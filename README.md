@@ -6,8 +6,8 @@ CREATE PROCEDURE C_P
 RETURNS (rc INTEGER)
 AS
   DECLARE conn TYPE OF ty$pointer;
-  DECLARE stmt TYPE OF ty$pointer;
-  DECLARE rslt TYPE OF ty$pointer;
+  DECLARE stmt TYPE OF ty$pointer;  
+  DECLARE rslt TYPE OF ty$pointer;  
 BEGIN
   conn = nano$conn.connection_('driver=SQL Server; server=localhost; database=mydb; uid=test; pwd=test1');
   stmt = nano$conn.statement_(conn, 'select * from adm' /*-- default 0*/);
