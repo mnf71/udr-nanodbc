@@ -23,13 +23,13 @@
 
 #include "nano.h"
  
-using namespace nanodbc;
 using namespace Firebird;
+using namespace nanodbc;
 
 namespace nano
 {
 	//-----------------------------------------------------------------------------
-	// create nano$conn.connection
+	// create function connection
 	//	returns ty$pointer
 	//	external name 'nano!conn_connection'
 	//	engine udr; 
@@ -61,7 +61,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.sql_connection (
+	// create function sql_connection (
 	//	 dsn varchar(512) character set utf8 not null , 
 	//	 user varchar(63) character set utf8 not null , 
 	//	 pass varchar(63) character set utf8 not null, 
@@ -107,7 +107,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.driver_connection (
+	// create function driver_connection (
 	//	 connection_string varchar(512) character set utf8 not null,  
 	//	 timeout integer not null default = 0
 	//	) returns ty$pointer
@@ -148,7 +148,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.dispose (
+	// create function dispose (
 	//	 conn ty$pointer, 
 	//	) returns ty$pointer
 	//	external name 'nano!conn_dispose'
@@ -191,7 +191,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.allocate (
+	// create function allocate (
 	//	 conn ty$pointer, 
 	//	) returns ty$nano_blank
 	//	external name 'nano!conn_allocate'
@@ -233,7 +233,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.deallocate (
+	// create function deallocate (
 	//	 conn ty$pointer, 
 	//	) returns ty$nano_blank
 	//	external name 'nano!conn_deallocate'
@@ -275,7 +275,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.sql_connect (
+	// create function sql_connect (
 	//	 conn ty$pointer, 
 	//	 dsn varchar(512) character set utf8 not null, 
 	//	 user varchar(64) character set utf8 not null, 
@@ -326,7 +326,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.driver_connect (
+	// create function driver_connect (
 	//	 conn ty$pointer, 
 	//	 connection_string varchar(512) character set utf8 not null, 
 	//	 timeout integer not null default = 0
@@ -372,7 +372,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.connected (
+	// create function connected (
 	//	 conn ty$pointer, 
 	//	) returns boolean
 	//	external name 'nano!conn_connected'
@@ -414,7 +414,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.disconnect (
+	// create function disconnect (
 	//	 conn ty$pointer, 
 	//	) returns ty$nano_blank
 	//	external name 'nano!conn_disconnect'
@@ -456,7 +456,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.transactions (
+	// create function transactions (
 	//	 conn ty$pointer, 
 	//	) returns integer
 	//	external name 'nano!conn_transactions'
@@ -498,7 +498,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.get_info (
+	// create function get_info (
 	//	 conn ty$pointer, 
 	//	 info_type smallint not null
 	//	) returns varchar(256) character set utf8
@@ -547,7 +547,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.dbms_name (
+	// create function dbms_name (
 	//	 conn ty$pointer, 
 	//	) returns varchar(128) character set utf8
 	//	external name 'nano!conn_dbms_name'
@@ -594,7 +594,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.dbms_version (
+	// create function dbms_version (
 	//	 conn ty$pointer, 
 	//	) returns varchar(128) character set utf8
 	//	external name 'nano!conn_dbms_version'
@@ -641,7 +641,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.driver_name (
+	// create function driver_name (
 	//	 conn ty$pointer, 
 	//	) returns varchar(128) character set utf8
 	//	external name 'nano!conn_driver_name'
@@ -688,7 +688,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.database_name (
+	// create function database_name (
 	//	 conn ty$pointer, 
 	//	) returns varchar(128) character set utf8
 	//	external name 'nano!conn_database_name'
@@ -735,7 +735,7 @@ namespace nano
 	FB_UDR_END_FUNCTION
 
 	//-----------------------------------------------------------------------------
-	// create nano$conn.catalog_name (
+	// create function catalog_name (
 	//	 conn ty$pointer, 
 	//	) returns varchar(128) character set utf8
 	//	external name 'nano!conn_catalog_name'

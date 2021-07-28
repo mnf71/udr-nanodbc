@@ -23,4 +23,11 @@
 #include "nano.h"
  
 using namespace Firebird;
+using namespace nanodbc;
+
+namespace nano
+{
+
+
+} // namespace nano
 

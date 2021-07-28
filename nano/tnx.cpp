@@ -23,4 +23,58 @@
 #include "nano.h"
  
 using namespace Firebird;
+using namespace nanodbc;
 
+namespace nano
+{
+
+	//-----------------------------------------------------------------------------
+	// create function catalog_name (
+	//	 conn ty$pointer, 
+	//	) returns varchar(128) character set utf8
+	//	external name 'nano!conn_catalog_name'
+	//	engine udr; 
+	//
+
+	FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
+
+		FB_UDR_MESSAGE(
+			InMessage,
+			(NANO_POINTER, conn)
+		);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_VARCHAR(128 * 4), rslt)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->connNull == FB_FALSE)
+		{
+			memset(out->rslt.str, 0, sizeof(out->rslt.str));
+			try
+			{
+				nanodbc::connection* conn = nano::connPtr(in->conn.str);
+				string name = conn->catalog_name();
+				out->rslt.length =
+					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->rslt.str) ?
+						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->rslt.str);
+				memcpy(out->rslt.str, name.c_str(), out->rslt.length);
+				out->rsltNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->rsltNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+			out->rsltNull = FB_TRUE;
+	}
+
+		FB_UDR_END_FUNCTION
+
+
+
+} // namespace nano

@@ -22,8 +22,8 @@
  *  2021 Maxim Filatov <2chemist@mail.ru>
  */
 
-#ifndef UDR_NANO_H
-#define UDR_NANO_H
+#ifndef NANO_H
+#define NANO_H
 
 #define FB_UDR_STATUS_TYPE ::Firebird::ThrowStatusWrapper
 
@@ -205,4 +205,4 @@ namespace nano
 	nanodbc::result* rsltPtr(const char* cptr);
 }
 
-#endif	/* UDR_NANO_H */
+#endif	/* NANO_H */
