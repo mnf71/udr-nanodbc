@@ -23,6 +23,11 @@
 #include "nano.h"
  
 using namespace Firebird;
+
+//-----------------------------------------------------------------------------
+// package nano$rslt
+//
+
 using namespace nanodbc;
 
 namespace nano

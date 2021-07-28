@@ -188,10 +188,10 @@ namespace
 
 namespace nano
 {
-	#define	NANO_POINTER	FB_CHAR(8)		// domain types
+	#define	NANO_POINTER	FB_CHAR(8)	// domain types
 	#define	NANO_BLANK		FB_INTEGER
 
-	#define	BLANK_RESULT	-1
+	#define	BLANK	-1
 
 	void fbPtr(char* cptr, int64_t iptr);
 	int64_t nativePtr(const char* cptr);

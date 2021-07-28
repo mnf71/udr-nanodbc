@@ -24,6 +24,11 @@
 #include "nano.h"
  
 using namespace Firebird;
+
+//-----------------------------------------------------------------------------
+// package nano$conn
+//
+
 using namespace nanodbc;
 
 namespace nano
@@ -52,7 +57,6 @@ namespace nano
 			}
 			catch (...)
 			{
-				nano::fbPtr(out->conn.str, 0L);
 				out->connNull = FB_TRUE;
 				throw;
 			}
@@ -98,7 +102,6 @@ namespace nano
 			}
 			catch (...)
 			{
-				nano::fbPtr(out->conn.str, 0L);
 				out->connNull = FB_TRUE;
 				throw;
 			}
@@ -139,7 +142,6 @@ namespace nano
 			}
 			catch (...)
 			{
-				nano::fbPtr(out->conn.str, 0L);
 				out->connNull = FB_TRUE;
 				throw;
 			}
@@ -155,7 +157,7 @@ namespace nano
 	//	engine udr; 
 	//
 
-	FB_UDR_BEGIN_FUNCTION(conn_Dispose)
+	FB_UDR_BEGIN_FUNCTION(conn_dispose)
 
 		FB_UDR_MESSAGE(
 			InMessage,
@@ -174,12 +176,12 @@ namespace nano
 				try
 				{
 					delete nano::connPtr(in->conn.str);
-					nano::fbPtr(out->conn.str, 0L);
 					out->connNull = FB_TRUE;
 				}
 				catch (...)
 				{
-					nano::fbPtr(out->conn.str, nano::nativePtr(in->conn.str));
+					nano::fbPtr
+						(out->conn.str, nano::nativePtr(in->conn.str));
 					out->connNull = FB_FALSE;
 					throw;
 				}
@@ -207,14 +209,14 @@ namespace nano
 
 		FB_UDR_MESSAGE(
 			OutMessage,
-			(FB_SMALLINT, rslt)
+			(NANO_BLANK, rslt)
 		);
 
 		FB_UDR_EXECUTE_FUNCTION
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				out->rslt = BLANK_RESULT;
+				out->rslt = BLANK;
 				out->rsltNull = FB_FALSE;
 				try
 				{
@@ -256,7 +258,7 @@ namespace nano
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				out->rslt = BLANK_RESULT;
+				out->rslt = BLANK;
 				out->rsltNull = FB_FALSE;
 				try
 				{
@@ -306,7 +308,7 @@ namespace nano
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				out->rslt = BLANK_RESULT;
+				out->rslt = BLANK;
 				out->rsltNull = FB_FALSE;
 				try
 				{
@@ -353,7 +355,7 @@ namespace nano
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				out->rslt = BLANK_RESULT;
+				out->rslt = BLANK;
 				out->rsltNull = FB_FALSE;
 				try
 				{
@@ -437,7 +439,7 @@ namespace nano
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				out->rslt = BLANK_RESULT;
+				out->rslt = BLANK;
 				out->rsltNull = FB_FALSE;
 				try
 				{
@@ -479,7 +481,7 @@ namespace nano
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				out->rslt = -1;
+				out->rslt = BLANK;
 				out->rsltNull = FB_FALSE;
 				try
 				{
@@ -523,7 +525,6 @@ namespace nano
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				memset(out->rslt.str, 0, sizeof(out->rslt.str));
 				try
 				{
 					nanodbc::connection* conn = nano::connPtr(in->conn.str);
@@ -570,7 +571,6 @@ namespace nano
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				memset(out->rslt.str, 0, sizeof(out->rslt.str));
 				try
 				{
 					nanodbc::connection* conn = nano::connPtr(in->conn.str);
@@ -617,7 +617,6 @@ namespace nano
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				memset(out->rslt.str, 0, sizeof(out->rslt.str));
 				try
 				{
 					nanodbc::connection* conn = nano::connPtr(in->conn.str);
@@ -664,7 +663,6 @@ namespace nano
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				memset(out->rslt.str, 0, sizeof(out->rslt.str));
 				try
 				{
 					nanodbc::connection* conn = nano::connPtr(in->conn.str);
@@ -711,7 +709,6 @@ namespace nano
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				memset(out->rslt.str, 0, sizeof(out->rslt.str));
 				try
 				{
 					nanodbc::connection* conn = nano::connPtr(in->conn.str);
@@ -758,7 +755,6 @@ namespace nano
 		{
 			if (in->connNull == FB_FALSE)
 			{
-				memset(out->rslt.str, 0, sizeof(out->rslt.str));
 				try
 				{
 					nanodbc::connection* conn = nano::connPtr(in->conn.str);
