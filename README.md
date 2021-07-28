@@ -1,3 +1,5 @@
 # udr-nanodbc
 
-А new project opened... ;)
+А new project started... 
+
+Firebird user defined routine based on a small C++ wrapper for the native C ODBC API https://github.com/mnf71/nanodbc
