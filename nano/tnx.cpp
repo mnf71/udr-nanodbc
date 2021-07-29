@@ -82,9 +82,9 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function dispose (
 //	 tnx ty$pointer not null, 
-//	) returns ty$pointer
-//	external name 'nano!tnx_dispose'
-//	engine udr; 
+// ) returns ty$pointer
+// external name 'nano!tnx_dispose'
+//engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(tnx_dispose)
@@ -203,6 +203,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 			}
 			catch (...)
 			{
+				out->blankNull = FB_TRUE;
 				throw;
 			}
 		}
@@ -214,5 +215,51 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 	}
 
 FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function connection (
+//	 tnx ty$pointer not null, 
+//	) returns ty$pointer
+//	external name 'nano!tnx_connection'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(tnx_connection)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, tnx)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_POINTER, conn)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->tnxNull == FB_FALSE)
+		{
+			nanodbc::transaction* tnx = nano::tnxPtr(in->tnx.str);
+			try
+			{
+				nanodbc::connection conn = tnx->connection();
+				nano::fbPtr(out->conn.str, (int64_t)&conn);
+				out->connNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->connNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->connNull = FB_TRUE;
+			 throw tnx_POINTER_INVALID;
+		}
+	}
+
+		FB_UDR_END_FUNCTION
 
 } // namespace nano
