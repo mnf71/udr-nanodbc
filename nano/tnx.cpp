@@ -260,6 +260,6 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 		}
 	}
 
-		FB_UDR_END_FUNCTION
+FB_UDR_END_FUNCTION
 
 } // namespace nano
