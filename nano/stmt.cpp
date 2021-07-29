@@ -323,9 +323,9 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function close (
 //	 stmt ty$pointer not null, 
-// ) returns ty$nano_blank
-// external name 'nano!stmt_close'
-// engine udr; 
+//	) returns ty$nano_blank
+//	external name 'nano!stmt_close'
+//	engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(stmt_close)
@@ -369,9 +369,9 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function cancel (
 //	 stmt ty$pointer not null, 
-// ) returns ty$nano_blank
-// external name 'nano!stmt_cancel'
-// engine udr; 
+//	) returns ty$nano_blank
+//	external name 'nano!stmt_cancel'
+//	engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(stmt_cancel)
@@ -418,9 +418,9 @@ FB_UDR_END_FUNCTION
 //	 conn ty$pointer default null, 
 //   query varchar(8191) character set utf8 not null,
 // 	 timeout integer not null default 0 
-// ) returns ty$nano_blank
-// external name 'nano!stmt_prepare'
-// engine udr; 
+//	) returns ty$nano_blank
+//	external name 'nano!stmt_prepare'
+//	engine udr; 
 //
 // \brief
 // prepare (?, ?, ?, ...) returns blank and prepares the given statement to execute its associated connection
@@ -477,9 +477,9 @@ FB_UDR_END_FUNCTION
 // create function timeout (
 //	 stmt ty$pointer not null, 
 // 	 timeout integer not null default 0 
-// ) returns ty$nano_blank
-// external name 'nano!stmt_timeout'
-// engine udr; 
+//	) returns ty$nano_blank
+//	external name 'nano!stmt_timeout'
+//	engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(stmt_timeout)
@@ -528,9 +528,9 @@ FB_UDR_END_FUNCTION
 //   query varchar(8191) character set utf8 not null,
 // 	 batch_operations integer not null default 1 
 // 	 timeout integer not null default 0 
-// ) returns ty$pointer
-// external name 'nano!stmt_execute_direct'
-// engine udr; 
+//	) returns ty$pointer
+//	external name 'nano!stmt_execute_direct'
+//	engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(stmt_execute_direct)
@@ -585,9 +585,9 @@ FB_UDR_END_FUNCTION
 //   query varchar(8191) character set utf8 not null,
 // 	 batch_operations integer not null default 1 
 // 	 timeout integer not null default 0 
-// ) returns ty$nano_blank
-// external name 'nano!stmt_just_execute_direct'
-// engine udr; 
+//	) returns ty$nano_blank
+//	external name 'nano!stmt_just_execute_direct'
+//	engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(stmt_just_execute_direct)
@@ -639,9 +639,9 @@ FB_UDR_END_FUNCTION
 //	 stmt ty$pointer not null, 
 // 	 batch_operations integer not null default 1 
 // 	 timeout integer not null default 0 
-// ) returns ty$pointer
-// external name 'nano!stmt_execute'
-// engine udr; 
+//	) returns ty$pointer
+//	external name 'nano!stmt_execute'
+//	engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(stmt_execute)
@@ -689,9 +689,9 @@ FB_UDR_END_FUNCTION
 //	 stmt ty$pointer not null, 
 // 	 batch_operations integer not null default 1 
 // 	 timeout integer not null default 0 
-// ) returns ty$nano_blank
-// external name 'nano!stmt_just_execute'
-// engine udr; 
+//	) returns ty$nano_blank
+//	external name 'nano!stmt_just_execute'
+//	engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(stmt_just_execute)
@@ -729,6 +729,62 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute)
 		{
 			 out->blankNull = FB_TRUE;
 			 throw stmt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function just_procedure_columns (
+//	 stmt ty$pointer not null, 
+//	 catalog_ varchar(128) character set utf8 not null, 
+//	 schema_ varchar(128) character set utf8 not null, 
+//	 procedure_ varchar(63) character set utf8 not null, 
+//	 column_ varchar(63) character set utf8 not null, 
+//	) returns ty$pointer
+//	external name 'nano!stmt_procedure_columns'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(stmt_procedure_columns)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, stmt)
+		(FB_VARCHAR(128 * 4), catalog)
+		(FB_VARCHAR(128 * 4), schema)
+		(FB_VARCHAR(63 * 4), procedure)
+		(FB_VARCHAR(63 * 4), column)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_POINTER, rslt)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->stmtNull == FB_FALSE)
+		{
+			nanodbc::statement* stmt = nano::stmtPtr(in->stmt.str);
+			try
+			{
+				nanodbc::result rslt = 
+					stmt->procedure_columns(NANODBC_TEXT(in->catalog.str), NANODBC_TEXT(in->schema.str), NANODBC_TEXT(in->procedure.str),
+						NANODBC_TEXT(in->column.str));
+				nano::fbPtr(out->rslt.str, (int64_t)&rslt);
+				out->rsltNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->rsltNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			out->rsltNull = FB_TRUE;
+			throw stmt_POINTER_INVALID;
 		}
 	}
 
