@@ -46,8 +46,8 @@ namespace nano
 //
 // \brief
 // connection (null, null, null, ...) returns new connection object, initially not connected	
-// connection (?, null, null, ...) new connection object and immediately connect by SQLDriverConnect
-// connection (?, ?, ?, ...) new connection object and immediately connect by SQLConnect
+// connection (?, null, null, ...) returns new connection object and immediately connect by SQLDriverConnect
+// connection (?, ?, ?, ...) returns new connection object and immediately connect by SQLConnect
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_connection)
@@ -243,7 +243,7 @@ FB_UDR_END_FUNCTION
 //
 // \brief
 // connect (?, ?, null, null, ...) returns blank and connect to the given data source by SQLDriverConnect
-// connect (?, ?, ?, ?, ...) new connection object and immediately connect by SQLConnect
+// connect (?, ?, ?, ?, ...) returns blank and connect to the given data source by by SQLConnect
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_connect)
