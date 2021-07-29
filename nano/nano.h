@@ -188,21 +188,27 @@ namespace
 
 namespace nano
 {
-	#define	NANO_POINTER	FB_CHAR(8)	// domain types
-	#define	NANO_BLANK		FB_INTEGER
 
-	#define	BLANK	-1
+#define	NANO_POINTER			FB_CHAR(8)	// domain types
+#define	NANO_BLANK				FB_INTEGER	//
 
-	void fbPtr(char* cptr, int64_t iptr);
-	int64_t nativePtr(const char* cptr);
+#define	BLANK					-1			// void function emulation
 
-	FB_BOOLEAN fbBool(bool value);
-	bool nativeBool(const ISC_UCHAR value);
+#define conn_POINTER_INVALID	"Input parameter conn_POINTER invalid."
+#define tnx_POINTER_INVALID		"Input parameter tnx_POINTER invalid."
+#define stmt_POINTER_INVALID	"Input parameter stmt_POINTER invalid."
 
-	nanodbc::connection* connPtr(const char* cptr);
-	nanodbc::transaction* tnxPtr(const char* cptr);
-	nanodbc::statement* stmtPtr(const char* cptr);
-	nanodbc::result* rsltPtr(const char* cptr);
+void fbPtr(char* cptr, int64_t iptr);
+int64_t nativePtr(const char* cptr);
+
+FB_BOOLEAN fbBool(bool value);
+bool nativeBool(const ISC_UCHAR value);
+
+nanodbc::connection* connPtr(const char* cptr);
+nanodbc::transaction* tnxPtr(const char* cptr);
+nanodbc::statement* stmtPtr(const char* cptr);
+nanodbc::result* rsltPtr(const char* cptr);
+
 }
 
 #endif	/* NANO_H */

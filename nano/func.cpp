@@ -21,6 +21,18 @@
  */
 
 #include "nano.h"
- 
+
 using namespace Firebird;
+
+//-----------------------------------------------------------------------------
+// package nano$func
+//
+
+using namespace nanodbc;
+
+namespace nano
+{
+
+
+} // namespace nano
 
