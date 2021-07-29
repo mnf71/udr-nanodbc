@@ -201,7 +201,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_opened)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_BOOLEAN, rslt)
+		(FB_BOOLEAN, opened)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -211,18 +211,18 @@ FB_UDR_BEGIN_FUNCTION(stmt_opened)
 			nanodbc::statement* stmt = nano::stmtPtr(in->stmt.str);
 			try
 			{
-				out->rslt = nano::fbBool(stmt->open());
-				out->rsltNull = FB_FALSE;
+				out->opened = nano::fbBool(stmt->open());
+				out->openedNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->rsltNull = FB_TRUE;
+				out->openedNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			out->rsltNull = FB_TRUE;
+			out->openedNull = FB_TRUE;
 			throw stmt_POINTER_INVALID;
 		}
 	}
@@ -246,7 +246,7 @@ FB_UDR_MESSAGE(
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_BOOLEAN, rslt)
+		(FB_BOOLEAN, connected)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -256,18 +256,18 @@ FB_UDR_MESSAGE(
 			nanodbc::statement* stmt = nano::stmtPtr(in->stmt.str);
 			try
 			{
-				out->rslt = nano::fbBool(stmt->connected());
-				out->rsltNull = FB_FALSE;
+				out->connected = nano::fbBool(stmt->connected());
+				out->connectedNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->rsltNull = FB_TRUE;
+				out->connectedNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			out->rsltNull = FB_TRUE;
+			out->connectedNull = FB_TRUE;
 			throw stmt_POINTER_INVALID;
 		}
 	}
@@ -504,6 +504,219 @@ FB_UDR_BEGIN_FUNCTION(stmt_timeout)
 			try
 			{
 				stmt->timeout(in->timeout);
+				out->blankNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->blankNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->blankNull = FB_TRUE;
+			 throw stmt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function execute_direct (
+//	 stmt ty$pointer not null, 
+//	 conn ty$pointer not null, 
+//   query varchar(8191) character set utf8 not null,
+// 	 batch_operations integer not null default 1 
+// 	 timeout integer not null default 0 
+// ) returns ty$pointer
+// external name 'nano!stmt_execute_direct'
+// engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(stmt_execute_direct)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, stmt)
+		(NANO_POINTER, conn)
+		(FB_VARCHAR(8191 * 4), query)
+		(FB_INTEGER, batch_operations)
+		(FB_INTEGER, timeout)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_POINTER, rslt)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->stmtNull == FB_FALSE)
+		{
+			nanodbc::statement* stmt = nano::stmtPtr(in->stmt.str);
+			if (in->connNull == FB_TRUE) throw conn_POINTER_INVALID;
+			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			try
+			{
+				nanodbc::result rslt =
+					stmt->execute_direct(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
+				nano::fbPtr(out->rslt.str, (int64_t)&rslt);
+				out->rsltNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->rsltNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->rsltNull = FB_TRUE;
+			 throw stmt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function just_execute_direct (
+//	 stmt ty$pointer not null, 
+//	 conn ty$pointer not null, 
+//   query varchar(8191) character set utf8 not null,
+// 	 batch_operations integer not null default 1 
+// 	 timeout integer not null default 0 
+// ) returns ty$nano_blank
+// external name 'nano!stmt_just_execute_direct'
+// engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(stmt_just_execute_direct)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, stmt)
+		(NANO_POINTER, conn)
+		(FB_VARCHAR(8191 * 4), query)
+		(FB_INTEGER, batch_operations)
+		(FB_INTEGER, timeout)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_BLANK, blank)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->stmtNull == FB_FALSE)
+		{
+			out->blank = BLANK;
+			nanodbc::statement* stmt = nano::stmtPtr(in->stmt.str);
+			if (in->connNull == FB_TRUE) throw conn_POINTER_INVALID;
+			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			try
+			{
+				stmt->just_execute_direct(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
+				out->blankNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->blankNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->blankNull = FB_TRUE;
+			 throw stmt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function execute_ (
+//	 stmt ty$pointer not null, 
+// 	 batch_operations integer not null default 1 
+// 	 timeout integer not null default 0 
+// ) returns ty$pointer
+// external name 'nano!stmt_execute'
+// engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(stmt_execute)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, stmt)
+		(FB_INTEGER, batch_operations)
+		(FB_INTEGER, timeout)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_POINTER, rslt)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->stmtNull == FB_FALSE)
+		{
+			nanodbc::statement* stmt = nano::stmtPtr(in->stmt.str);
+			try
+			{
+				nanodbc::result rslt = stmt->execute(in->batch_operations, in->timeout);
+				nano::fbPtr(out->rslt.str, (int64_t)&rslt);
+				out->rsltNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->rsltNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->rsltNull = FB_TRUE;
+			 throw stmt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function just_execute (
+//	 stmt ty$pointer not null, 
+// 	 batch_operations integer not null default 1 
+// 	 timeout integer not null default 0 
+// ) returns ty$nano_blank
+// external name 'nano!stmt_just_execute'
+// engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(stmt_just_execute)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, stmt)
+		(FB_INTEGER, batch_operations)
+		(FB_INTEGER, timeout)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_BLANK, blank)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->stmtNull == FB_FALSE)
+		{
+			out->blank = BLANK;
+			nanodbc::statement* stmt = nano::stmtPtr(in->stmt.str);
+			try
+			{
+				stmt->just_execute(in->batch_operations, in->timeout);
 				out->blankNull = FB_FALSE;
 			}
 			catch (...)

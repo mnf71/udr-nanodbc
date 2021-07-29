@@ -309,7 +309,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connected)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_BOOLEAN, rslt)
+		(FB_BOOLEAN, connected)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -319,18 +319,18 @@ FB_UDR_BEGIN_FUNCTION(conn_connected)
 			nanodbc::connection* conn = nano::connPtr(in->conn.str);
 			try
 			{
-				out->rslt = nano::fbBool(conn->connected());
-				out->rsltNull = FB_FALSE;
+				out->connected = nano::fbBool(conn->connected());
+				out->connectedNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->rsltNull = FB_TRUE;
+				out->connectedNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			out->rsltNull = FB_TRUE;
+			out->connectedNull = FB_TRUE;
 			throw conn_POINTER_INVALID;
 		}
 	}
@@ -400,7 +400,7 @@ FB_UDR_BEGIN_FUNCTION(conn_transactions)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_INTEGER, rslt)
+		(FB_INTEGER, transactions)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -410,18 +410,18 @@ FB_UDR_BEGIN_FUNCTION(conn_transactions)
 			nanodbc::connection* conn = nano::connPtr(in->conn.str);
 			try
 			{
-				out->rslt = (ISC_LONG)conn->transactions();
-				out->rsltNull = FB_FALSE;
+				out->transactions = (ISC_LONG)conn->transactions();
+				out->transactionsNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->rsltNull = FB_TRUE;
+				out->transactionsNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			out->rsltNull = FB_TRUE;
+			out->transactionsNull = FB_TRUE;
 			throw conn_POINTER_INVALID;
 		}
 	}
@@ -447,7 +447,7 @@ FB_UDR_BEGIN_FUNCTION(conn_get_info)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(256 * 4), rslt)
+		(FB_VARCHAR(256 * 4), info)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -458,21 +458,21 @@ FB_UDR_BEGIN_FUNCTION(conn_get_info)
 			try
 			{
 				string info = conn->get_info<string>(in->info_type);
-				out->rslt.length = 
-					(ISC_USHORT) info.length() < (ISC_USHORT) sizeof(out->rslt.str) ? 
-						(ISC_USHORT) info.length() : (ISC_USHORT) sizeof(out->rslt.str);
-				memcpy(out->rslt.str, info.c_str(), out->rslt.length);
-				out->rsltNull = FB_FALSE;
+				out->info.length =
+					(ISC_USHORT) info.length() < (ISC_USHORT) sizeof(out->info.str) ?
+						(ISC_USHORT) info.length() : (ISC_USHORT) sizeof(out->info.str);
+				memcpy(out->info.str, info.c_str(), out->info.length);
+				out->infoNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->rsltNull = FB_TRUE;
+				out->infoNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			out->rsltNull = FB_TRUE;
+			out->infoNull = FB_TRUE;
 			throw conn_POINTER_INVALID;
 		}
 	}
@@ -496,7 +496,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(128 * 4), rslt)
+		(FB_VARCHAR(128 * 4), name)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -507,21 +507,21 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 			try
 			{
 				string name = conn->dbms_name();
-				out->rslt.length =
-					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->rslt.str) ?
-						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->rslt.str);
-				memcpy(out->rslt.str, name.c_str(), out->rslt.length);
-				out->rsltNull = FB_FALSE;
+				out->name.length =
+					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->name.str) ?
+						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->name.str);
+				memcpy(out->name.str, name.c_str(), out->name.length);
+				out->nameNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->rsltNull = FB_TRUE;
+				out->nameNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			out->rsltNull = FB_TRUE;
+			out->nameNull = FB_TRUE;
 			throw conn_POINTER_INVALID;
 		}
 	}
@@ -545,7 +545,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(128 * 4), rslt)
+		(FB_VARCHAR(128 * 4), version)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -556,21 +556,21 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 			try
 			{
 				string version = conn->dbms_version();
-				out->rslt.length =
-					(ISC_USHORT)version.length() < (ISC_USHORT)sizeof(out->rslt.str) ?
-						(ISC_USHORT)version.length() : (ISC_USHORT)sizeof(out->rslt.str);
-				memcpy(out->rslt.str, version.c_str(), out->rslt.length);
-				out->rsltNull = FB_FALSE;
+				out->version.length =
+					(ISC_USHORT)version.length() < (ISC_USHORT)sizeof(out->version.str) ?
+						(ISC_USHORT)version.length() : (ISC_USHORT)sizeof(out->version.str);
+				memcpy(out->version.str, version.c_str(), out->version.length);
+				out->versionNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->rsltNull = FB_TRUE;
+				out->versionNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			out->rsltNull = FB_TRUE;
+			out->versionNull = FB_TRUE;
 			throw conn_POINTER_INVALID;
 		}
 	}
@@ -594,7 +594,7 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(128 * 4), rslt)
+		(FB_VARCHAR(128 * 4), name)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -605,21 +605,21 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 			try
 			{
 				string name = conn->driver_name();
-				out->rslt.length =
-					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->rslt.str) ?
-						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->rslt.str);
-				memcpy(out->rslt.str, name.c_str(), out->rslt.length);
-				out->rsltNull = FB_FALSE;
+				out->name.length =
+					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->name.str) ?
+						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->name.str);
+				memcpy(out->name.str, name.c_str(), out->name.length);
+				out->nameNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->rsltNull = FB_TRUE;
+				out->nameNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			out->rsltNull = FB_TRUE;
+			out->nameNull = FB_TRUE;
 			throw conn_POINTER_INVALID;
 		}
 	}
@@ -643,7 +643,7 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(128 * 4), rslt)
+		(FB_VARCHAR(128 * 4), name)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -654,21 +654,21 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 			try
 			{
 				string name = conn->database_name();
-				out->rslt.length =
-					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->rslt.str) ?
-						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->rslt.str);
-				memcpy(out->rslt.str, name.c_str(), out->rslt.length);
-				out->rsltNull = FB_FALSE;
+				out->name.length =
+					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->name.str) ?
+						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->name.str);
+				memcpy(out->name.str, name.c_str(), out->name.length);
+				out->nameNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->rsltNull = FB_TRUE;
+				out->nameNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			out->rsltNull = FB_TRUE;
+			out->nameNull = FB_TRUE;
 			throw conn_POINTER_INVALID;
 		}
 	}
@@ -692,7 +692,7 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(128 * 4), rslt)
+		(FB_VARCHAR(128 * 4), name)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -703,21 +703,21 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 			try
 			{
 				string name = conn->catalog_name();
-				out->rslt.length =
-					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->rslt.str) ?
-						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->rslt.str);
-				memcpy(out->rslt.str, name.c_str(), out->rslt.length);
-				out->rsltNull = FB_FALSE;
+				out->name.length =
+					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->name.str) ?
+						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->name.str);
+				memcpy(out->name.str, name.c_str(), out->name.length);
+				out->nameNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->rsltNull = FB_TRUE;
+				out->nameNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			out->rsltNull = FB_TRUE;
+			out->nameNull = FB_TRUE;
 			throw conn_POINTER_INVALID;
 		}
 	}
