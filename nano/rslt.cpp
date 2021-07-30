@@ -352,7 +352,7 @@ FB_UDR_END_FUNCTION
 // create function next_ (
 //	 rslt ty$pointer not null, 
 //	) returns boolean
-//	external name 'nano!rslt_last'
+//	external name 'nano!rslt_next'
 //	engine udr; 
 //
 
@@ -533,7 +533,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_skip)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function position (
+// create function position_ (
 //	 rslt ty$pointer not null, 
 //	) returns integer
 //	external name 'nano!rslt_position'
@@ -950,10 +950,10 @@ FB_UDR_END_FUNCTION
 //	engine udr; 
 //
 // \brief
-// column_size (?, ?) testing covertion the character string into a integer and call associate method
+// column_decimal_digits (?, ?) testing covertion the character string into a integer and call associate method
 //
 
-FB_UDR_BEGIN_FUNCTION(column_decimal_digits)
+FB_UDR_BEGIN_FUNCTION(rslt_column_decimal_digits)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -988,6 +988,261 @@ FB_UDR_BEGIN_FUNCTION(column_decimal_digits)
 		else
 		{
 			 out->digitsNull = FB_TRUE;
+			 throw rslt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function column_datatype (
+//	 rslt ty$pointer not null, 
+//	 column_ varchar(63) character set utf8 not null 
+//	) returns integer
+//	external name 'nano!rslt_column_datatype'
+//	engine udr; 
+//
+// \brief
+// column_datatype (?, ?) testing covertion the character string into a integer and call associate method
+//
+
+FB_UDR_BEGIN_FUNCTION(rslt_column_datatype)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, rslt)
+		(FB_VARCHAR(63 * 4), column)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_INTEGER, datatype)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->rsltNull == FB_FALSE)
+		{
+			nanodbc::result* rslt = nano::rsltPtr(in->rslt.str);
+			try
+			{
+				if (!isdigit(in->column.str[0]))
+					out->datatype = rslt->column_datatype(NANODBC_TEXT(in->column.str));
+				else
+					out->datatype = rslt->column_datatype((short)atoi(in->column.str));
+				out->datatypeNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->datatypeNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->datatypeNull = FB_TRUE;
+			 throw rslt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function column_datatype_name (
+//	 rslt ty$pointer not null, 
+//	 column_ varchar(63) character set utf8 not null 
+//	) returns integer
+//	external name 'nano!rslt_column_datatype_name'
+//	engine udr; 
+//
+// \brief
+// column_datatype_name (?, ?) testing covertion the character string into a integer and call associate method
+//
+
+FB_UDR_BEGIN_FUNCTION(rslt_column_datatype_name)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, rslt)
+		(FB_VARCHAR(63 * 4), column)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_VARCHAR(128 * 4), datatype_name)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->rsltNull == FB_FALSE)
+		{
+			nanodbc::result* rslt = nano::rsltPtr(in->rslt.str);
+			try
+			{
+				string datatype_name;
+				if (!isdigit(in->column.str[0]))
+					datatype_name = rslt->column_datatype_name(NANODBC_TEXT(in->column.str));
+				else
+					datatype_name = rslt->column_datatype_name((short)atoi(in->column.str));
+				out->datatype_name.length =
+					(ISC_USHORT)datatype_name.length() < (ISC_USHORT)sizeof(out->datatype_name.str) ?
+						(ISC_USHORT)datatype_name.length() : (ISC_USHORT)sizeof(out->datatype_name.str);
+				memcpy(out->datatype_name.str, datatype_name.c_str(), out->datatype_name.length);
+				out->datatype_nameNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->datatype_nameNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->datatype_nameNull = FB_TRUE;
+			 throw rslt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function column_c_datatype (
+//	 rslt ty$pointer not null, 
+//	 column_ varchar(63) character set utf8 not null 
+//	) returns integer
+//	external name 'nano!rslt_column_c_datatype'
+//	engine udr; 
+//
+// \brief
+// column_c_datatype (?, ?) testing covertion the character string into a integer and call associate method
+//
+
+FB_UDR_BEGIN_FUNCTION(rslt_column_c_datatype)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, rslt)
+		(FB_VARCHAR(63 * 4), column)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_INTEGER, c_datatype)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->rsltNull == FB_FALSE)
+		{
+			nanodbc::result* rslt = nano::rsltPtr(in->rslt.str);
+			try
+			{
+				if (!isdigit(in->column.str[0]))
+					out->c_datatype = rslt->column_c_datatype(NANODBC_TEXT(in->column.str));
+				else
+					out->c_datatype = rslt->column_c_datatype((short)atoi(in->column.str));
+				out->c_datatypeNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->c_datatypeNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->c_datatypeNull = FB_TRUE;
+			 throw rslt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function next_result (
+//	 rslt ty$pointer not null, 
+//	) returns boolean
+//	external name 'nano!rslt_next_result'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(rslt_next_result)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, rslt)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_BOOLEAN, succes)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->rsltNull == FB_FALSE)
+		{
+			nanodbc::result* rslt = nano::rsltPtr(in->rslt.str);
+			try
+			{
+				out->succes = nano::fbBool(rslt->next_result());
+				out->succesNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->succesNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->succesNull = FB_TRUE;
+			 throw rslt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function bool (
+//	 rslt ty$pointer not null, 
+//	) returns boolean
+//	external name 'nano!rslt_bool'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(rslt_bool)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, rslt)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_BOOLEAN, valid)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->rsltNull == FB_FALSE)
+		{
+			nanodbc::result* rslt = nano::rsltPtr(in->rslt.str);
+			try
+			{
+				bool bool_ = rslt;
+				out->valid = nano::fbBool(bool_);
+				out->validNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->validNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->validNull = FB_TRUE;
 			 throw rslt_POINTER_INVALID;
 		}
 	}
