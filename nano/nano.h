@@ -197,6 +197,7 @@ namespace nano
 #define conn_POINTER_INVALID	"Input parameter conn_POINTER invalid."
 #define tnx_POINTER_INVALID		"Input parameter tnx_POINTER invalid."
 #define stmt_POINTER_INVALID	"Input parameter stmt_POINTER invalid."
+#define rslt_POINTER_INVALID	"Input parameter rslt_POINTER invalid."
 
 void fbPtr(char* cptr, int64_t iptr);
 int64_t nativePtr(const char* cptr);

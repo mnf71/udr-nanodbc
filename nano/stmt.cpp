@@ -807,7 +807,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_affected_rows)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_INTEGER, affected_rows)
+		(FB_INTEGER, affected)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -817,18 +817,18 @@ FB_UDR_BEGIN_FUNCTION(stmt_affected_rows)
 			nanodbc::statement* stmt = nano::stmtPtr(in->stmt.str);
 			try
 			{
-				out->affected_rows = stmt->affected_rows();
-				out->affected_rowsNull = FB_FALSE;
+				out->affected = stmt->affected_rows();
+				out->affectedNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->affected_rowsNull = FB_TRUE;
+				out->affectedNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			 out->affected_rowsNull = FB_TRUE;
+			 out->affectedNull = FB_TRUE;
 			 throw stmt_POINTER_INVALID;
 		}
 	}
@@ -1019,6 +1019,9 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
 	}
 
 FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// todo: template <class T>	void bind
 
 //-----------------------------------------------------------------------------
 // create function bind_null (
