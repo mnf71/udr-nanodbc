@@ -975,7 +975,7 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function parameter_size  ( 
 //	 stmt ty$pointer not null, 
-//   param_index smallint not null
+//	 param_index smallint not null
 //	) returns integer
 //	external name 'nano!stmt_parameter_size'
 //	engine udr; 
@@ -1014,6 +1014,120 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
 		else
 		{
 			 out->sizeNull = FB_TRUE;
+			 throw stmt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function bind_null (
+//	 stmt ty$pointer not null,
+// 	 param_index smallint not null,
+// 	 batch_size integer not null default 1 
+//	) returns ty$nano_blank
+//	external name 'nano!stmt_bind_null'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(stmt_bind_null)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, stmt)
+		(FB_SMALLINT, param_index)
+		(FB_INTEGER, batch_size)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_BLANK, blank)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->stmtNull == FB_FALSE)
+		{
+			out->blank = BLANK;
+			nanodbc::statement* stmt = nano::stmtPtr(in->stmt.str);
+			try
+			{
+				stmt->bind_null(in->param_index, in->batch_size);
+				out->blankNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->blankNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->blankNull = FB_TRUE;
+			 throw stmt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+
+void describe_parameters(
+	const std::vector<short>& idx,
+	const std::vector<short>& type,
+	const std::vector<unsigned long>& size,
+	const std::vector<short>& scale);
+
+
+	//-----------------------------------------------------------------------------
+// create function describe_parameters (
+//	 stmt ty$pointer not null,
+// 	 idx smallint not null,
+// 	 type_ smallint not null,
+// 	 size integer not null,
+// 	 scale smallint not null default 0
+//	) returns ty$nano_blank
+//	external name 'nano!stmt_describe_parameters
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(stmt_describe_parameters)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, stmt)
+		(FB_SMALLINT, idx)
+		(FB_SMALLINT, type)
+		(FB_INTEGER, size)
+		(FB_SMALLINT, scale)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_BLANK, blank)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->stmtNull == FB_FALSE)
+		{
+			out->blank = BLANK;
+			nanodbc::statement* stmt = nano::stmtPtr(in->stmt.str);
+			try
+			{
+				stmt->describe_parameters
+					(std::vector<short>(in->idx), std::vector<short>(in->type), std::vector<unsigned long>(in->size), 
+					 std::vector<short>(in->scale));
+				out->blankNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->blankNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->blankNull = FB_TRUE;
 			 throw stmt_POINTER_INVALID;
 		}
 	}
