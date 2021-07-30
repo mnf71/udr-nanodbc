@@ -928,9 +928,9 @@ FB_UDR_BEGIN_FUNCTION(stmt_reset_parameters)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function parameters ( 
+// create function parameters  ( 
 //	 stmt ty$pointer not null, 
-//	) returns integer
+//	) returns smallint
 //	external name 'nano!stmt_parameters'
 //	engine udr; 
 //
@@ -944,7 +944,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameters)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_INTEGER, parameters)
+		(FB_SMALLINT, parameters)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -955,7 +955,6 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameters)
 			try
 			{
 				out->parameters = stmt->parameters();
-				if out->parameters < 0 then out->parameters = -1; // BLOB
 				out->parametersNull = FB_FALSE;
 			}
 			catch (...)
@@ -967,6 +966,54 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameters)
 		else
 		{
 			 out->parametersNull = FB_TRUE;
+			 throw stmt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function parameter_size  ( 
+//	 stmt ty$pointer not null, 
+//   param_index smallint not null
+//	) returns integer
+//	external name 'nano!stmt_parameter_size'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, stmt)
+		(FB_SMALLINT, param_index)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_INTEGER, size)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (in->stmtNull == FB_FALSE)
+		{
+			nanodbc::statement* stmt = nano::stmtPtr(in->stmt.str);
+			try
+			{
+				out->size = stmt->parameter_size(in->param_index);
+				if (out->size < 0) out->size = -1; // BLOB
+				out->sizeNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->sizeNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->sizeNull = FB_TRUE;
 			 throw stmt_POINTER_INVALID;
 		}
 	}
