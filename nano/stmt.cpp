@@ -735,7 +735,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function just_procedure_columns (
+// create function procedure_columns (
 //	 stmt ty$pointer not null, 
 //	 catalog_ varchar(128) character set utf8 not null, 
 //	 schema_ varchar(128) character set utf8 not null, 
@@ -1073,15 +1073,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind_null)
 
 FB_UDR_END_FUNCTION
 
-
-void describe_parameters(
-	const std::vector<short>& idx,
-	const std::vector<short>& type,
-	const std::vector<unsigned long>& size,
-	const std::vector<short>& scale);
-
-
-	//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 // create function describe_parameters (
 //	 stmt ty$pointer not null,
 // 	 idx smallint not null,
