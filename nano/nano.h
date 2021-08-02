@@ -199,16 +199,16 @@ namespace nano
 #define stmt_POINTER_INVALID	"Input parameter stmt_POINTER invalid."
 #define rslt_POINTER_INVALID	"Input parameter rslt_POINTER invalid."
 
-void fbPtr(char* cptr, int64_t iptr);
-int64_t nativePtr(const char* cptr);
+void fb_ptr(char* cptr, int64_t iptr);
+int64_t native_ptr(const char* cptr);
 
-FB_BOOLEAN fbBool(bool value);
-bool nativeBool(const ISC_UCHAR value);
+FB_BOOLEAN fb_bool(bool value);
+bool native_bool(const ISC_UCHAR value);
 
-nanodbc::connection* connPtr(const char* cptr);
-nanodbc::transaction* tnxPtr(const char* cptr);
-nanodbc::statement* stmtPtr(const char* cptr);
-nanodbc::result* rsltPtr(const char* cptr);
+nanodbc::connection* conn_ptr(const char* cptr);
+nanodbc::transaction* tnx_ptr(const char* cptr);
+nanodbc::statement* stmt_ptr(const char* cptr);
+nanodbc::result* rslt_ptr(const char* cptr);
 
 }
 

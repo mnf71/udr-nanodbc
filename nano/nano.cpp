@@ -26,50 +26,50 @@
 namespace nano
 {
 
-void fbPtr(char* cptr, int64_t iptr)
+void fb_ptr(char* cptr, int64_t iptr)
 {
 	memcpy(cptr, &iptr, 8);
 }
 
-int64_t nativePtr(const char* cptr)
+int64_t native_ptr(const char* cptr)
 {
 	int64_t iptr = 0;
 	memcpy(&iptr, cptr, 8);
 	return iptr;
 }
 
-FB_BOOLEAN fbBool(bool value)
+FB_BOOLEAN fb_bool(bool value)
 {	
 	return (value ? FB_TRUE : FB_FALSE);	
 }
 
-bool nativeBool(const FB_BOOLEAN value)
+bool native_bool(const FB_BOOLEAN value)
 {	
 	return (value == FB_TRUE ? true : value == FB_FALSE ? false : throw "Invalid FB_BOOLEAN value.");
 }
 
-nanodbc::connection* connPtr(const char* cptr)
+nanodbc::connection* conn_ptr(const char* cptr)
 {
 	int64_t conn = 0;
 	memcpy(&conn, cptr, 8);
 	return (nanodbc::connection*)conn;
 }
 
-nanodbc::transaction* tnxPtr(const char* cptr)
+nanodbc::transaction* tnx_ptr(const char* cptr)
 {
 	int64_t tnx = 0;
 	memcpy(&tnx, cptr, 8);
 	return (nanodbc::transaction*)tnx;
 }
 
-nanodbc::statement* stmtPtr(const char* cptr)
+nanodbc::statement* stmt_ptr(const char* cptr)
 {
 	int64_t stmt = 0;
 	memcpy(&stmt, cptr, 8);
 	return (nanodbc::statement*)stmt;
 }
 
-nanodbc::result* rsltPtr(const char* cptr)
+nanodbc::result* rslt_ptr(const char* cptr)
 {
 	int64_t rslt = 0;
 	memcpy(&rslt, cptr, 8);

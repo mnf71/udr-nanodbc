@@ -81,7 +81,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 				conn =
 					new nanodbc::connection
 						(NANODBC_TEXT(in->attr.str), NANODBC_TEXT(in->user.str), NANODBC_TEXT(in->pass.str), in->timeout);
-			nano::fbPtr(out->conn.str, (int64_t)conn);
+			nano::fb_ptr(out->conn.str, (int64_t)conn);
 			out->connNull = FB_FALSE;
 		}
 		catch (...)
@@ -119,12 +119,12 @@ FB_UDR_BEGIN_FUNCTION(conn_dispose)
 		{
 			try
 			{
-				delete nano::connPtr(in->conn.str);
+				delete nano::conn_ptr(in->conn.str);
 				out->connNull = FB_TRUE;
 			}
 			catch (...)
 			{
-				nano::fbPtr(out->conn.str, nano::nativePtr(in->conn.str));
+				nano::fb_ptr(out->conn.str, nano::native_ptr(in->conn.str));
 				out->connNull = FB_FALSE;
 				throw;
 			}
@@ -163,7 +163,7 @@ FB_UDR_BEGIN_FUNCTION(conn_allocate)
 		if (in->connNull == FB_FALSE)
 		{
 			out->blank = BLANK;
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				conn->allocate();
@@ -209,7 +209,7 @@ FB_UDR_BEGIN_FUNCTION(conn_deallocate)
 		if (in->connNull == FB_FALSE)
 		{
 			out->blank = BLANK;
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				conn->deallocate();
@@ -267,7 +267,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 		if (in->connNull == FB_FALSE)
 		{
 			out->blank = BLANK;
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				if (in->userNull == FB_TRUE && in->passNull == FB_TRUE)
@@ -316,10 +316,10 @@ FB_UDR_BEGIN_FUNCTION(conn_connected)
 	{
 		if (in->connNull == FB_FALSE)
 		{
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
-				out->connected = nano::fbBool(conn->connected());
+				out->connected = nano::fb_bool(conn->connected());
 				out->connectedNull = FB_FALSE;
 			}
 			catch (...)
@@ -362,7 +362,7 @@ FB_UDR_BEGIN_FUNCTION(conn_disconnect)
 		if (in->connNull == FB_FALSE)
 		{
 			out->blank = BLANK;
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				conn->disconnect();
@@ -407,7 +407,7 @@ FB_UDR_BEGIN_FUNCTION(conn_transactions)
 	{
 		if (in->connNull == FB_FALSE)
 		{
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				out->transactions = (ISC_LONG)conn->transactions();
@@ -454,7 +454,7 @@ FB_UDR_BEGIN_FUNCTION(conn_get_info)
 	{
 		if (in->connNull == FB_FALSE)
 		{
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				string info = conn->get_info<string>(in->info_type);
@@ -503,7 +503,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 	{
 		if (in->connNull == FB_FALSE)
 		{
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				string name = conn->dbms_name();
@@ -552,7 +552,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 	{
 		if (in->connNull == FB_FALSE)
 		{
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				string version = conn->dbms_version();
@@ -601,7 +601,7 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 	{
 		if (in->connNull == FB_FALSE)
 		{
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				string name = conn->driver_name();
@@ -650,7 +650,7 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 	{
 		if (in->connNull == FB_FALSE)
 		{
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				string name = conn->database_name();
@@ -699,7 +699,7 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 	{
 		if (in->connNull == FB_FALSE)
 		{
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				string name = conn->catalog_name();

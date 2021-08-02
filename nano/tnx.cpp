@@ -57,11 +57,11 @@ FB_UDR_BEGIN_FUNCTION(tnx_transaction)
 	{
 		if (in->connNull == FB_FALSE)
 		{
-			nanodbc::connection* conn = nano::connPtr(in->conn.str);
+			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				nanodbc::transaction* tnx = new nanodbc::transaction(*conn);
-				nano::fbPtr(out->tnx.str, (int64_t)tnx);
+				nano::fb_ptr(out->tnx.str, (int64_t)tnx);
 				out->tnxNull = FB_FALSE;
 			}
 			catch (...)
@@ -105,12 +105,12 @@ FB_UDR_BEGIN_FUNCTION(tnx_dispose)
 		{
 			try
 			{
-				delete nano::tnxPtr(in->tnx.str);
+				delete nano::tnx_ptr(in->tnx.str);
 				out->tnxNull = FB_TRUE;
 			}
 			catch (...)
 			{
-				nano::fbPtr(out->tnx.str, nano::nativePtr(in->tnx.str));
+				nano::fb_ptr(out->tnx.str, nano::native_ptr(in->tnx.str));
 				out->tnxNull = FB_FALSE;
 				throw;
 			}
@@ -149,7 +149,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_commit)
 		if (in->tnxNull == FB_FALSE)
 		{
 			out->blank = BLANK;
-			nanodbc::transaction* tnx = nano::tnxPtr(in->tnx.str);
+			nanodbc::transaction* tnx = nano::tnx_ptr(in->tnx.str);
 			try
 			{
 				tnx->commit();
@@ -195,7 +195,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 		if (in->tnxNull == FB_FALSE)
 		{
 			out->blank = BLANK;
-			nanodbc::transaction* tnx = nano::tnxPtr(in->tnx.str);
+			nanodbc::transaction* tnx = nano::tnx_ptr(in->tnx.str);
 			try
 			{
 				tnx->rollback();
@@ -240,11 +240,11 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 	{
 		if (in->tnxNull == FB_FALSE)
 		{
-			nanodbc::transaction* tnx = nano::tnxPtr(in->tnx.str);
+			nanodbc::transaction* tnx = nano::tnx_ptr(in->tnx.str);
 			try
 			{
 				nanodbc::connection conn = tnx->connection();
-				nano::fbPtr(out->conn.str, (int64_t)&conn);
+				nano::fb_ptr(out->conn.str, (int64_t)&conn);
 				out->connNull = FB_FALSE;
 			}
 			catch (...)
