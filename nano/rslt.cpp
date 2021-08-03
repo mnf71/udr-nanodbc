@@ -1249,14 +1249,14 @@ FB_UDR_BEGIN_FUNCTION(rslt_next_result)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function ready (
+// create function exist (
 //	 rslt ty$pointer not null, 
 //	) returns boolean
-//	external name 'nano!rslt_ready'
+//	external name 'nano!rslt_exist'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_ready)
+FB_UDR_BEGIN_FUNCTION(rslt_exist)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1265,7 +1265,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_ready)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_BOOLEAN, ready)
+		(FB_BOOLEAN, exist)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -1276,18 +1276,18 @@ FB_UDR_BEGIN_FUNCTION(rslt_ready)
 			try
 			{
 				bool bool_ = rslt;
-				out->ready = nano::fb_bool(bool_);
-				out->readyNull = FB_FALSE;
+				out->exist = nano::fb_bool(bool_);
+				out->existNull = FB_FALSE;
 			}
 			catch (...)
 			{
-				out->readyNull = FB_TRUE;
+				out->existNull = FB_TRUE;
 				throw;
 			}
 		}
 		else
 		{
-			 out->readyNull = FB_TRUE;
+			 out->existNull = FB_TRUE;
 			 throw rslt_POINTER_INVALID;
 		}
 	}

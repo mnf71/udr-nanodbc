@@ -21,7 +21,7 @@
  */
 
 #include "nano.h"
- 
+
 using namespace Firebird;
 
 //-----------------------------------------------------------------------------
@@ -30,8 +30,14 @@ using namespace Firebird;
 
 using namespace nanodbc;
 
+#include <variant>
+
 namespace nano
 {
+
+class params_array;
+
+params_array* batch_array;
 
 //-----------------------------------------------------------------------------
 // create function statement (
@@ -117,6 +123,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_dispose)
 			{
 				delete nano::stmt_ptr(in->stmt.str);
 				out->stmtNull = FB_TRUE;
+				delete &nano::batch_array;
 			}
 			catch (...)
 			{
@@ -350,6 +357,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_close)
 			{
 				stmt->close();
 				out->blankNull = FB_FALSE;
+				delete &batch_array;
 			}
 			catch (...)
 			{
@@ -450,6 +458,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_prepare)
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
 			{
+				delete &batch_array;
 				if (in->connNull == FB_FALSE)
 				{
 					nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
@@ -911,6 +920,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_reset_parameters)
 			{
 				stmt->reset_parameters();
 				out->blankNull = FB_FALSE;
+				delete &batch_array;
 			}
 			catch (...)
 			{
@@ -1002,7 +1012,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
 			try
 			{
 				out->size = stmt->parameter_size(in->param_index);
-				if (out->size < 0) out->size = -1; // BLOB
+				if (  out->size < 0) out->size = -1; // BLOB
 				out->sizeNull = FB_FALSE;
 			}
 			catch (...)
@@ -1012,7 +1022,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
 			}
 		}
 		else
-		{
+		{   
 			 out->sizeNull = FB_TRUE;
 			 throw stmt_POINTER_INVALID;
 		}
@@ -1021,7 +1031,131 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// todo: template <class T>	void bind
+// template <class T> void bind (...
+//
+// create function bind_[fb_type] (
+//	 stmt ty$pointer not null,
+// 	 param_index smallint not null,
+//   value_	[fb_type],
+//	) returns ty$nano_blank
+//	external name 'nano!stmt_bind'
+//	engine udr; 
+
+FB_UDR_BEGIN_FUNCTION(stmt_bind)
+	
+	unsigned inCount;
+
+	enum in : short {
+		stmt = 0, param_index, value_
+	};
+	enum out : short {
+		blank = 0
+	};
+
+	AutoArrayDelete<unsigned> inNullOffsets;
+	AutoArrayDelete<unsigned> inOffsets;
+	AutoArrayDelete<unsigned> inTypes;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> inMetadata(metadata->getInputMetadata(status));
+
+		inCount = inMetadata->getCount(status);
+		
+		inNullOffsets.reset(new unsigned[inCount]);
+		inOffsets.reset(new unsigned[inCount]);
+		inTypes.reset(new unsigned[inCount]);
+
+		for (unsigned i = 0; i < inCount; ++i)
+		{
+			inNullOffsets[i] = inMetadata->getNullOffset(status, i);
+			inOffsets[i] = inMetadata->getOffset(status, i);
+			inTypes[i] = inMetadata->getType(status, i);
+		}
+	}
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_BLANK, blank)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (*(ISC_SHORT*)(in + inNullOffsets[in::stmt]) == FB_FALSE)
+		{
+			out->blank = BLANK;
+			nanodbc::statement* stmt = nano::stmt_ptr((const char*)(in + inOffsets[in::stmt]));
+			const int batch_size = 1;
+			try
+			{
+				short param_index = *(ISC_SHORT*)(in + inOffsets[in::param_index]);
+				switch (inTypes[in::value_])
+				{
+					case SQL_TEXT: // char
+						break;
+					case SQL_VARYING : //varchar
+						break;
+					case SQL_SHORT: // smallint
+						stmt->bind(param_index, (ISC_SHORT*)(in + inOffsets[in::value_]));
+						break;
+					case SQL_LONG: // integer 
+						stmt->bind(param_index, (ISC_LONG*)(in + inOffsets[in::value_]));
+						break;
+					case SQL_FLOAT: // float
+						stmt->bind(param_index, (float*)(in + inOffsets[in::value_]));
+						break;
+					case SQL_DOUBLE: 
+					case SQL_D_FLOAT: // double precision
+						stmt->bind(param_index, (double*)(in + inOffsets[in::value_]));
+						break;
+					case SQL_TIMESTAMP: // timestamp
+						break;
+					case SQL_BLOB: // blob
+						break;
+					case SQL_ARRAY: // array
+						break;
+					case SQL_QUAD: // blob_id 
+						break;
+					case SQL_TYPE_TIME: // time
+						break;
+					case SQL_TYPE_DATE: // date
+						break;
+					case SQL_INT64: // bigint
+						stmt->bind(param_index, (ISC_INT64*)(in + inOffsets[in::value_]));
+						break;
+					case SQL_BOOLEAN: // boolean
+					{
+						int /* ? bool */ value_b = nano::native_bool(*(FB_BOOLEAN*)(in + inOffsets[in::value_]));
+						stmt->bind(param_index, &value_b);
+						break;
+					}
+					case SQL_NULL: // null
+					{
+						bool nulls[batch_size] = { true };
+						nanodbc::string::value_type value_s[batch_size][10] = { NANODBC_TEXT("") };
+						stmt->bind_strings(param_index, value_s, nulls);
+						break;
+					}
+					default:
+						break;
+				}
+				out->blankNull = FB_FALSE;
+			}
+			catch (...)
+			{
+				out->blankNull = FB_TRUE;
+				throw;
+			}
+		}
+		else
+		{
+			 out->blankNull = FB_TRUE;
+			 throw stmt_POINTER_INVALID;
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
 
 //-----------------------------------------------------------------------------
 // create function bind_null (
@@ -1128,6 +1262,86 @@ FB_UDR_BEGIN_FUNCTION(stmt_describe_parameters)
 	}
 
 FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+class params_array
+{
+	params_array(std::size_t size)
+	{
+		data_ = new param_values[size];
+		size_ = size;
+	};
+
+	~params_array() noexcept
+	{
+		clear();
+		delete[] data_;
+	};
+
+public:
+	template <class T>
+	void push(std::size_t index, T const* value)
+	{
+		data_[index].values.push_back(&value);
+	};
+
+	void push_null(std::size_t index)
+	{
+		data_[index].values.push_back('\0');
+	};
+
+	template <class T>
+	std::vector<T> data(std::size_t index)
+	{
+		return data_[index].values;
+	};
+
+	template <class T>
+	T* data(std::size_t index)
+	{
+		return (T*)data_[index].data();
+	};
+	
+	void clear()
+	{
+		for (std::size_t i = 0; i < size_; ++i) 
+			data_[i].values.clear();
+		size_ = 0;
+	}
+
+	explicit operator bool() const
+	{
+		return static_cast<bool>(data_);
+	};
+
+private:
+	struct param_values
+	{
+		std::vector<
+			std::variant<
+			short,
+			unsigned short,
+			int,
+			unsigned int,
+			long int,
+			unsigned long int,
+			long long,
+			unsigned long long,
+			float,
+			double,
+			date,
+			time,
+			timestamp,
+			std::string,
+			wide_string
+			>
+		> values;
+	};
+	param_values* data_;
+	std::size_t size_;
+
+};
+
 
 } // namespace nano
 

@@ -211,5 +211,4 @@ nanodbc::statement* stmt_ptr(const char* cptr);
 nanodbc::result* rslt_ptr(const char* cptr);
 
 }
-
 #endif	/* NANO_H */
