@@ -55,7 +55,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_dispose)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			try
 			{
@@ -100,7 +100,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_rowset_size)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -145,7 +145,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_affected_rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -190,7 +190,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_has_affected_rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -235,7 +235,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -280,7 +280,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_columns)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -325,7 +325,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_first)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -370,7 +370,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_last)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -415,7 +415,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_next)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -460,7 +460,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_prior)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -507,7 +507,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_move)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -554,7 +554,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_skip)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -599,7 +599,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_position)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -644,7 +644,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_at_end)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -694,13 +694,13 @@ FB_UDR_BEGIN_FUNCTION(rslt_unbind)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			out->blank = BLANK;
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
 			{
-				if (in->columnNull == FB_FALSE)
+				if (!in->columnNull)
 				{
 					if (!isdigit(in->column.str[0]))
 						rslt->unbind(NANODBC_TEXT(in->column.str));
@@ -756,7 +756,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_null)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -809,7 +809,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_bound)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -859,7 +859,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -906,7 +906,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -960,7 +960,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_size)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -1013,7 +1013,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_decimal_digits)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -1066,7 +1066,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -1119,7 +1119,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -1177,7 +1177,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_c_datatype)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -1225,7 +1225,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_next_result)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
@@ -1270,7 +1270,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_exist)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->rsltNull == FB_FALSE)
+		if (!in->rsltNull)
 		{
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try

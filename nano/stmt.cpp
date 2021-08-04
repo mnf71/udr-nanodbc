@@ -73,10 +73,10 @@ FB_UDR_BEGIN_FUNCTION(stmt_statement)
 		try
 		{
 			nanodbc::statement* stmt;
-			if (in->connNull == FB_FALSE)
+			if (!in->connNull)
 			{
 				nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
-				if (in->queryNull == FB_FALSE)
+				if (!in->queryNull)
 					stmt = new nanodbc::statement(*conn, NANODBC_TEXT(in->query.str), in->timeout);
 				else
 					stmt = new nanodbc::statement(*conn);
@@ -117,7 +117,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_dispose)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			try
 			{
@@ -165,11 +165,11 @@ FB_UDR_BEGIN_FUNCTION(stmt_open)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
-			if (in->connNull == FB_TRUE) throw conn_POINTER_INVALID;
+			if (in->connNull) throw conn_POINTER_INVALID;
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
@@ -213,7 +213,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_opened)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
@@ -258,7 +258,7 @@ FB_UDR_MESSAGE(
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
@@ -303,7 +303,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
@@ -349,7 +349,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_close)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
@@ -396,7 +396,7 @@ FB_UDR_MESSAGE(
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
@@ -452,14 +452,14 @@ FB_UDR_BEGIN_FUNCTION(stmt_prepare)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
 			{
 				delete &batch_array;
-				if (in->connNull == FB_FALSE)
+				if (!in->connNull)
 				{
 					nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 					stmt->prepare(*conn, NANODBC_TEXT(in->query.str), in->timeout);
@@ -506,7 +506,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_timeout)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
@@ -560,10 +560,10 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute_direct)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
-			if (in->connNull == FB_TRUE) throw conn_POINTER_INVALID;
+			if (in->connNull) throw conn_POINTER_INVALID;
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
@@ -617,11 +617,11 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute_direct)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
-			if (in->connNull == FB_TRUE) throw conn_POINTER_INVALID;
+			if (in->connNull) throw conn_POINTER_INVALID;
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
@@ -669,7 +669,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
@@ -719,7 +719,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
@@ -773,7 +773,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_procedure_columns)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
@@ -821,7 +821,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_affected_rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
@@ -866,7 +866,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_columns)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
@@ -912,7 +912,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_reset_parameters)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
@@ -959,7 +959,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameters)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
@@ -1006,7 +1006,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
@@ -1043,34 +1043,37 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(stmt_bind)
 	
-	unsigned inCount;
+	unsigned in_count;
 
 	enum in : short {
-		stmt = 0, param_index, value_
+		stmt = 0, param_index, value
 	};
 	enum out : short {
 		blank = 0
 	};
 
-	AutoArrayDelete<unsigned> inNullOffsets;
-	AutoArrayDelete<unsigned> inOffsets;
-	AutoArrayDelete<unsigned> inTypes;
+	AutoArrayDelete<unsigned> in_offsets;
+	AutoArrayDelete<unsigned> in_null_offsets;
+	AutoArrayDelete<unsigned> in_types;
+	AutoArrayDelete<unsigned> in_char_sets;
 
 	FB_UDR_CONSTRUCTOR
 	{
-		AutoRelease<IMessageMetadata> inMetadata(metadata->getInputMetadata(status));
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
-		inCount = inMetadata->getCount(status);
+		in_count = in_metadata->getCount(status);
 		
-		inNullOffsets.reset(new unsigned[inCount]);
-		inOffsets.reset(new unsigned[inCount]);
-		inTypes.reset(new unsigned[inCount]);
+		in_offsets.reset(new unsigned[in_count]);
+		in_null_offsets.reset(new unsigned[in_count]);
+		in_types.reset(new unsigned[in_count]);
+		in_char_sets.reset(new unsigned[in_count]);
 
-		for (unsigned i = 0; i < inCount; ++i)
+		for (unsigned i = 0; i < in_count; ++i)
 		{
-			inNullOffsets[i] = inMetadata->getNullOffset(status, i);
-			inOffsets[i] = inMetadata->getOffset(status, i);
-			inTypes[i] = inMetadata->getType(status, i);
+			in_offsets[i] = in_metadata->getOffset(status, i);
+			in_null_offsets[i] = in_metadata->getNullOffset(status, i);
+			in_types[i] = in_metadata->getType(status, i);
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
 		}
 	}
 
@@ -1081,32 +1084,55 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (*(ISC_SHORT*)(in + inNullOffsets[in::stmt]) == FB_FALSE)
+		if (!*(ISC_SHORT*)(in + in_null_offsets[in::stmt]))
 		{
 			out->blank = BLANK;
-			nanodbc::statement* stmt = nano::stmt_ptr((const char*)(in + inOffsets[in::stmt]));
-			const int batch_size = 1;
+			nanodbc::statement* stmt = nano::stmt_ptr((const char*)(in + in_offsets[in::stmt]));
+			const int single_batch = 1;
 			try
 			{
-				short param_index = *(ISC_SHORT*)(in + inOffsets[in::param_index]);
-				switch (inTypes[in::value_])
+				short param_index = *(ISC_SHORT*)(in + in_offsets[in::param_index]);
+				switch (in_types[in::value])
 				{
 					case SQL_TEXT: // char
+					{
+						//if (in_char_sets[in::value] == /* UTF8 */ 4) 
+						//{
+						//}
+						//else 
+						{
+							std::size_t length_s = strlen((char*)(in + in_offsets[in::value]));
+							nanodbc::string value_s(++length_s, '\0');
+							value_s = (char*)(in + in_offsets[in::value]);
+							stmt->bind(param_index, value_s.c_str());
+						}
 						break;
-					case SQL_VARYING : //varchar
+					}
+					case SQL_VARYING: // varchar
+					{
+						//if (in_char_sets[in::value] == /* UTF8 */ 4) 
+						//{
+						//}
+						//else 
+						{
+							std::size_t length_s = *(ISC_USHORT*)(in + in_offsets[in::value]);
+							nanodbc::string value_s(++length_s, '\0');
+							value_s = (char*)(in + sizeof(ISC_USHORT) + in_offsets[in::value]);
+							stmt->bind(param_index, value_s.c_str());
+						}
 						break;
-					case SQL_SHORT: // smallint
-						stmt->bind(param_index, (ISC_SHORT*)(in + inOffsets[in::value_]));
+					}
+					case SQL_SHORT: // smallint 
+						stmt->bind(param_index, (ISC_SHORT*)(in + in_offsets[in::value]));
 						break;
 					case SQL_LONG: // integer 
-						stmt->bind(param_index, (ISC_LONG*)(in + inOffsets[in::value_]));
+						stmt->bind(param_index, (ISC_LONG*)(in + in_offsets[in::value]));
 						break;
 					case SQL_FLOAT: // float
-						stmt->bind(param_index, (float*)(in + inOffsets[in::value_]));
+						stmt->bind(param_index, (float*)(in + in_offsets[in::value]));
 						break;
-					case SQL_DOUBLE: 
-					case SQL_D_FLOAT: // double precision
-						stmt->bind(param_index, (double*)(in + inOffsets[in::value_]));
+					case SQL_DOUBLE, SQL_D_FLOAT: // double precision
+						stmt->bind(param_index, (double*)(in + in_offsets[in::value]));
 						break;
 					case SQL_TIMESTAMP: // timestamp
 						break;
@@ -1121,18 +1147,19 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 					case SQL_TYPE_DATE: // date
 						break;
 					case SQL_INT64: // bigint
-						stmt->bind(param_index, (ISC_INT64*)(in + inOffsets[in::value_]));
+						stmt->bind(param_index, (ISC_INT64*)(in + in_offsets[in::value]));
 						break;
 					case SQL_BOOLEAN: // boolean
 					{
-						int /* ? bool */ value_b = nano::native_bool(*(FB_BOOLEAN*)(in + inOffsets[in::value_]));
-						stmt->bind(param_index, &value_b);
-						break;
+						nanodbc::string value_b(sizeof("FALSE"), '\0');
+						value_b = (*(FB_BOOLEAN*)(in + in_offsets[in::value])) ? "TRUE" : "FALSE";
+						stmt->bind(param_index, value_b.c_str());
+						break; 
 					}
 					case SQL_NULL: // null
 					{
-						bool nulls[batch_size] = { true };
-						nanodbc::string::value_type value_s[batch_size][10] = { NANODBC_TEXT("") };
+						bool nulls[single_batch] = { true };
+						nanodbc::string::value_type value_s[single_batch][1] = { NANODBC_TEXT(0) };
 						stmt->bind_strings(param_index, value_s, nulls);
 						break;
 					}
@@ -1183,7 +1210,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind_null)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
@@ -1237,7 +1264,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_describe_parameters)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);

@@ -55,7 +55,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_transaction)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
@@ -101,7 +101,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_dispose)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->tnxNull == FB_FALSE)
+		if (!in->tnxNull)
 		{
 			try
 			{
@@ -146,7 +146,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_commit)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->tnxNull == FB_FALSE)
+		if (!in->tnxNull)
 		{
 			out->blank = BLANK;
 			nanodbc::transaction* tnx = nano::tnx_ptr(in->tnx.str);
@@ -192,7 +192,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->tnxNull == FB_FALSE)
+		if (!in->tnxNull)
 		{
 			out->blank = BLANK;
 			nanodbc::transaction* tnx = nano::tnx_ptr(in->tnx.str);
@@ -238,7 +238,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->tnxNull == FB_FALSE)
+		if (!in->tnxNull)
 		{
 			nanodbc::transaction* tnx = nano::tnx_ptr(in->tnx.str);
 			try

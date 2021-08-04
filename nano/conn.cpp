@@ -70,9 +70,9 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 		try
 		{
 			nanodbc::connection* conn;
-			if (in->userNull == FB_TRUE && in->passNull == FB_TRUE)
+			if (in->userNull && in->passNull)
 			{
-				if (in->attrNull == FB_FALSE)
+				if (!in->attrNull) 
 					conn = new nanodbc::connection(NANODBC_TEXT(in->attr.str), in->timeout);
 				else
 					conn = new nanodbc::connection();
@@ -115,7 +115,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dispose)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull) 
 		{
 			try
 			{
@@ -160,7 +160,7 @@ FB_UDR_BEGIN_FUNCTION(conn_allocate)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull) 
 		{
 			out->blank = BLANK;
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
@@ -206,7 +206,7 @@ FB_UDR_BEGIN_FUNCTION(conn_deallocate)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			out->blank = BLANK;
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
@@ -264,13 +264,13 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			out->blank = BLANK;
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
-				if (in->userNull == FB_TRUE && in->passNull == FB_TRUE)
+				if (in->userNull && in->passNull)
 					conn->connect(NANODBC_TEXT(in->attr.str), in->timeout);
 				else
 					conn->connect
@@ -314,7 +314,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connected)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
@@ -359,7 +359,7 @@ FB_UDR_BEGIN_FUNCTION(conn_disconnect)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			out->blank = BLANK;
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
@@ -405,7 +405,7 @@ FB_UDR_BEGIN_FUNCTION(conn_transactions)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
@@ -452,7 +452,7 @@ FB_UDR_BEGIN_FUNCTION(conn_get_info)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
@@ -501,7 +501,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
@@ -550,7 +550,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
@@ -599,7 +599,7 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
@@ -648,7 +648,7 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
@@ -697,7 +697,7 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try

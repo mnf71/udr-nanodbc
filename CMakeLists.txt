@@ -38,6 +38,8 @@ add_library(nano SHARED ${files})
 set_property(TARGET nano PROPERTY CXX_STANDARD 17)
 set_property(TARGET nano PROPERTY CXX_STANDARD_REQUIRED ON)
 
+set_target_properties(nano PROPERTIES LINK_FLAGS "/DEF:\"${CMAKE_SOURCE_DIR}/defs/udr_plugin.def\"") 
+
 target_link_libraries(nano PUBLIC ${ODBC} nanodbc firebird)
 
 

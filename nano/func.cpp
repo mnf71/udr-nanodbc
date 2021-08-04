@@ -71,7 +71,7 @@ FB_UDR_BEGIN_FUNCTION(func_execute_conn)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
@@ -124,7 +124,7 @@ FB_UDR_BEGIN_FUNCTION(func_just_execute_conn)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->connNull == FB_FALSE)
+		if (!in->connNull)
 		{
 			out->blank = BLANK;
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
@@ -173,7 +173,7 @@ FB_UDR_BEGIN_FUNCTION(func_execute_stmt)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
@@ -221,7 +221,7 @@ FB_UDR_BEGIN_FUNCTION(func_just_execute_stmt)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
@@ -269,7 +269,7 @@ FB_UDR_BEGIN_FUNCTION(func_transact_stmt)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
@@ -317,7 +317,7 @@ FB_UDR_BEGIN_FUNCTION(func_just_transact_stmt)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
@@ -367,7 +367,7 @@ FB_UDR_BEGIN_FUNCTION(func_prepare_stmt)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (in->stmtNull == FB_FALSE)
+		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
