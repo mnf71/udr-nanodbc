@@ -45,7 +45,7 @@ FB_BOOLEAN fb_bool(bool value)
 
 bool native_bool(const FB_BOOLEAN value)
 {	
-	return (value == FB_TRUE ? true : value == FB_FALSE ? false : throw "Invalid FB_BOOLEAN value.");
+	return (value ? true : !value ? false : throw "Invalid FB_BOOLEAN value.");
 }
 
 nanodbc::connection* conn_ptr(const char* cptr)
