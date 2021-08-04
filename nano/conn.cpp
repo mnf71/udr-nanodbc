@@ -67,6 +67,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
+		FB_UDR_STATUS_TYPE t(status);
 		try
 		{
 			nanodbc::connection* conn;
@@ -84,10 +85,10 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 			nano::fb_ptr(out->conn.str, (int64_t)conn);
 			out->connNull = FB_FALSE;
 		}
-		catch (...)
+		catch (std::runtime_error const& e)
 		{
 			out->connNull = FB_TRUE;
-			throw;
+			NANO_THROW_ERROR(e.what());
 		}
 	}
 
@@ -122,17 +123,17 @@ FB_UDR_BEGIN_FUNCTION(conn_dispose)
 				delete nano::conn_ptr(in->conn.str);
 				out->connNull = FB_TRUE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				nano::fb_ptr(out->conn.str, nano::native_ptr(in->conn.str));
 				out->connNull = FB_FALSE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->connNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -169,16 +170,16 @@ FB_UDR_BEGIN_FUNCTION(conn_allocate)
 				conn->allocate();
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->blankNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -215,16 +216,16 @@ FB_UDR_BEGIN_FUNCTION(conn_deallocate)
 				conn->deallocate();
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->blankNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -277,16 +278,16 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 						(NANODBC_TEXT(in->attr.str), NANODBC_TEXT(in->user.str), NANODBC_TEXT(in->pass.str), in->timeout);
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->blankNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -322,16 +323,16 @@ FB_UDR_BEGIN_FUNCTION(conn_connected)
 				out->connected = nano::fb_bool(conn->connected());
 				out->connectedNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->connectedNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->connectedNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -368,16 +369,16 @@ FB_UDR_BEGIN_FUNCTION(conn_disconnect)
 				conn->disconnect();
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->blankNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -413,16 +414,16 @@ FB_UDR_BEGIN_FUNCTION(conn_transactions)
 				out->transactions = (ISC_LONG)conn->transactions();
 				out->transactionsNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->transactionsNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->transactionsNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -464,16 +465,16 @@ FB_UDR_BEGIN_FUNCTION(conn_get_info)
 				memcpy(out->info.str, info.c_str(), out->info.length);
 				out->infoNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->infoNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->infoNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -513,16 +514,16 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 				memcpy(out->name.str, name.c_str(), out->name.length);
 				out->nameNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->nameNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->nameNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -562,16 +563,16 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 				memcpy(out->version.str, version.c_str(), out->version.length);
 				out->versionNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->versionNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->versionNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -611,16 +612,16 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 				memcpy(out->name.str, name.c_str(), out->name.length);
 				out->nameNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->nameNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->nameNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -660,16 +661,16 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 				memcpy(out->name.str, name.c_str(), out->name.length);
 				out->nameNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->nameNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->nameNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -709,16 +710,16 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 				memcpy(out->name.str, name.c_str(), out->name.length);
 				out->nameNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->nameNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->nameNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 

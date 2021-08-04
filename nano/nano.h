@@ -189,15 +189,20 @@ namespace
 namespace nano
 {
 
+#define	NANO_THROW_ERROR(error_message)	\
+	ISC_STATUS_ARRAY vector =	\
+		{ isc_arg_gds, isc_random, isc_arg_string, (ISC_STATUS)(error_message), isc_arg_end };	\
+	status->setErrors(vector);	/* NANO_THROW_ERROR */
+
 #define	NANO_POINTER			FB_CHAR(8)	// domain types
 #define	NANO_BLANK				FB_INTEGER	//
 
 #define	BLANK					-1			// void function emulation
 
-#define conn_POINTER_INVALID	"Input parameter conn_POINTER invalid."
-#define tnx_POINTER_INVALID		"Input parameter tnx_POINTER invalid."
-#define stmt_POINTER_INVALID	"Input parameter stmt_POINTER invalid."
-#define rslt_POINTER_INVALID	"Input parameter rslt_POINTER invalid."
+#define INVALID_CONN_POINTER	"Input parameter CONNECTION invalid."
+#define INVALID_TNX_POINTER		"Input parameter TRANSACTION invalid."
+#define INVALID_STMT_POINTER	"Input parameter STATEMENT invalid."
+#define INVALID_RSLT_POINTER	"Input parameter RESULT invalid."
 
 void fb_ptr(char* cptr, int64_t iptr);
 int64_t native_ptr(const char* cptr);

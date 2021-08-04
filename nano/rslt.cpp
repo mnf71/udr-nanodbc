@@ -62,17 +62,17 @@ FB_UDR_BEGIN_FUNCTION(rslt_dispose)
 				delete nano::rslt_ptr(in->rslt.str);
 				out->rsltNull = FB_TRUE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				nano::fb_ptr(out->rslt.str, nano::native_ptr(in->rslt.str));
 				out->rsltNull = FB_FALSE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->rsltNull = FB_TRUE;
-			 throw tnx_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_TNX_POINTER);
 		}
 	}
 
@@ -108,16 +108,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_rowset_size)
 				out->size = rslt->rowset_size();
 				out->sizeNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->sizeNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->sizeNull = FB_TRUE;
-			throw rslt_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -153,16 +153,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_affected_rows)
 				out->affected = rslt->affected_rows();
 				out->affectedNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->affectedNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->affectedNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -198,16 +198,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_has_affected_rows)
 				out->has_affected = nano::fb_bool(rslt->has_affected_rows());
 				out->has_affectedNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->has_affectedNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->has_affectedNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -243,16 +243,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_rows)
 				out->rows = rslt->rows();
 				out->rowsNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->rowsNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->rowsNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -288,16 +288,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_columns)
 				out->columns = rslt->columns();
 				out->columnsNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->columnsNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->columnsNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -333,16 +333,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_first)
 				out->succes = nano::fb_bool(rslt->first());
 				out->succesNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->succesNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->succesNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -378,16 +378,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_last)
 				out->succes = nano::fb_bool(rslt->last());
 				out->succesNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->succesNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->succesNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -423,16 +423,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_next)
 				out->succes = nano::fb_bool(rslt->next());
 				out->succesNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->succesNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->succesNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -468,16 +468,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_prior)
 				out->succes = nano::fb_bool(rslt->prior());
 				out->succesNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->succesNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->succesNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -515,16 +515,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_move)
 				out->succes = nano::fb_bool(rslt->move(in->row));
 				out->succesNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->succesNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->succesNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -562,16 +562,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_skip)
 				out->succes = nano::fb_bool(rslt->skip(in->rows));
 				out->succesNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->succesNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->succesNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -607,16 +607,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_position)
 				out->position = rslt->position();
 				out->positionNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->positionNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->positionNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -652,16 +652,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_at_end)
 				out->at_end = nano::fb_bool(rslt->at_end());
 				out->at_endNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->at_endNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->at_endNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -711,16 +711,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_unbind)
 					rslt->unbind();
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -767,16 +767,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_null)
 					out->is_null = nano::fb_bool(rslt->is_null((short)atoi(in->column.str)));
 				out->is_nullNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->is_nullNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->is_nullNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -820,16 +820,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_bound)
 					out->is_null = nano::fb_bool(rslt->is_bound((short)atoi(in->column.str)));
 				out->is_nullNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->is_nullNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->is_nullNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -867,16 +867,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_column)
 				out->column = rslt->column(NANODBC_TEXT(in->column_name.str));
 				out->columnNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->columnNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->columnNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -918,16 +918,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_name)
 				memcpy(out->column_name.str, column_name.c_str(), out->column_name.length);
 				out->column_nameNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->column_nameNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->column_nameNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -971,16 +971,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_size)
 					out->size = rslt->column_size((short)atoi(in->column.str));
 				out->sizeNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->sizeNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->sizeNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -1024,16 +1024,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_decimal_digits)
 					out->digits = rslt->column_decimal_digits((short)atoi(in->column.str));
 				out->digitsNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->digitsNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->digitsNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -1077,16 +1077,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype)
 					out->datatype = rslt->column_datatype((short)atoi(in->column.str));
 				out->datatypeNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->datatypeNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->datatypeNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -1135,16 +1135,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype_name)
 				memcpy(out->datatype_name.str, datatype_name.c_str(), out->datatype_name.length);
 				out->datatype_nameNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->datatype_nameNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->datatype_nameNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -1188,16 +1188,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_c_datatype)
 					out->c_datatype = rslt->column_c_datatype((short)atoi(in->column.str));
 				out->c_datatypeNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->c_datatypeNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->c_datatypeNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -1233,16 +1233,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_next_result)
 				out->succes = nano::fb_bool(rslt->next_result());
 				out->succesNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->succesNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->succesNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 
@@ -1279,16 +1279,16 @@ FB_UDR_BEGIN_FUNCTION(rslt_exist)
 				out->exist = nano::fb_bool(bool_);
 				out->existNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->existNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->existNull = FB_TRUE;
-			 throw rslt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
 

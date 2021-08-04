@@ -86,10 +86,10 @@ FB_UDR_BEGIN_FUNCTION(stmt_statement)
 			nano::fb_ptr(out->stmt.str, (int64_t)stmt);
 			out->stmtNull = FB_FALSE;
 		}	
-		catch (...)
+		catch (std::runtime_error const& e)
 		{
 			out->stmtNull = FB_TRUE;
-			throw;
+			NANO_THROW_ERROR(e.what());
 		}
 	}
 
@@ -125,20 +125,20 @@ FB_UDR_BEGIN_FUNCTION(stmt_dispose)
 				out->stmtNull = FB_TRUE;
 				delete &nano::batch_array;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				nano::fb_ptr(out->stmt.str, nano::native_ptr(in->stmt.str));
 				out->stmtNull = FB_FALSE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->stmtNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
-
+		
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
@@ -169,23 +169,23 @@ FB_UDR_BEGIN_FUNCTION(stmt_open)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
-			if (in->connNull) throw conn_POINTER_INVALID;
+			if (in->connNull) { NANO_THROW_ERROR(INVALID_CONN_POINTER); }
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				stmt->open(*conn);
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -221,16 +221,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_opened)
 				out->opened = nano::fb_bool(stmt->open());
 				out->openedNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->openedNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->openedNull = FB_TRUE;
-			throw stmt_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -266,16 +266,16 @@ FB_UDR_MESSAGE(
 				out->connected = nano::fb_bool(stmt->connected());
 				out->connectedNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->connectedNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->connectedNull = FB_TRUE;
-			throw stmt_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -312,16 +312,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_connection)
 				nano::fb_ptr(out->conn.str, (int64_t)&conn);
 				out->connNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->connNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->connNull = FB_TRUE;
-			 throw tnx_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -359,16 +359,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_close)
 				out->blankNull = FB_FALSE;
 				delete &batch_array;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -405,16 +405,16 @@ FB_UDR_MESSAGE(
 				stmt->cancel();
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -467,16 +467,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_prepare)
 				else
 					stmt->prepare(NANODBC_TEXT(in->query.str), in->timeout);
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -515,16 +515,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_timeout)
 				stmt->timeout(in->timeout);
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -563,7 +563,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute_direct)
 		if (!in->stmtNull)
 		{
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
-			if (in->connNull) throw conn_POINTER_INVALID;
+			if (in->connNull) { NANO_THROW_ERROR(INVALID_CONN_POINTER); }
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
@@ -572,16 +572,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute_direct)
 				nano::fb_ptr(out->rslt.str, (int64_t)&rslt);
 				out->rsltNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->rsltNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->rsltNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -621,23 +621,23 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute_direct)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
-			if (in->connNull) throw conn_POINTER_INVALID;
+			if (in->connNull) { NANO_THROW_ERROR(INVALID_CONN_POINTER); }
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
 				stmt->just_execute_direct(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -678,16 +678,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute)
 				nano::fb_ptr(out->rslt.str, (int64_t)&rslt);
 				out->rsltNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->rsltNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->rsltNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -728,16 +728,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute)
 				stmt->just_execute(in->batch_operations, in->timeout);
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -784,16 +784,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_procedure_columns)
 				nano::fb_ptr(out->rslt.str, (int64_t)&rslt);
 				out->rsltNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->rsltNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->rsltNull = FB_TRUE;
-			throw stmt_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -829,16 +829,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_affected_rows)
 				out->affected = stmt->affected_rows();
 				out->affectedNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->affectedNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->affectedNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -874,16 +874,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_columns)
 				out->columns = stmt->columns();
 				out->columnsNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->columnsNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->columnsNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -922,16 +922,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_reset_parameters)
 				out->blankNull = FB_FALSE;
 				delete &batch_array;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -967,16 +967,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameters)
 				out->parameters = stmt->parameters();
 				out->parametersNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->parametersNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->parametersNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -1015,16 +1015,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
 				if (  out->size < 0) out->size = -1; // BLOB
 				out->sizeNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->sizeNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{   
 			 out->sizeNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -1168,16 +1168,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 				}
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -1219,16 +1219,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind_null)
 				stmt->bind_null(in->param_index, in->batch_size);
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 
@@ -1275,16 +1275,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_describe_parameters)
 					 std::vector<short>(in->scale));
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw stmt_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
 		}
 	}
 

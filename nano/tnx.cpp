@@ -64,16 +64,16 @@ FB_UDR_BEGIN_FUNCTION(tnx_transaction)
 				nano::fb_ptr(out->tnx.str, (int64_t)tnx);
 				out->tnxNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->tnxNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			out->tnxNull = FB_TRUE;
-			throw conn_POINTER_INVALID;
+			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
 
@@ -108,17 +108,17 @@ FB_UDR_BEGIN_FUNCTION(tnx_dispose)
 				delete nano::tnx_ptr(in->tnx.str);
 				out->tnxNull = FB_TRUE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				nano::fb_ptr(out->tnx.str, nano::native_ptr(in->tnx.str));
 				out->tnxNull = FB_FALSE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->tnxNull = FB_TRUE;
-			 throw tnx_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_TNX_POINTER);
 		}
 	}
 
@@ -155,16 +155,16 @@ FB_UDR_BEGIN_FUNCTION(tnx_commit)
 				tnx->commit();
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw tnx_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_TNX_POINTER);
 		}
 	}
 
@@ -201,16 +201,16 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 				tnx->rollback();
 				out->blankNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 throw tnx_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_TNX_POINTER);
 		}
 	}
 
@@ -247,16 +247,16 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 				nano::fb_ptr(out->conn.str, (int64_t)&conn);
 				out->connNull = FB_FALSE;
 			}
-			catch (...)
+			catch (std::runtime_error const& e)
 			{
 				out->connNull = FB_TRUE;
-				throw;
+				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
 			 out->connNull = FB_TRUE;
-			 throw tnx_POINTER_INVALID;
+			 NANO_THROW_ERROR(INVALID_TNX_POINTER);
 		}
 	}
 
