@@ -48,7 +48,7 @@ namespace nano
 //	 conn ty$pointer not null, 
 //   query varchar(8191) character set utf8 not null,
 // 	 batch_operations integer not null default 1 
-// 	 timeout integer not null default 0 
+// 	 timeout integer not null default 0, 
 //	) returns ty$pointer
 //	external name 'nano!func_execute_conn'
 //	engine udr; 
@@ -100,7 +100,7 @@ FB_UDR_END_FUNCTION
 // create function just_execute_conn (
 //	 conn ty$pointer not null, 
 //   query varchar(8191) character set utf8 not null,
-// 	 batch_operations integer not null default 1 
+// 	 batch_operations integer not null default 1, 
 // 	 timeout integer not null default 0 
 //	) returns ty$nano_blank
 //	external name 'nano!func_just_execute_conn'

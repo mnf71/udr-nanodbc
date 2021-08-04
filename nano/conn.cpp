@@ -67,7 +67,6 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		FB_UDR_STATUS_TYPE t(status);
 		try
 		{
 			nanodbc::connection* conn;
