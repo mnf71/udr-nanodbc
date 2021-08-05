@@ -34,25 +34,12 @@ using namespace nanodbc;
 namespace nano
 {
 
-//-----------------------------------------------------------------------------
-// create function connection (
-//	 attr varchar(512) character set utf8 default null, 
-//	 user varchar(63) character set utf8 default null, 
-//	 pass varchar(63) character set utf8 default null, 
-	//	 timeout integer not null default 0 
-	//	) returns ty$pointer
-	//	external name 'nano!conn_connection'
-	//	engine udr; 
-	//
-	// \brief
-	// connection (null, null, null, ...) returns new connection object, initially not connected	
-	// connection (?, null, null, ...) returns new connection object and immediately connect by SQLDriverConnect
-	// connection (?, ?, ?, ...) returns new connection object and immediately connect by SQLConnect
-	//
+char last_error_message[ERROR_MESSAGE_LENGTH] = { 0 };
 
 //-----------------------------------------------------------------------------
 // create function connection (
 //	 attr varchar(512) character set utf8 default null, 
+//	 odbc_locale varchar(10) character set none not null default '.1251',
 //	 user varchar(63) character set utf8 default null, 
 //	 pass varchar(63) character set utf8 default null, 
 //	 timeout integer not null default 0 
@@ -61,16 +48,37 @@ namespace nano
 //	engine udr; 
 //
 // \brief
-// connection (null, null, null, ...) returns new connection object, initially not connected	
-// connection (?, null, null, ...) returns new connection object and immediately connect by SQLDriverConnect
-// connection (?, ?, ?, ...) returns new connection object and immediately connect by SQLConnect
+// connection (null, ?, null, null, ...) returns new connection object, initially not connected	
+// connection (?, ?, null, null, ...) returns new connection object and immediately connect by SQLDriverConnect
+// connection (?, ?, ?, ?, ...) returns new connection object and immediately connect by SQLConnect
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_connection)
 
+	unsigned in_count;
+
+	enum in : short {
+		attr = 0, odbc_locale, user, pass
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(FB_VARCHAR(512 * 4), attr)
+		(FB_VARCHAR(10), odbc_locale)
 		(FB_VARCHAR(63 * 4), user)
 		(FB_VARCHAR(63 * 4), pass)
 		(FB_INTEGER, timeout)
@@ -85,6 +93,11 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 	{
 		try
 		{
+			strncpy_s(nano::odbc_locale, in->odbc_locale.length + 1, in->odbc_locale.str, _TRUNCATE);
+			if (in_char_sets[in::attr] == /* UTF8 */ 4) utf8_to_odbc_locale(in->attr.str, in->attr.str);
+			if (in_char_sets[in::user] == /* UTF8 */ 4) utf8_to_odbc_locale(in->user.str, in->user.str);
+			if (in_char_sets[in::pass] == /* UTF8 */ 4) utf8_to_odbc_locale(in->pass.str, in->pass.str);
+
 			nanodbc::connection* conn;
 			if (in->userNull && in->passNull)
 			{
@@ -251,7 +264,7 @@ FB_UDR_END_FUNCTION
 //	 conn ty$pointer not null, 
 //	 attr varchar(512) character set utf8 not null, 
 //	 user varchar(64) character set utf8 default null, 
-//	 pass varchar(64) character set utf8 default null, 
+// 	 pass varchar(64) character set utf8 default null, 
 //	 timeout integer not null default = 0
 //	) returns ty$nano_blank
 //	external name 'nano!conn_connect'
@@ -268,6 +281,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 		InMessage,
 		(NANO_POINTER, conn)
 		(FB_VARCHAR(512 * 4), attr)
+		(FB_VARCHAR(10), odbc_locale)
 		(FB_VARCHAR(63 * 4), user)
 		(FB_VARCHAR(63 * 4), pass)
 		(FB_INTEGER, timeout)
@@ -736,6 +750,30 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 			out->nameNull = FB_TRUE;
 			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function e_message 
+//	returns varchar(512) character set utf8
+//	external name 'nano!conn_e_message'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(conn_e_message)
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_VARCHAR(512 * 4), e_msg)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		out->e_msgNull = FB_FALSE;
+		out->e_msg.length = (ISC_SHORT)strlen(nano::last_error_message);
+		memcpy(out->e_msg.str, nano::last_error_message, out->e_msg.length);
+		odbc_locale_to_utf8(out->e_msg.str, out->e_msg.str);
 	}
 
 FB_UDR_END_FUNCTION

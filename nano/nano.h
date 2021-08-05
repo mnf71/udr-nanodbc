@@ -189,21 +189,18 @@ namespace
 namespace nano
 {
 
-static char last_error_message[512] = { 0 };
-
+#define ERROR_MESSAGE_LENGTH	512
 #define	NANO_THROW_ERROR(error_message)	\
 	ISC_STATUS_ARRAY vector =	\
 		{ isc_arg_gds, isc_random, isc_arg_string, (ISC_STATUS)(error_message), isc_arg_end };	\
 	status->setErrors(vector);	\
-    std::size_t error_message_length = strlen((error_message));	\
-	memcpy(	\
-		last_error_message, (error_message),	\
-		error_message_length > sizeof(last_error_message) ? sizeof(last_error_message) : error_message_length	\
-	);  /* NANO_THROW_ERROR */
+	strncpy_s(nano::last_error_message, ERROR_MESSAGE_LENGTH + 1, (error_message), _TRUNCATE);  /* NANO_THROW_ERROR */
+
+extern char last_error_message[ERROR_MESSAGE_LENGTH];
 
 #define	NANO_POINTER			FB_CHAR(8)	// domain types
 #define	NANO_BLANK				FB_INTEGER	//
-
+	////strlen((error_message));	
 #define	BLANK					-1			// void function emulation
 
 #define INVALID_CONN_POINTER	"Input parameter CONNECTION invalid."
@@ -221,6 +218,11 @@ nanodbc::connection* conn_ptr(const char* cptr);
 nanodbc::transaction* tnx_ptr(const char* cptr);
 nanodbc::statement* stmt_ptr(const char* cptr);
 nanodbc::result* rslt_ptr(const char* cptr);
+
+extern char odbc_locale[10];
+
+void utf8_to_odbc_locale(char* s, const char* utf8);
+void odbc_locale_to_utf8(char* utf8, const char* s);
 
 }
 #endif	/* NANO_H */

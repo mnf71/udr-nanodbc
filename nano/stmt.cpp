@@ -1048,9 +1048,6 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 	enum in : short {
 		stmt = 0, param_index, value
 	};
-	enum out : short {
-		blank = 0
-	};
 
 	AutoArrayDelete<unsigned> in_offsets;
 	AutoArrayDelete<unsigned> in_null_offsets;

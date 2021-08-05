@@ -35,28 +35,6 @@ namespace nano
 {
 
 //-----------------------------------------------------------------------------
-// create function e_message 
-//	returns varchar(512) character set utf8
-//	external name 'nano!func_e_message'
-//	engine udr; 
-//
-
-FB_UDR_BEGIN_FUNCTION(func_e_message)
-
-	FB_UDR_MESSAGE(
-		OutMessage,
-		(FB_VARCHAR(512 * 4), e_msg)
-	);
-
-	FB_UDR_EXECUTE_FUNCTION
-	{
-		out->e_msgNull = FB_FALSE;
-		out->e_msg.set(nano::last_error_message);
-	}
-
-FB_UDR_END_FUNCTION
-
-//-----------------------------------------------------------------------------
 // todo: 
 //	create procedure list_datasources - ?
 //
