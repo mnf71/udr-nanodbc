@@ -189,10 +189,17 @@ namespace
 namespace nano
 {
 
+static char last_error_message[512] = { 0 };
+
 #define	NANO_THROW_ERROR(error_message)	\
 	ISC_STATUS_ARRAY vector =	\
 		{ isc_arg_gds, isc_random, isc_arg_string, (ISC_STATUS)(error_message), isc_arg_end };	\
-	status->setErrors(vector);	/* NANO_THROW_ERROR */
+	status->setErrors(vector);	\
+    std::size_t error_message_length = strlen((error_message));	\
+	memcpy(	\
+		last_error_message, (error_message),	\
+		error_message_length > sizeof(last_error_message) ? sizeof(last_error_message) : error_message_length	\
+	);  /* NANO_THROW_ERROR */
 
 #define	NANO_POINTER			FB_CHAR(8)	// domain types
 #define	NANO_BLANK				FB_INTEGER	//

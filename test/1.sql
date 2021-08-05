@@ -15,6 +15,10 @@ BEGIN
     conn ty$pointer not null
   ) returns ty$pointer;
 
+  FUNCTION dispose_throw(
+    conn ty$pointer
+  ) returns ty$pointer;
+  
 END^
 
 RECREATE PACKAGE BODY NANO$CONN
@@ -36,6 +40,12 @@ BEGIN
   external name 'nano!conn_dispose'
   engine udr;
 
+  FUNCTION dispose_throw(
+    conn ty$pointer
+  ) returns ty$pointer
+  external name 'nano!conn_dispose'
+  engine udr;
+  
 END^
 
 SET TERM ; ^
@@ -103,5 +113,18 @@ begin
   conn = nano$conn.connection('LOGFDB', 'SYSDBA', 'masterkey');
   nano$func.just_execute_conn(conn, 'insert into sample (rec) values (153)');
   nano$conn.dispose(conn);
+  /*
+	conn = nano$conn....
+	or
+	nano$conn....
+	conn = null;  
+ */	
+end
+
+execute block
+as
+ declare conn ty$pointer;
+begin
+  nano$conn.dispose_throw(conn);
 end
 

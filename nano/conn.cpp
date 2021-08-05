@@ -39,6 +39,22 @@ namespace nano
 //	 attr varchar(512) character set utf8 default null, 
 //	 user varchar(63) character set utf8 default null, 
 //	 pass varchar(63) character set utf8 default null, 
+	//	 timeout integer not null default 0 
+	//	) returns ty$pointer
+	//	external name 'nano!conn_connection'
+	//	engine udr; 
+	//
+	// \brief
+	// connection (null, null, null, ...) returns new connection object, initially not connected	
+	// connection (?, null, null, ...) returns new connection object and immediately connect by SQLDriverConnect
+	// connection (?, ?, ?, ...) returns new connection object and immediately connect by SQLConnect
+	//
+
+//-----------------------------------------------------------------------------
+// create function connection (
+//	 attr varchar(512) character set utf8 default null, 
+//	 user varchar(63) character set utf8 default null, 
+//	 pass varchar(63) character set utf8 default null, 
 //	 timeout integer not null default 0 
 //	) returns ty$pointer
 //	external name 'nano!conn_connection'

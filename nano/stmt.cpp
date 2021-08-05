@@ -123,7 +123,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_dispose)
 			{
 				delete nano::stmt_ptr(in->stmt.str);
 				out->stmtNull = FB_TRUE;
-				delete &nano::batch_array;
+				delete& nano::batch_array;
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -357,7 +357,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_close)
 			{
 				stmt->close();
 				out->blankNull = FB_FALSE;
-				delete &batch_array;
+				delete& nano::batch_array;
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -458,7 +458,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_prepare)
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
 			{
-				delete &batch_array;
+				delete& nano::batch_array;
 				if (!in->connNull)
 				{
 					nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
@@ -920,7 +920,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_reset_parameters)
 			{
 				stmt->reset_parameters();
 				out->blankNull = FB_FALSE;
-				delete &batch_array;
+				delete& nano::batch_array;
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -1335,7 +1335,7 @@ public:
 			data_[i].values.clear();
 		size_ = 0;
 	}
-
+	
 	explicit operator bool() const
 	{
 		return static_cast<bool>(data_);
