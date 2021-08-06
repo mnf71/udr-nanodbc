@@ -98,7 +98,7 @@ void utf8_to_odbc_locale(char* dest, const char* utf)
 void odbc_locale_to_utf8(char* dest, const char* ansi)
 {
 	// ANSII to wstring
-	std::string s(ansi);
+	std::string s = ansi;
 	std::wstring ws(s.size(), 0);
 	std::locale loc(nano::odbc_locale);
 	std::use_facet<std::ctype<wchar_t>>(loc).widen(s.data(), s.data() + s.size(), &ws[0]);
