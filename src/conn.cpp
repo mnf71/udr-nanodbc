@@ -96,9 +96,9 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 				nano::udr_locale, in->udr_locale.length + 1, in->udr_locale.str, _TRUNCATE
 			); // initialize locale
 
-			if (in_char_sets[in::attr] == fb_char_set::CS_UTF8) utf8_to_loc(in->attr.str, in->attr.str);
-			if (in_char_sets[in::user] == fb_char_set::CS_UTF8) utf8_to_loc(in->user.str, in->user.str);
-			if (in_char_sets[in::pass] == fb_char_set::CS_UTF8) utf8_to_loc(in->pass.str, in->pass.str);
+			UTF8_IN(attr);
+			UTF8_IN(user);
+			UTF8_IN(pass);
 
 			nanodbc::connection* conn;
 			if (in->userNull && in->passNull)
@@ -319,9 +319,9 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 		{
 			out->blank = BLANK;
 
-			if (in_char_sets[in::attr] == fb_char_set::CS_UTF8) utf8_to_loc(in->attr.str, in->attr.str);
-			if (in_char_sets[in::user] == fb_char_set::CS_UTF8) utf8_to_loc(in->user.str, in->user.str);
-			if (in_char_sets[in::pass] == fb_char_set::CS_UTF8) utf8_to_loc(in->pass.str, in->pass.str);
+			UTF8_IN(attr);
+			UTF8_IN(user);
+			UTF8_IN(pass);
 
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
@@ -495,6 +495,26 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_get_info)
 
+unsigned out_count;
+
+	enum out : short {
+		info = 0
+	};
+
+	AutoArrayDelete<unsigned> out_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		out_count = out_metadata->getCount(status);
+		out_char_sets.reset(new unsigned[out_count]);
+		for (unsigned i = 0; i < out_count; ++i)
+		{
+			out_char_sets[i] = out_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -513,12 +533,9 @@ FB_UDR_BEGIN_FUNCTION(conn_get_info)
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
-				string info = conn->get_info<string>(in->info_type);
-				out->info.length =
-					(ISC_USHORT) info.length() < (ISC_USHORT) sizeof(out->info.str) ?
-						(ISC_USHORT) info.length() : (ISC_USHORT) sizeof(out->info.str);
-				memcpy(out->info.str, info.c_str(), out->info.length);
+				FB_STRING(out->info, conn->get_info<string>(in->info_type));
 				out->infoNull = FB_FALSE;
+				UTF8_OUT(info);
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -545,6 +562,26 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 
+	unsigned out_count;
+
+	enum out : short {
+		dbms_name = 0
+	};
+
+	AutoArrayDelete<unsigned> out_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		out_count = out_metadata->getCount(status);
+		out_char_sets.reset(new unsigned[out_count]);
+		for (unsigned i = 0; i < out_count; ++i)
+		{
+			out_char_sets[i] = out_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -552,7 +589,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(128 * 4), name)
+		(FB_VARCHAR(128 * 4), dbms_name)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -562,22 +599,19 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
-				string name = conn->dbms_name();
-				out->name.length =
-					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->name.str) ?
-						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->name.str);
-				memcpy(out->name.str, name.c_str(), out->name.length);
-				out->nameNull = FB_FALSE;
+				FB_STRING(out->dbms_name, conn->dbms_name());
+				out->dbms_nameNull = FB_FALSE;
+				UTF8_OUT(dbms_name);
 			}
 			catch (std::runtime_error const& e)
 			{
-				out->nameNull = FB_TRUE;
+				out->dbms_nameNull = FB_TRUE;
 				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
-			out->nameNull = FB_TRUE;
+			out->dbms_nameNull = FB_TRUE;
 			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
@@ -593,6 +627,26 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
+	
+	unsigned out_count;
+
+	enum out : short {
+		version = 0
+	};
+
+	AutoArrayDelete<unsigned> out_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		out_count = out_metadata->getCount(status);
+		out_char_sets.reset(new unsigned[out_count]);
+		for (unsigned i = 0; i < out_count; ++i)
+		{
+			out_char_sets[i] = out_metadata->getCharSet(status, i);
+		}
+	}
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -611,12 +665,9 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
-				string version = conn->dbms_version();
-				out->version.length =
-					(ISC_USHORT)version.length() < (ISC_USHORT)sizeof(out->version.str) ?
-						(ISC_USHORT)version.length() : (ISC_USHORT)sizeof(out->version.str);
-				memcpy(out->version.str, version.c_str(), out->version.length);
+				FB_STRING(out->version, conn->dbms_version());
 				out->versionNull = FB_FALSE;
+				UTF8_OUT(version);
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -643,6 +694,26 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 
+	unsigned out_count;
+
+	enum out : short {
+		drv_name = 0
+	};
+
+	AutoArrayDelete<unsigned> out_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		out_count = out_metadata->getCount(status);
+		out_char_sets.reset(new unsigned[out_count]);
+		for (unsigned i = 0; i < out_count; ++i)
+		{
+			out_char_sets[i] = out_metadata->getCharSet(status, i);
+		}
+	}
+	
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -650,7 +721,7 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(128 * 4), name)
+		(FB_VARCHAR(128 * 4), drv_name)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -660,22 +731,19 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
-				string name = conn->driver_name();
-				out->name.length =
-					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->name.str) ?
-						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->name.str);
-				memcpy(out->name.str, name.c_str(), out->name.length);
-				out->nameNull = FB_FALSE;
+				FB_STRING(out->drv_name, conn->driver_name());
+				out->drv_nameNull = FB_FALSE;
+				UTF8_OUT(drv_name);
 			}
 			catch (std::runtime_error const& e)
 			{
-				out->nameNull = FB_TRUE;
+				out->drv_nameNull = FB_TRUE;
 				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
-			out->nameNull = FB_TRUE;
+			out->drv_nameNull = FB_TRUE;
 			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
@@ -692,6 +760,26 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_database_name)
 
+	unsigned out_count;
+
+	enum out : short {
+		db_name = 0
+	};
+
+	AutoArrayDelete<unsigned> out_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		out_count = out_metadata->getCount(status);
+		out_char_sets.reset(new unsigned[out_count]);
+		for (unsigned i = 0; i < out_count; ++i)
+		{
+			out_char_sets[i] = out_metadata->getCharSet(status, i);
+		}
+	}
+	
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -699,7 +787,7 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(128 * 4), name)
+		(FB_VARCHAR(128 * 4), db_name)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -709,22 +797,19 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
-				string name = conn->database_name();
-				out->name.length =
-					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->name.str) ?
-						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->name.str);
-				memcpy(out->name.str, name.c_str(), out->name.length);
-				out->nameNull = FB_FALSE;
+				FB_STRING(out->db_name, conn->database_name());
+				out->db_nameNull = FB_FALSE;
+				UTF8_OUT(db_name);
 			}
 			catch (std::runtime_error const& e)
 			{
-				out->nameNull = FB_TRUE;
+				out->db_nameNull = FB_TRUE;
 				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
-			out->nameNull = FB_TRUE;
+			out->db_nameNull = FB_TRUE;
 			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
@@ -741,6 +826,26 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 
+	unsigned out_count;
+
+	enum out : short {
+		ctlg_name = 0
+	};
+
+	AutoArrayDelete<unsigned> out_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		out_count = out_metadata->getCount(status);
+		out_char_sets.reset(new unsigned[out_count]);
+		for (unsigned i = 0; i < out_count; ++i)
+		{
+			out_char_sets[i] = out_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -748,7 +853,7 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(128 * 4), name)
+		(FB_VARCHAR(128 * 4), ctlg_name)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -758,22 +863,19 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
-				string name = conn->catalog_name();
-				out->name.length =
-					(ISC_USHORT)name.length() < (ISC_USHORT)sizeof(out->name.str) ?
-						(ISC_USHORT)name.length() : (ISC_USHORT)sizeof(out->name.str);
-				memcpy(out->name.str, name.c_str(), out->name.length);
-				out->nameNull = FB_FALSE;
+				FB_STRING(out->ctlg_name, conn->catalog_name());
+				out->ctlg_nameNull = FB_FALSE;
+				UTF8_OUT(ctlg_name);
 			}
 			catch (std::runtime_error const& e)
 			{
-				out->nameNull = FB_TRUE;
+				out->ctlg_nameNull = FB_TRUE;
 				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
-			out->nameNull = FB_TRUE;
+			out->ctlg_nameNull = FB_TRUE;
 			NANO_THROW_ERROR(INVALID_CONN_POINTER);
 		}
 	}
@@ -816,12 +918,9 @@ FB_UDR_BEGIN_FUNCTION(conn_e_message)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
+		FB_STRING(out->e_msg, (std::string)(nano::last_error_message));
 		out->e_msgNull = FB_FALSE;
-		out->e_msg.length = (ISC_SHORT)strlen(nano::last_error_message);
-		memcpy(out->e_msg.str, nano::last_error_message, out->e_msg.length);
-		out->e_msg.str[out->e_msg.length] = '\0';
-		if (out_char_sets[out::e_msg] == fb_char_set::CS_UTF8)
-			loc_to_utf8(out->e_msg.str, out->e_msg.str);
+		UTF8_OUT(e_msg);
 	}
 
 FB_UDR_END_FUNCTION

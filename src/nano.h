@@ -199,17 +199,20 @@ namespace nano
 	status->setErrors(vector);	\
 	strncpy_s(nano::last_error_message, ERROR_MESSAGE_LENGTH + 1, (error_message), _TRUNCATE);  /* NANO_THROW_ERROR */
 
-	extern char last_error_message[ERROR_MESSAGE_LENGTH];
+extern char last_error_message[ERROR_MESSAGE_LENGTH];
 
 #define	NANO_POINTER			FB_CHAR(8)	// domain types
 #define	NANO_BLANK				FB_INTEGER	//
-	////strlen((error_message));	
+
 #define	BLANK					-1			// void function emulation
 
 #define INVALID_CONN_POINTER	"Input parameter CONNECTION invalid."
 #define INVALID_TNX_POINTER		"Input parameter TRANSACTION invalid."
 #define INVALID_STMT_POINTER	"Input parameter STATEMENT invalid."
 #define INVALID_RSLT_POINTER	"Input parameter RESULT invalid."
+
+//-----------------------------------------------------------------------------
+//
 
 void fb_ptr(char* cptr, int64_t iptr);
 int64_t native_ptr(const char* cptr);
@@ -221,6 +224,28 @@ nanodbc::connection* conn_ptr(const char* cptr);
 nanodbc::transaction* tnx_ptr(const char* cptr);
 nanodbc::statement* stmt_ptr(const char* cptr);
 nanodbc::result* rslt_ptr(const char* cptr);
+        
+//-----------------------------------------------------------------------------
+//
+
+#define FB_STRING(fb, s)	\
+	(fb).length = (ISC_USHORT)sizeof((fb).str);	\
+	ISC_USHORT s_length = (ISC_USHORT)(s).length();	\
+	(fb).length = (fb).length <= s_length ? (fb).length : s_length;	\
+	memcpy((fb).str, (s).c_str(), (fb).length);	\
+	(fb).str[(fb).length] = '\0';	/* FB_STRING */
+
+#define UTF8_IN(param)	\
+	if (in_char_sets[in::##param] == fb_char_set::CS_UTF8)	\
+	{	\
+		utf8_to_loc(in->##param.str, in->##param.str);	\
+	}	/* UTF8_IN */  
+
+#define UTF8_OUT(param)	\
+	if (out_char_sets[out::##param] == fb_char_set::CS_UTF8)	\
+	{	\
+		loc_to_utf8(out->##param.str, out->##param.str);	\
+	}	/* UTF8_OUT */
 
 //-----------------------------------------------------------------------------
 //
