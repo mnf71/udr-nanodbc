@@ -76,8 +76,8 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 
 	FB_UDR_MESSAGE(
 		InMessage,
-		(FB_VARCHAR(512 * 4), attr)
 		(FB_VARCHAR(20), udr_locale)
+		(FB_VARCHAR(512 * 4), attr)
 		(FB_VARCHAR(63 * 4), user)
 		(FB_VARCHAR(63 * 4), pass)
 		(FB_INTEGER, timeout)

@@ -5,8 +5,8 @@ AS
 BEGIN
 
   FUNCTION connection(
+    udr_locale varchar(20) character set none not null default 'cp1251',
     attr varchar(512) character set utf8 default null,
-    odbc_locale varchar(10) character set none not null default '.1251',
     user_ varchar(63) character set utf8 default null,
     password_ varchar(63) character set utf8 default null,
     timeout integer not null default 0
@@ -16,12 +16,8 @@ BEGIN
     conn ty$pointer not null
   ) returns ty$pointer;
 
-  FUNCTION dispose_throw(
-    conn ty$pointer
-  ) returns ty$pointer;
-
   function e_message (
-  ) returns varchar(512) -- character set utf8;
+  ) returns varchar(512) character set utf8;
 
 END^
 
@@ -30,8 +26,8 @@ AS
 BEGIN
 
   FUNCTION connection(
+    udr_locale varchar(20) character set none not null ,
     attr varchar(512) character set utf8,
-    odbc_locale varchar(10) character set none not null ,
     user_ varchar(63) character set utf8,
     password_ varchar(63) character set utf8,
     timeout integer not null
@@ -45,14 +41,8 @@ BEGIN
   external name 'nano!conn_dispose'
   engine udr;
 
-  FUNCTION dispose_throw(
-    conn ty$pointer
-  ) returns ty$pointer
-  external name 'nano!conn_dispose'
-  engine udr;
-
   function e_message (
-  ) returns varchar(512) -- character set utf8
+  ) returns varchar(512) character set utf8
   external name 'nano!conn_e_message'
   engine udr;
 
@@ -64,7 +54,6 @@ SET TERM ; ^
 /* Existing privileges on this package */
 
 GRANT EXECUTE ON PACKAGE NANO$CONN TO SYSDBA;
-
 
 SET TERM ^ ;
 
@@ -119,14 +108,14 @@ SET TERM ; ^
 GRANT EXECUTE ON PACKAGE NANO$FUNC TO SYSDBA;
 
 
-execute block returns (e VARCHAR(512))
+execute block returns (e VARCHAR(512) character set utf8)
 as
  declare conn ty$pointer;
 begin
-  conn = nano$conn.connection('ÙˇLOGFDB', '.1251', 'SYSDBA', 'masterkey');
-  -- conn = nano$conn.connection('LOGFDB', '.1251', 'SYSDBA', 'masterkey');
-  nano$func.just_execute_conn(conn, 'insert into sample (rec) values (1153)');
-  nano$conn.dispose(conn);
+--  conn = nano$conn.connection('cp1251', 'LOGFDB',  'SYSDBA', 'masterkey');
+  conn = nano$conn.connection('cp1251', '”“‘8LOGFDB',  'SYSDBA', 'masterkey');
+--  nano$func.just_execute_conn(conn, 'insert into sample (rec) values (1153)');
+--  nano$conn.dispose(conn);
   when any do
   begin
     e = nano$conn.e_message();
