@@ -670,21 +670,41 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function unbind (
 //	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 default null 
+//	 column_ varchar(63) character set utf8 not null 
 //	) returns ty$nano_blank
 //	external name 'nano!rslt_unbind'
 //	engine udr; 
 //
 // \brief
-// unbind (?, ?) testing covertion the character string into a integer and call associate method
+// unbind (?, ?) testing convertion the character string into a integer and call associate method
 //
 
 FB_UDR_BEGIN_FUNCTION(rslt_unbind)
 
+	unsigned in_count;
+
+	enum in : short {
+		rslt = 0, column_
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(63 * 4), column_)
 	);
 
 	FB_UDR_MESSAGE(
@@ -700,12 +720,13 @@ FB_UDR_BEGIN_FUNCTION(rslt_unbind)
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
 			{
-				if (!in->columnNull)
+				UTF8_IN(column_);
+				if (!in->column_Null)
 				{
-					if (!isdigit(in->column.str[0]))
-						rslt->unbind(NANODBC_TEXT(in->column.str));
+					if (!isdigit(in->column_.str[0]))
+						rslt->unbind(NANODBC_TEXT(in->column_.str));
 					else
-						rslt->unbind((short)atoi(in->column.str));
+						rslt->unbind((short)atoi(in->column_.str));
 				}
 				else
 					rslt->unbind();
@@ -732,21 +753,41 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function is_null (
 //	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 default null 
+//	 column_ varchar(63) character set utf8 not null 
 //	) returns boolean
 //	external name 'nano!rslt_is_null'
 //	engine udr; 
 //
 // \brief
-// is_null (?, ?) testing covertion the character string into a integer and call associate method
+// is_null (?, ?) testing convertion the character string into a integer and call associate method
 //
 
 FB_UDR_BEGIN_FUNCTION(rslt_is_null)
 
+	unsigned in_count;
+
+	enum in : short {
+		rslt = 0, column_
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+	
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(63 * 4), column_)
 	);
 
 	FB_UDR_MESSAGE(
@@ -761,10 +802,11 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_null)
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
 			{
-				if (!isdigit(in->column.str[0]))
-					out->is_null = nano::fb_bool(rslt->is_null(NANODBC_TEXT(in->column.str)));
+				UTF8_IN(column_);
+				if (!isdigit(in->column_.str[0]))
+					out->is_null = nano::fb_bool(rslt->is_null(NANODBC_TEXT(in->column_.str)));
 				else
-					out->is_null = nano::fb_bool(rslt->is_null((short)atoi(in->column.str)));
+					out->is_null = nano::fb_bool(rslt->is_null((short)atoi(in->column_.str)));
 				out->is_nullNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -791,15 +833,35 @@ FB_UDR_END_FUNCTION
 //	engine udr; 
 //
 // \brief
-// is_bound (?, ?) testing covertion the character string into a integer and call associate method
+// is_bound (?, ?) testing convertion the character string into a integer and call associate method
 //
 
 FB_UDR_BEGIN_FUNCTION(rslt_is_bound)
 
+	unsigned in_count;
+
+	enum in : short {
+		rslt = 0, column_
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+	
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(63 * 4), column_)
 	);
 
 	FB_UDR_MESSAGE(
@@ -814,10 +876,11 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_bound)
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
 			{
-				if (!isdigit(in->column.str[0]))
-					out->is_null = nano::fb_bool(rslt->is_bound(NANODBC_TEXT(in->column.str)));
+				UTF8_IN(column_);
+				if (!isdigit(in->column_.str[0]))
+					out->is_null = nano::fb_bool(rslt->is_bound(NANODBC_TEXT(in->column_.str)));
 				else
-					out->is_null = nano::fb_bool(rslt->is_bound((short)atoi(in->column.str)));
+					out->is_null = nano::fb_bool(rslt->is_bound((short)atoi(in->column_.str)));
 				out->is_nullNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -838,7 +901,7 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function column_ (
 //	 rslt ty$pointer not null, 
-//	 column_name varchar(63) character set utf8 not null 
+//	 column_ varchar(63) character set utf8 not null 
 //	) returns smallint
 //	external name 'nano!rslt_column'
 //	engine udr; 
@@ -846,15 +909,35 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt_column)
 
+	unsigned in_count;
+
+	enum in : short {
+		rslt = 0, column_
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column_name)
+		(FB_VARCHAR(63 * 4), column_)
 	);
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_SMALLINT, column)
+		(FB_SMALLINT, index)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -864,18 +947,19 @@ FB_UDR_BEGIN_FUNCTION(rslt_column)
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
 			{
-				out->column = rslt->column(NANODBC_TEXT(in->column_name.str));
-				out->columnNull = FB_FALSE;
+				UTF8_IN(column_);
+				out->index = rslt->column(NANODBC_TEXT(in->column_.str));
+				out->indexNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
 			{
-				out->columnNull = FB_TRUE;
+				out->indexNull = FB_TRUE;
 				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
-			 out->columnNull = FB_TRUE;
+			 out->indexNull = FB_TRUE;
 			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
@@ -885,7 +969,7 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function column_name (
 //	 rslt ty$pointer not null, 
-//	 column_name smallint not null 
+//	 index smallint not null 
 //	) returns varchar(63) character set utf8
 //	external name 'nano!rslt_column_name'
 //	engine udr; 
@@ -893,15 +977,35 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt_column_name)
 
+	unsigned out_count;
+
+	enum out : short {
+		column_ = 0
+	};
+
+	AutoArrayDelete<unsigned> out_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		out_count = out_metadata->getCount(status);
+		out_char_sets.reset(new unsigned[out_count]);
+		for (unsigned i = 0; i < out_count; ++i)
+		{
+			out_char_sets[i] = out_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_SMALLINT, column)
+		(FB_SMALLINT, index)
 	);
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(63 * 4), column_name)
+		(FB_VARCHAR(63 * 4), column_)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
@@ -911,22 +1015,19 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_name)
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
 			{
-				string column_name = rslt->column_name(NANODBC_TEXT(in->column));
-				out->column_name.length =
-					(ISC_USHORT)column_name.length() < (ISC_USHORT)sizeof(out->column_name.str) ?
-						(ISC_USHORT)column_name.length() : (ISC_USHORT)sizeof(out->column_name.str);
-				memcpy(out->column_name.str, column_name.c_str(), out->column_name.length);
-				out->column_nameNull = FB_FALSE;
+				FB_STRING(out->column_, rslt->column_name(NANODBC_TEXT(in->index)));
+				out->column_Null = FB_FALSE;
+				UTF8_OUT(column_);
 			}
 			catch (std::runtime_error const& e)
 			{
-				out->column_nameNull = FB_TRUE;
+				out->column_Null = FB_TRUE;
 				NANO_THROW_ERROR(e.what());
 			}
 		}
 		else
 		{
-			 out->column_nameNull = FB_TRUE;
+			 out->column_Null = FB_TRUE;
 			 NANO_THROW_ERROR(INVALID_RSLT_POINTER);
 		}
 	}
@@ -947,10 +1048,30 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt_column_size)
 
+	unsigned in_count;
+
+	enum in : short {
+		rslt = 0, column_
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(63 * 4), column_)
 	);
 
 	FB_UDR_MESSAGE(
@@ -965,10 +1086,11 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_size)
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
 			{
-				if (!isdigit(in->column.str[0]))
-					out->size = rslt->column_size(NANODBC_TEXT(in->column.str));
+				UTF8_IN(column_);
+				if (!isdigit(in->column_.str[0]))
+					out->size = rslt->column_size(NANODBC_TEXT(in->column_.str));
 				else
-					out->size = rslt->column_size((short)atoi(in->column.str));
+					out->size = rslt->column_size((short)atoi(in->column_.str));
 				out->sizeNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1000,10 +1122,30 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt_column_decimal_digits)
 
+	unsigned in_count;
+
+	enum in : short {
+		rslt = 0, column_
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(63 * 4), column_)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1018,10 +1160,11 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_decimal_digits)
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
 			{
-				if (!isdigit(in->column.str[0]))
-					out->digits = rslt->column_decimal_digits(NANODBC_TEXT(in->column.str));
+				UTF8_IN(column_);
+				if (!isdigit(in->column_.str[0]))
+					out->digits = rslt->column_decimal_digits(NANODBC_TEXT(in->column_.str));
 				else
-					out->digits = rslt->column_decimal_digits((short)atoi(in->column.str));
+					out->digits = rslt->column_decimal_digits((short)atoi(in->column_.str));
 				out->digitsNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1053,10 +1196,30 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt_column_datatype)
 
+	unsigned in_count;
+
+	enum in : short {
+		rslt = 0, column_
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(63 * 4), column_)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1071,10 +1234,11 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype)
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
 			{
-				if (!isdigit(in->column.str[0]))
-					out->datatype = rslt->column_datatype(NANODBC_TEXT(in->column.str));
+				UTF8_IN(column_);
+				if (!isdigit(in->column_.str[0]))
+					out->datatype = rslt->column_datatype(NANODBC_TEXT(in->column_.str));
 				else
-					out->datatype = rslt->column_datatype((short)atoi(in->column.str));
+					out->datatype = rslt->column_datatype((short)atoi(in->column_.str));
 				out->datatypeNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1096,7 +1260,7 @@ FB_UDR_END_FUNCTION
 // create function column_datatype_name (
 //	 rslt ty$pointer not null, 
 //	 column_ varchar(63) character set utf8 not null 
-//	) returns integer
+//	) returns varchar(63) character set utf8
 //	external name 'nano!rslt_column_datatype_name'
 //	engine udr; 
 //
@@ -1106,10 +1270,43 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt_column_datatype_name)
 
+	unsigned in_count, out_count;
+
+	enum in : short {
+		rslt = 0, column_
+	};
+
+	enum out : short {
+		datatype_name = 0
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+	AutoArrayDelete<unsigned> out_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+
+		out_count = out_metadata->getCount(status);
+		out_char_sets.reset(new unsigned[out_count]);
+		for (unsigned i = 0; i < out_count; ++i)
+		{
+			out_char_sets[i] = out_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(63 * 4), column_)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1124,16 +1321,15 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype_name)
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
 			{
+				UTF8_IN(column_);
 				string datatype_name;
-				if (!isdigit(in->column.str[0]))
-					datatype_name = rslt->column_datatype_name(NANODBC_TEXT(in->column.str));
+				if (!isdigit(in->column_.str[0]))
+					datatype_name = rslt->column_datatype_name(NANODBC_TEXT(in->column_.str));
 				else
-					datatype_name = rslt->column_datatype_name((short)atoi(in->column.str));
-				out->datatype_name.length =
-					(ISC_USHORT)datatype_name.length() < (ISC_USHORT)sizeof(out->datatype_name.str) ?
-						(ISC_USHORT)datatype_name.length() : (ISC_USHORT)sizeof(out->datatype_name.str);
-				memcpy(out->datatype_name.str, datatype_name.c_str(), out->datatype_name.length);
+					datatype_name = rslt->column_datatype_name((short)atoi(in->column_.str));
+				FB_STRING(out->datatype_name, datatype_name);
 				out->datatype_nameNull = FB_FALSE;
+				UTF8_OUT(datatype_name);
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -1164,10 +1360,30 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt_column_c_datatype)
 
+	unsigned in_count;
+
+	enum in : short {
+		rslt = 0, column_
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(63 * 4), column_)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1182,10 +1398,11 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_c_datatype)
 			nanodbc::result* rslt = nano::rslt_ptr(in->rslt.str);
 			try
 			{
-				if (!isdigit(in->column.str[0]))
-					out->c_datatype = rslt->column_c_datatype(NANODBC_TEXT(in->column.str));
+				UTF8_IN(column_);
+				if (!isdigit(in->column_.str[0]))
+					out->c_datatype = rslt->column_c_datatype(NANODBC_TEXT(in->column_.str));
 				else
-					out->c_datatype = rslt->column_c_datatype((short)atoi(in->column.str));
+					out->c_datatype = rslt->column_c_datatype((short)atoi(in->column_.str));
 				out->c_datatypeNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)

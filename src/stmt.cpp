@@ -56,6 +56,26 @@ params_array* batch_array;
 
 FB_UDR_BEGIN_FUNCTION(stmt_statement)
 
+	unsigned in_count;
+
+	enum in : short {
+		conn = 0, query, timeout
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -77,7 +97,10 @@ FB_UDR_BEGIN_FUNCTION(stmt_statement)
 			{
 				nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 				if (!in->queryNull)
+				{
+					UTF8_IN(query);
 					stmt = new nanodbc::statement(*conn, NANODBC_TEXT(in->query.str), in->timeout);
+				}
 				else
 					stmt = new nanodbc::statement(*conn);
 			}
@@ -283,7 +306,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function connection (
-//	 tnx ty$pointer not null, 
+//	 stmt ty$pointer not null, 
 //	) returns ty$pointer
 //	external name 'nano!stmt_connection'
 //	engine udr; 
@@ -436,6 +459,26 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(stmt_prepare)
+	
+	unsigned in_count;
+
+	enum in : short {
+		stmt = 0, conn, query, timeout
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -459,6 +502,8 @@ FB_UDR_BEGIN_FUNCTION(stmt_prepare)
 			try
 			{
 				delete& nano::batch_array;
+
+				UTF8_IN(query);
 				if (!in->connNull)
 				{
 					nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
@@ -544,6 +589,26 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(stmt_execute_direct)
 
+	unsigned in_count;
+
+	enum in : short {
+		stmt = 0, conn, query, batch_operations, timeout
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, stmt)
@@ -567,6 +632,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute_direct)
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
+				UTF8_IN(query);
 				nanodbc::result rslt =
 					stmt->execute_direct(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
 				nano::fb_ptr(out->rslt.str, (int64_t)&rslt);
@@ -601,6 +667,26 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(stmt_just_execute_direct)
 
+	unsigned in_count;
+
+	enum in : short {
+		stmt = 0, conn, query, batch_operations, timeout
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, stmt)
@@ -625,6 +711,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute_direct)
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
+				UTF8_IN(query);
 				stmt->just_execute_direct(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
 				out->blankNull = FB_FALSE;
 			}
@@ -757,13 +844,33 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(stmt_procedure_columns)
 
+unsigned in_count;
+
+	enum in : short {
+		stmt = 0, catalog_, schema_, procedure_, column_
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, stmt)
-		(FB_VARCHAR(128 * 4), catalog)
-		(FB_VARCHAR(128 * 4), schema)
-		(FB_VARCHAR(63 * 4), procedure)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), catalog_)
+		(FB_VARCHAR(128 * 4), schema_)
+		(FB_VARCHAR(63 * 4), procedure_)
+		(FB_VARCHAR(63 * 4), column_)
 	);
 
 	FB_UDR_MESSAGE(
@@ -778,9 +885,13 @@ FB_UDR_BEGIN_FUNCTION(stmt_procedure_columns)
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
 			{
-				nanodbc::result rslt = 
-					stmt->procedure_columns(NANODBC_TEXT(in->catalog.str), NANODBC_TEXT(in->schema.str), NANODBC_TEXT(in->procedure.str),
-						NANODBC_TEXT(in->column.str));
+				UTF8_IN(catalog_);
+				UTF8_IN(schema_);
+				UTF8_IN(procedure_);
+				UTF8_IN(column_);
+				nanodbc::result rslt =
+					stmt->procedure_columns(NANODBC_TEXT(in->catalog_.str), NANODBC_TEXT(in->schema_.str), NANODBC_TEXT(in->procedure_.str),
+						NANODBC_TEXT(in->column_.str));
 				nano::fb_ptr(out->rslt.str, (int64_t)&rslt);
 				out->rsltNull = FB_FALSE;
 			}
