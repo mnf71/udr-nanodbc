@@ -33,8 +33,9 @@ elseif(MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
     add_library(iconv SHARED IMPORTED)
     set_target_properties(iconv
         PROPERTIES
-            IMPORTED_IMPLIB ${ICONV}/lib/iconv.lib
+            IMPORTED_IMPLIB ${ICONV}/lib/libiconv.lib
             INTERFACE_INCLUDE_DIRECTORIES ${ICONV}/include
+
     )
 
 endif() 
@@ -46,7 +47,15 @@ add_library(nano SHARED ${files})
 set_property(TARGET nano PROPERTY CXX_STANDARD 17)
 set_property(TARGET nano PROPERTY CXX_STANDARD_REQUIRED ON)
 
-set_target_properties(nano PROPERTIES LINK_FLAGS "/DEF:\"${CMAKE_SOURCE_DIR}/defs/udr_plugin.def\"") 
+if(UNIX)
+
+elseif(MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+
+    set_target_properties(nano 
+        PROPERTIES 
+            LINK_FLAGS "/DEF:\"${CMAKE_SOURCE_DIR}/defs/udr_plugin.def\"") 
+
+endif() 
 
 target_link_libraries(nano PUBLIC ${ODBC} firebird nanodbc iconv)
 
