@@ -20,7 +20,6 @@
  *  Contributor(s): ______________________________________.
  */
 
-
 #include "nano.h"
  
 using namespace Firebird;
@@ -38,8 +37,8 @@ char last_error_message[ERROR_MESSAGE_LENGTH] = { 0 };
 
 //-----------------------------------------------------------------------------
 // create function connection (
+//	 udr_locale varchar(20) character set none not null default '.1251',
 //	 attr varchar(512) character set utf8 default null, 
-//	 odbc_locale varchar(10) character set none not null default '.1251',
 //	 user varchar(63) character set utf8 default null, 
 //	 pass varchar(63) character set utf8 default null, 
 //	 timeout integer not null default 0 
@@ -48,7 +47,7 @@ char last_error_message[ERROR_MESSAGE_LENGTH] = { 0 };
 //	engine udr; 
 //
 // \brief
-// connection (null, ?, null, null, ...) returns new connection object, initially not connected	
+// connection (?, null, null, null, ...) returns new connection object, initially not connected	
 // connection (?, ?, null, null, ...) returns new connection object and immediately connect by SQLDriverConnect
 // connection (?, ?, ?, ?, ...) returns new connection object and immediately connect by SQLConnect
 //
@@ -58,7 +57,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 	unsigned in_count;
 
 	enum in : short {
-		attr = 0, odbc_locale, user, pass
+		udr_locale = 0, attr, user, pass, timeout
 	};
 
 	AutoArrayDelete<unsigned> in_char_sets;
@@ -78,7 +77,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(FB_VARCHAR(512 * 4), attr)
-		(FB_VARCHAR(10), odbc_locale)
+		(FB_VARCHAR(20), udr_locale)
 		(FB_VARCHAR(63 * 4), user)
 		(FB_VARCHAR(63 * 4), pass)
 		(FB_INTEGER, timeout)
@@ -93,10 +92,13 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 	{
 		try
 		{
-			strncpy_s(nano::odbc_locale, in->odbc_locale.length + 1, in->odbc_locale.str, _TRUNCATE);
-			if (in_char_sets[in::attr] == /* UTF8 */ 4) utf8_to_odbc_locale(in->attr.str, in->attr.str);
-			if (in_char_sets[in::user] == /* UTF8 */ 4) utf8_to_odbc_locale(in->user.str, in->user.str);
-			if (in_char_sets[in::pass] == /* UTF8 */ 4) utf8_to_odbc_locale(in->pass.str, in->pass.str);
+			strncpy_s(
+				nano::udr_locale, in->udr_locale.length + 1, in->udr_locale.str, _TRUNCATE
+			); // initialize locale
+
+			if (in_char_sets[in::attr] == fb_char_set::CS_UTF8) utf8_to_loc(in->attr.str, in->attr.str);
+			if (in_char_sets[in::user] == fb_char_set::CS_UTF8) utf8_to_loc(in->user.str, in->user.str);
+			if (in_char_sets[in::pass] == fb_char_set::CS_UTF8) utf8_to_loc(in->pass.str, in->pass.str);
 
 			nanodbc::connection* conn;
 			if (in->userNull && in->passNull)
@@ -277,11 +279,30 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_connect)
 
+	unsigned in_count;
+
+	enum in : short {
+		conn = 0, attr, user, pass, timeout
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
 		(FB_VARCHAR(512 * 4), attr)
-		(FB_VARCHAR(10), odbc_locale)
 		(FB_VARCHAR(63 * 4), user)
 		(FB_VARCHAR(63 * 4), pass)
 		(FB_INTEGER, timeout)
@@ -297,6 +318,11 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 		if (!in->connNull)
 		{
 			out->blank = BLANK;
+
+			if (in_char_sets[in::attr] == fb_char_set::CS_UTF8) utf8_to_loc(in->attr.str, in->attr.str);
+			if (in_char_sets[in::user] == fb_char_set::CS_UTF8) utf8_to_loc(in->user.str, in->user.str);
+			if (in_char_sets[in::pass] == fb_char_set::CS_UTF8) utf8_to_loc(in->pass.str, in->pass.str);
+
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
@@ -762,6 +788,26 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_e_message)
+	
+	unsigned out_count;
+
+	enum out : short {
+		e_msg = 0
+	};
+
+	AutoArrayDelete<unsigned> out_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		out_count = out_metadata->getCount(status);
+		out_char_sets.reset(new unsigned[out_count]);
+		for (unsigned i = 0; i < out_count; ++i)
+		{
+			out_char_sets[i] = out_metadata->getCharSet(status, i);
+		}
+	}
 
 	FB_UDR_MESSAGE(
 		OutMessage,
@@ -773,7 +819,9 @@ FB_UDR_BEGIN_FUNCTION(conn_e_message)
 		out->e_msgNull = FB_FALSE;
 		out->e_msg.length = (ISC_SHORT)strlen(nano::last_error_message);
 		memcpy(out->e_msg.str, nano::last_error_message, out->e_msg.length);
-		odbc_locale_to_utf8(out->e_msg.str, out->e_msg.str);
+		out->e_msg.str[out->e_msg.length] = '\0';
+		if (out_char_sets[out::e_msg] == fb_char_set::CS_UTF8)
+			loc_to_utf8(out->e_msg.str, out->e_msg.str);
 	}
 
 FB_UDR_END_FUNCTION

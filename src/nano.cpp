@@ -23,15 +23,16 @@
 #include "nano.h"
 
 #include <string>
-#include <codecvt>
-#include <locale>
+
+#include <iconv.h>
 
 namespace nano
 {
 
-char odbc_locale[10] = ".1251"; // default
+char udr_locale[20] = "cp1251"; // default
 
 //-----------------------------------------------------------------------------
+//
 void fb_ptr(char* cptr, int64_t iptr)
 {
 	memcpy(cptr, &iptr, 8);
@@ -45,6 +46,7 @@ int64_t native_ptr(const char* cptr)
 }
 
 //-----------------------------------------------------------------------------
+//
 FB_BOOLEAN fb_bool(bool value)
 {	
 	return (value ? FB_TRUE : FB_FALSE);	
@@ -56,6 +58,7 @@ bool native_bool(const FB_BOOLEAN value)
 }
 
 //-----------------------------------------------------------------------------
+//
 nanodbc::connection* conn_ptr(const char* cptr)
 {
 	int64_t conn = 0;
@@ -85,27 +88,48 @@ nanodbc::result* rslt_ptr(const char* cptr)
 }
 
 //-----------------------------------------------------------------------------
-void utf8_to_odbc_locale(char* dest, const char* utf)
+//
+void utf8_to_loc(char* dest, const char* src)
 {
-	// UTF-8 to wstring
-	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wc;
-	std::wstring ws = wc.from_bytes(utf);
-	// wstring to ANSI
-	std::locale loc(nano::odbc_locale);
-	std::use_facet<std::ctype<wchar_t>>(loc).narrow(ws.data(), ws.data() + ws.length() + 1, '?', dest);
+	try
+	{
+		iconv_t ic = iconv_open(nano::udr_locale, "UTF-8");
+		char* in = (char*) src;
+		size_t in_length = strlen(in);
+		char* buf = new char[in_length + 1], * out = buf;
+		memset(buf, '\0', in_length + 1);
+		size_t out_length = in_length;
+		iconv(ic, &in, &in_length, &out, &out_length);
+		strcpy(dest, buf);
+		iconv_close(ic);
+		delete[] buf; 
+	}
+	catch (...)
+	{
+		throw "iconv: cannot convert to ODBC locale.";
+	}
 }
 
-void odbc_locale_to_utf8(char* dest, const char* ansi)
+void loc_to_utf8(char* dest, const char* src)
 {
-	// ANSII to wstring
-	std::string s = ansi;
-	std::wstring ws(s.size(), 0);
-	std::locale loc(nano::odbc_locale);
-	std::use_facet<std::ctype<wchar_t>>(loc).widen(s.data(), s.data() + s.size(), &ws[0]);
-	// wstring to UTF-8
-	std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> wc;
-	s = wc.to_bytes(ws);
-	dest = s.data();
+	try 
+	{
+		iconv_t ic = iconv_open("UTF-8", nano::udr_locale);
+		char* in = (char*) src;
+		size_t in_length = strlen(in);
+		char* buf = new char[(in_length * 4) + 1], * out = buf;
+		memset(buf, '\0', (in_length * 4) + 1);
+		size_t out_length = in_length * 4;
+		// todo: строка возвращается не полнлостью
+		iconv(ic, &in, &in_length, &out, &out_length);
+		strcpy(dest, buf);
+		iconv_close(ic);
+		delete[] buf;
+	}
+	catch (...)
+	{
+		throw "iconv: cannot convert to UTF-8.";
+	}
 }
 
 } // namespace nano

@@ -184,6 +184,9 @@ namespace
 	};
 }
 
+//-----------------------------------------------------------------------------
+//
+
 #include <nanodbc.h> 
 
 namespace nano
@@ -196,7 +199,7 @@ namespace nano
 	status->setErrors(vector);	\
 	strncpy_s(nano::last_error_message, ERROR_MESSAGE_LENGTH + 1, (error_message), _TRUNCATE);  /* NANO_THROW_ERROR */
 
-extern char last_error_message[ERROR_MESSAGE_LENGTH];
+	extern char last_error_message[ERROR_MESSAGE_LENGTH];
 
 #define	NANO_POINTER			FB_CHAR(8)	// domain types
 #define	NANO_BLANK				FB_INTEGER	//
@@ -219,10 +222,90 @@ nanodbc::transaction* tnx_ptr(const char* cptr);
 nanodbc::statement* stmt_ptr(const char* cptr);
 nanodbc::result* rslt_ptr(const char* cptr);
 
-extern char odbc_locale[10];
+//-----------------------------------------------------------------------------
+//
 
-void utf8_to_odbc_locale(char* s, const char* utf8);
-void odbc_locale_to_utf8(char* utf8, const char* s);
+extern char udr_locale[20];
+
+enum fb_char_set
+{
+	CS_NONE = 0,		// No Character Set
+
+	CS_BINARY = 1,		// BINARY BYTES
+	CS_ASCII = 2,		// ASCII
+	CS_UNICODE_FSS = 3, // UNICODE in FSS format	- 3b
+	CS_UTF8 = 4,		// UTF-8	- 4b
+	CS_SJIS = 5,		// SJIS		- 2b
+	CS_EUCJ = 6,		// EUC-J	- 2b
+
+	CS_JIS_0208 = 7,	// JIS 0208; 1990
+	CS_UNICODE_UCS2 = 8,	// UNICODE v 1.10
+
+	CS_DOS_737 = 9,
+	CS_DOS_437 = 10,	// DOS CP 437
+	CS_DOS_850 = 11,	// DOS CP 850
+	CS_DOS_865 = 12,	// DOS CP 865
+	CS_DOS_860 = 13,	// DOS CP 860
+	CS_DOS_863 = 14,	// DOS CP 863
+
+	CS_DOS_775 = 15,
+	CS_DOS_858 = 16,
+	CS_DOS_862 = 17,
+	CS_DOS_864 = 18,
+
+	CS_NEXT = 19,		// NeXTSTEP OS native charset
+
+	CS_ISO8859_1 = 21,	// ISO-8859.1
+	CS_ISO8859_2 = 22,	// ISO-8859.2
+	CS_ISO8859_3 = 23,	// ISO-8859.3
+	CS_ISO8859_4 = 34,	// ISO-8859.4
+	CS_ISO8859_5 = 35,	// ISO-8859.5
+	CS_ISO8859_6 = 36,	// ISO-8859.6
+	CS_ISO8859_7 = 37,	// ISO-8859.7
+	CS_ISO8859_8 = 38,	// ISO-8859.8
+	CS_ISO8859_9 = 39,	// ISO-8859.9
+	CS_ISO8859_13 = 40,	// ISO-8859.13
+
+	CS_KSC5601 = 44,	// KOREAN STANDARD 5601	- 2b
+
+	CS_DOS_852 = 45,	// DOS CP 852
+	CS_DOS_857 = 46,	// DOS CP 857
+	CS_DOS_861 = 47,	// DOS CP 861
+
+	CS_DOS_866 = 48,
+	CS_DOS_869 = 49,
+
+	CS_CYRL = 50,
+	CS_WIN1250 = 51,	// Windows cp 1250
+	CS_WIN1251 = 52,	// Windows cp 1251
+	CS_WIN1252 = 53,	// Windows cp 1252
+	CS_WIN1253 = 54,	// Windows cp 1253
+	CS_WIN1254 = 55,	// Windows cp 1254
+
+	CS_BIG5 = 56,		// Big Five unicode cs
+	CS_GB2312 = 57,		// GB 2312-80 cs	- 2b
+
+	CS_WIN1255 = 58,	// Windows cp 1255
+	CS_WIN1256 = 59,	// Windows cp 1256
+	CS_WIN1257 = 60,	// Windows cp 1257
+
+	CS_UTF16 = 61,		// UTF-16
+	CS_UTF32 = 62,		// UTF-32
+
+	CS_KOI8R = 63,		// Russian KOI8R
+	CS_KOI8U = 64,		// Ukrainian KOI8U
+
+	CS_WIN1258 = 65,	// Windows cp 1258
+
+	CS_TIS620 = 66,		// TIS620
+	CS_GBK = 67,		// GBK	- 2b	
+	CS_CP943C = 68,		// CP943C	- 2b
+
+	CS_GB18030 = 69		// GB18030	- 4b
+};
+
+void utf8_to_loc(char* dest, const char* src);
+void loc_to_utf8(char* dest, const char* src);
 
 }
 #endif	/* NANO_H */
