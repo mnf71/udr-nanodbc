@@ -57,6 +57,26 @@ namespace nano
 
 FB_UDR_BEGIN_FUNCTION(func_execute_conn)
 
+	unsigned in_count;
+
+	enum in : short {
+		conn = 0, query, batch_operations, timeout
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -77,6 +97,7 @@ FB_UDR_BEGIN_FUNCTION(func_execute_conn)
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
+				UTF8_IN(query);
 				nanodbc::result rslt = 
 					nanodbc::execute(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
 				nano::fb_ptr(out->rslt.str, (int64_t)&rslt);
@@ -109,6 +130,26 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(func_just_execute_conn)
+	
+	unsigned in_count;
+
+	enum in : short {
+		conn = 0, query, batch_operations, timeout
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -131,6 +172,7 @@ FB_UDR_BEGIN_FUNCTION(func_just_execute_conn)
 			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
 			try
 			{
+				UTF8_IN(query);
 				nanodbc::just_execute
 					(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
 				out->blankNull = FB_FALSE;
@@ -354,6 +396,26 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(func_prepare_stmt)
 
+	unsigned in_count;
+
+	enum in : short {
+		stmt = 0, query, timeout
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, stmt)
@@ -374,6 +436,7 @@ FB_UDR_BEGIN_FUNCTION(func_prepare_stmt)
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
 			{
+				UTF8_IN(query);
 				nanodbc::prepare(*stmt, (NANODBC_TEXT(in->query.str)), in->timeout);
 				out->blankNull = FB_FALSE;
 			}
