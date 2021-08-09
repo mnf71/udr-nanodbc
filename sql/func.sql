@@ -3,6 +3,7 @@ SET TERM ^ ;
 CREATE OR ALTER PACKAGE NANO$FUNC
 AS
 BEGIN
+
   FUNCTION execute_conn(
       conn TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
@@ -18,23 +19,19 @@ BEGIN
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION execute_stmt(
-      stmt TY$POINTER NOT NULL,
-      batch_operations INTEGER NOT NULL DEFAULT 1
+      stmt TY$POINTER NOT NULL, batch_operations INTEGER NOT NULL DEFAULT 1
     ) RETURNS TY$POINTER;
 
   FUNCTION just_execute_stmt(
-      stmt TY$POINTER NOT NULL,
-      batch_operations INTEGER NOT NULL DEFAULT 1
+      stmt TY$POINTER NOT NULL, batch_operations INTEGER NOT NULL DEFAULT 1
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION transact_stmt(
-      stmt TY$POINTER NOT NULL,
-      batch_operations INTEGER NOT NULL DEFAULT 1
+      stmt TY$POINTER NOT NULL, batch_operations INTEGER NOT NULL DEFAULT 1
     ) RETURNS TY$POINTER;
 
   FUNCTION just_transact_stmt(
-      stmt TY$POINTER NOT NULL,
-      batch_operations INTEGER NOT NULL DEFAULT 1
+      stmt TY$POINTER NOT NULL, batch_operations INTEGER NOT NULL DEFAULT 1
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION prepare_stmt(

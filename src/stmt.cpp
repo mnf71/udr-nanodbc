@@ -40,7 +40,7 @@ class params_array;
 params_array* batch_array;
 
 //-----------------------------------------------------------------------------
-// create function statement (
+// create function statement_ (
 //	 conn ty$pointer default null, 
 //   query varchar(8191) character set utf8 default null,
 // 	 timeout integer not null default 0 
@@ -120,7 +120,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function dispose (
-//	 stmt ty$pointer not null, 
+//	 stmt ty$pointer not null 
 // ) returns ty$pointer
 // external name 'nano!stmt_dispose'
 // engine udr; 
@@ -165,7 +165,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_dispose)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function open (
+// create function open_ (
 //	 stmt ty$pointer not null, 
 //	 conn ty$pointer not null
 // ) returns ty$nano_blank
@@ -216,7 +216,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function opened (
-//	 stmt ty$pointer not null, 
+//	 stmt ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!stmt_opened'
 //	engine udr; 
@@ -261,7 +261,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function connected (
-//	 stmt ty$pointer not null, 
+//	 stmt ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!stmt_connected'
 //	engine udr; 
@@ -306,7 +306,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function connection (
-//	 stmt ty$pointer not null, 
+//	 stmt ty$pointer not null 
 //	) returns ty$pointer
 //	external name 'nano!stmt_connection'
 //	engine udr; 
@@ -351,8 +351,8 @@ FB_UDR_BEGIN_FUNCTION(stmt_connection)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function close (
-//	 stmt ty$pointer not null, 
+// create function close_ (
+//	 stmt ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt_close'
 //	engine udr; 
@@ -398,8 +398,8 @@ FB_UDR_BEGIN_FUNCTION(stmt_close)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function cancel (
-//	 stmt ty$pointer not null, 
+// create function cancel_ (
+//	 stmt ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt_cancel'
 //	engine udr; 
@@ -444,9 +444,9 @@ FB_UDR_MESSAGE(
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function prepare (
+// create function prepare_ (
 //	 stmt ty$pointer not null, 
-//	 conn ty$pointer default null, 
+//	 conn ty$pointer, 
 //   query varchar(8191) character set utf8 not null,
 // 	 timeout integer not null default 0 
 //	) returns ty$nano_blank
@@ -580,7 +580,7 @@ FB_UDR_END_FUNCTION
 //	 stmt ty$pointer not null, 
 //	 conn ty$pointer not null, 
 //   query varchar(8191) character set utf8 not null,
-// 	 batch_operations integer not null default 1 
+// 	 batch_operations integer not null default 1,
 // 	 timeout integer not null default 0 
 //	) returns ty$pointer
 //	external name 'nano!stmt_execute_direct'
@@ -733,7 +733,7 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function execute_ (
 //	 stmt ty$pointer not null, 
-// 	 batch_operations integer not null default 1 
+// 	 batch_operations integer not null default 1, 
 // 	 timeout integer not null default 0 
 //	) returns ty$pointer
 //	external name 'nano!stmt_execute'
@@ -783,7 +783,7 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function just_execute_ (
 //	 stmt ty$pointer not null, 
-// 	 batch_operations integer not null default 1 
+// 	 batch_operations integer not null default 1,
 // 	 timeout integer not null default 0 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt_just_execute'
@@ -836,7 +836,7 @@ FB_UDR_END_FUNCTION
 //	 catalog_ varchar(128) character set utf8 not null, 
 //	 schema_ varchar(128) character set utf8 not null, 
 //	 procedure_ varchar(63) character set utf8 not null, 
-//	 column_ varchar(63) character set utf8 not null, 
+//	 column_ varchar(63) character set utf8 not null 
 //	) returns ty$pointer
 //	external name 'nano!stmt_procedure_columns'
 //	engine udr; 
@@ -912,7 +912,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function affected_rows (
-//	 stmt ty$pointer not null, 
+//	 stmt ty$pointer not null 
 //	) returns integer
 //	external name 'nano!stmt_affected_rows'
 //	engine udr; 
@@ -957,7 +957,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function columns (
-//	 stmt ty$pointer not null, 
+//	 stmt ty$pointer not null 
 //	) returns smallint
 //	external name 'nano!stmt_columns'
 //	engine udr; 
@@ -1050,7 +1050,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function parameters  ( 
-//	 stmt ty$pointer not null, 
+//	 stmt ty$pointer not null 
 //	) returns smallint
 //	external name 'nano!stmt_parameters'
 //	engine udr; 
@@ -1147,7 +1147,7 @@ FB_UDR_END_FUNCTION
 // create function bind_[fb_type] (
 //	 stmt ty$pointer not null,
 // 	 param_index smallint not null,
-//   value_	[fb_type],
+//   value_	[fb_type]
 //	) returns ty$nano_blank
 //	external name 'nano!stmt_bind'
 //	engine udr; 
@@ -1347,8 +1347,8 @@ FB_UDR_END_FUNCTION
 //	 stmt ty$pointer not null,
 // 	 idx smallint not null,
 // 	 type_ smallint not null,
-// 	 size integer not null,
-// 	 scale smallint not null default 0
+// 	 size_ integer not null,
+// 	 scale_ smallint not null default 0
 //	) returns ty$nano_blank
 //	external name 'nano!stmt_describe_parameters
 //	engine udr; 

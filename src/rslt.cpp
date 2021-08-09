@@ -35,7 +35,7 @@ namespace nano
 
 //-----------------------------------------------------------------------------
 // create function dispose (
-//	 tnx ty$pointer not null, 
+//	 tnx ty$pointer not null 
 // ) returns ty$pointer
 // external name 'nano!rslt_dispose'
 // engine udr; 
@@ -80,7 +80,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function rowset_size  ( 
-//	 rslt ty$pointer not null, 
+//	 rslt ty$pointer not null 
 //	) returns integer
 //	external name 'nano!rslt_rowset_size'
 //	engine udr; 
@@ -125,7 +125,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function affected_rows (
-//	 rslt ty$pointer not null, 
+//	 rslt ty$pointer not null 
 //	) returns integer
 //	external name 'nano!rslt_affected_rows'
 //	engine udr; 
@@ -170,7 +170,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function has_affected_rows (
-//	 rslt ty$pointer not null, 
+//	 rslt ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!rslt_has_affected_rows'
 //	engine udr; 
@@ -214,8 +214,8 @@ FB_UDR_BEGIN_FUNCTION(rslt_has_affected_rows)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function rows (
-//	 rslt ty$pointer not null, 
+// create function rows_ (
+//	 rslt ty$pointer not null 
 //	) returns integer
 //	external name 'nano!rslt_rows'
 //	engine udr; 
@@ -486,7 +486,7 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function move_ (
 //	 rslt ty$pointer not null, 
-//	 row integer not null, 
+//	 row_ integer not null 
 //	) returns boolean
 //	external name 'nano!rslt_move'
 //	engine udr; 
@@ -533,7 +533,7 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function skip_ (
 //	 rslt ty$pointer not null, 
-//	 row integer not null, 
+//	 row_ integer not null 
 //	) returns boolean
 //	external name 'nano!rslt_skip'
 //	engine udr; 
@@ -579,7 +579,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function position_ (
-//	 rslt ty$pointer not null, 
+//	 rslt ty$pointer not null 
 //	) returns integer
 //	external name 'nano!rslt_position'
 //	engine udr; 
@@ -1422,7 +1422,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function next_result (
-//	 rslt ty$pointer not null, 
+//	 rslt ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!rslt_next_result'
 //	engine udr; 
@@ -1467,7 +1467,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function exist (
-//	 rslt ty$pointer not null, 
+//	 rslt ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!rslt_exist'
 //	engine udr; 

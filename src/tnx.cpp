@@ -34,8 +34,8 @@ namespace nano
 {
 
 //-----------------------------------------------------------------------------
-// create function transaction (
-//	 conn ty$pointer not null, 
+// create function transaction_ (
+//	 conn ty$pointer not null 
 //	) returns ty$pointer
 //	external name 'nano!tnx_transaction'
 //	engine udr; 
@@ -84,7 +84,7 @@ FB_UDR_END_FUNCTION
 //	 tnx ty$pointer not null, 
 // ) returns ty$pointer
 // external name 'nano!tnx_dispose'
-//engine udr; 
+// engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(tnx_dispose)
@@ -125,8 +125,8 @@ FB_UDR_BEGIN_FUNCTION(tnx_dispose)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function commit (
-//	 tnx ty$pointer not null, 
+// create function commit_ (
+//	 tnx ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!tnx_commit'
 //	engine udr; 
@@ -172,7 +172,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function rollback (
-//	 tnx ty$pointer not null, 
+//	 tnx ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!tnx_rollback'
 //	engine udr; 
@@ -218,7 +218,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function connection (
-//	 tnx ty$pointer not null, 
+//	 tnx ty$pointer not null 
 //	) returns ty$pointer
 //	external name 'nano!tnx_connection'
 //	engine udr; 
