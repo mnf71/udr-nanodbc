@@ -39,7 +39,7 @@ char last_error_message[ERROR_MESSAGE_LENGTH] = { 0 };
 // create function connection (
 //	 udr_locale varchar(20) character set none not null default '.1251',
 //	 attr varchar(512) character set utf8 default null, 
-//	 user varchar(63) character set utf8 default null, 
+//	 user_ varchar(63) character set utf8 default null, 
 //	 pass varchar(63) character set utf8 default null, 
 //	 timeout integer not null default 0 
 //	) returns ty$pointer
@@ -171,7 +171,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function allocate (
-//	 conn ty$pointer not null, 
+//	 conn ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!conn_allocate'
 //	engine udr; 
@@ -217,7 +217,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function deallocate (
-//	 conn ty$pointer not null, 
+//	 conn ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!conn_deallocate'
 //	engine udr; 
@@ -262,7 +262,7 @@ FB_UDR_BEGIN_FUNCTION(conn_deallocate)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function connect (
+// create function connect_ (
 //	 conn ty$pointer not null, 
 //	 attr varchar(512) character set utf8 not null, 
 //	 user varchar(64) character set utf8 default null, 
@@ -350,7 +350,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function connected (
-//	 conn ty$pointer not null, 
+//	 conn ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!conn_connected'
 //	engine udr; 
@@ -394,8 +394,8 @@ FB_UDR_BEGIN_FUNCTION(conn_connected)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function disconnect (
-//	 conn ty$pointer not null, 
+// create function disconnect_ (
+//	 conn ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!conn_disconnect'
 //	engine udr; 
@@ -441,7 +441,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function transactions (
-//	 conn ty$pointer not null, 
+//	 conn ty$pointer not null 
 //	) returns integer
 //	external name 'nano!conn_transactions'
 //	engine udr; 
@@ -554,7 +554,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function dbms_name (
-//	 conn ty$pointer not null, 
+//	 conn ty$pointer not null 
 //	) returns varchar(128) character set utf8
 //	external name 'nano!conn_dbms_name'
 //	engine udr; 
@@ -620,7 +620,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function dbms_version (
-//	 conn ty$pointer not null, 
+//	 conn ty$pointer not null 
 //	) returns varchar(128) character set utf8
 //	external name 'nano!conn_dbms_version'
 //	engine udr; 
@@ -686,7 +686,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function driver_name (
-//	 conn ty$pointer not null, 
+//	 conn ty$pointer not null 
 //	) returns varchar(128) character set utf8
 //	external name 'nano!conn_driver_name'
 //	engine udr; 
@@ -752,7 +752,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function database_name (
-//	 conn ty$pointer not null, 
+//	 conn ty$pointer not null 
 //	) returns varchar(128) character set utf8
 //	external name 'nano!conn_database_name'
 //	engine udr; 
@@ -818,7 +818,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function catalog_name (
-//	 conn ty$pointer not null, 
+//	 conn ty$pointer not null 
 //	) returns varchar(128) character set utf8
 //	external name 'nano!conn_catalog_name'
 //	engine udr; 

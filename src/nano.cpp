@@ -120,7 +120,7 @@ void loc_to_utf8(char* dest, const char* src)
 		char* buf = new char[(in_length * 4) + 1], * out = buf;
 		memset(buf, '\0', (in_length * 4) + 1);
 		size_t out_length = in_length * 4;
-		// todo: строка возвращается не полнлостью
+		// todo: иногда строка возвращается не полностью
 		iconv(ic, &in, &in_length, &out, &out_length);
 		strcpy(dest, buf);
 		iconv_close(ic);
