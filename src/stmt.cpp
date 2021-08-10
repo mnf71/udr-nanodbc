@@ -1031,7 +1031,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_reset_parameters)
 			{
 				stmt->reset_parameters();
 				out->blankNull = FB_FALSE;
-				//delete& nano::batch_array;
+				if (batch_array) delete& nano::batch_array;
 			}
 			catch (std::runtime_error const& e)
 			{
