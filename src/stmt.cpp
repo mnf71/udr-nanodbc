@@ -1123,7 +1123,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
 			try
 			{
 				out->size = stmt->parameter_size(in->param_index);
-				if (  out->size < 0) out->size = -1; // BLOB
+				if (out->size < 0) out->size = -1; // BLOB
 				out->sizeNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1165,6 +1165,8 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 	AutoArrayDelete<unsigned> in_types;
 	AutoArrayDelete<unsigned> in_char_sets;
 
+	IUtil* utl = master->getUtilInterface();
+
 	FB_UDR_CONSTRUCTOR
 	{
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
@@ -1202,32 +1204,27 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 				short param_index = *(ISC_SHORT*)(in + in_offsets[in::param_index]);
 				switch (in_types[in::value])
 				{
-					case SQL_TEXT: // char
+					case SQL_TEXT: // char, varchar
+					case SQL_VARYING: 
 					{
-						//if (in_char_sets[in::value] == /* UTF8 */ 4) 
-						//{
-						//}
-						//else 
+						nanodbc::string param = NANODBC_TEXT("");
+						switch (in_types[in::value])
 						{
-							std::size_t length_s = strlen((char*)(in + in_offsets[in::value]));
-							nanodbc::string value_s(++length_s, '\0');
-							value_s = (char*)(in + in_offsets[in::value]);
-							stmt->bind(param_index, value_s.c_str());
+							case SQL_TEXT: // char
+								param.assign(
+									(char*)(in + in_offsets[in::value]), strlen((char*)(in + in_offsets[in::value]))
+								);
+								break;
+							case SQL_VARYING: // varchar
+								param.assign(
+									(char*)(in + sizeof(ISC_USHORT) + in_offsets[in::value]),
+									*(ISC_USHORT*)(in + in_offsets[in::value]));
+								break;
+
 						}
-						break;
-					}
-					case SQL_VARYING: // varchar
-					{
-						//if (in_char_sets[in::value] == /* UTF8 */ 4) 
-						//{
-						//}
-						//else 
-						{
-							std::size_t length_s = *(ISC_USHORT*)(in + in_offsets[in::value]);
-							nanodbc::string value_s(++length_s, '\0');
-							value_s = (char*)(in + sizeof(ISC_USHORT) + in_offsets[in::value]);
-							stmt->bind(param_index, value_s.c_str());
-						}
+						if (in_char_sets[in::value] == fb_char_set::CS_UTF8) 
+							utf8_to_loc((char*)param.c_str(), (const char*)param.c_str());
+						stmt->bind(param_index, param.c_str());
 						break;
 					}
 					case SQL_SHORT: // smallint 
@@ -1239,11 +1236,22 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 					case SQL_FLOAT: // float
 						stmt->bind(param_index, (float*)(in + in_offsets[in::value]));
 						break;
-					case SQL_DOUBLE, SQL_D_FLOAT: // double precision
+					case SQL_DOUBLE: // double precision 
+					case SQL_D_FLOAT: 
 						stmt->bind(param_index, (double*)(in + in_offsets[in::value]));
 						break;
 					case SQL_TIMESTAMP: // timestamp
+					{
+						Firebird::FbTimestamp value_tm; 
+						// This class has memory layout identical to ISC_TIMESTAMP
+						memcpy(&value_tm, (ISC_TIMESTAMP*)(in + in_offsets[in::value]), sizeof(FbTimestamp));
+						struct nano::timestamp tm;
+						value_tm.date.decode(utl, &tm.year, &tm.month, &tm.day);
+						value_tm.time.decode(utl, &tm.hour, &tm.min, &tm.sec, &tm.fract);
+						nanodbc::timestamp param = nano::set_timestamp(&tm);
+						stmt->bind(param_index, &param);
 						break;
+					}
 					case SQL_BLOB: // blob
 						break;
 					case SQL_ARRAY: // array
@@ -1251,9 +1259,27 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 					case SQL_QUAD: // blob_id 
 						break;
 					case SQL_TYPE_TIME: // time
+					{
+						Firebird::FbTime value_t;
+						// This class has memory layout identical to ISC_TIME
+						memcpy(&value_t, (ISC_TIME*)(in + in_offsets[in::value]), sizeof(FbTime));
+						struct nano::time t;
+						value_t.decode(utl, &t.hour, &t.min, &t.sec, &t.fract);
+						nanodbc::time param = nano::set_time(&t);
+						stmt->bind(param_index, &param);
 						break;
+					}
 					case SQL_TYPE_DATE: // date
+					{
+						Firebird::FbDate value_d;
+						// This class has memory layout identical to ISC_DATE
+						memcpy(&value_d, (ISC_DATE*)(in + in_offsets[in::value]), sizeof(FbDate));
+						struct nano::date d;
+						value_d.decode(utl, &d.year, &d.month, &d.day);
+						nanodbc::date param = nano::set_date(&d);
+						stmt->bind(param_index, &param);
 						break;
+					}
 					case SQL_INT64: // bigint
 						stmt->bind(param_index, (ISC_INT64*)(in + in_offsets[in::value]));
 						break;
@@ -1265,13 +1291,8 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 						break; 
 					}
 					case SQL_NULL: // null
-					{
-						bool nulls[single_batch] = { true };
-						nanodbc::string::value_type value_s[single_batch][1] = { NANODBC_TEXT(0) };
-						stmt->bind_strings(param_index, value_s, nulls);
-						break;
-					}
 					default:
+						stmt->bind_null(param_index);
 						break;
 				}
 				out->blankNull = FB_FALSE;
@@ -1454,21 +1475,21 @@ private:
 	{
 		std::vector<
 			std::variant<
-			short,
-			unsigned short,
-			int,
-			unsigned int,
-			long int,
-			unsigned long int,
-			long long,
-			unsigned long long,
-			float,
-			double,
-			date,
-			time,
-			timestamp,
-			std::string,
-			wide_string
+				short,
+				unsigned short,
+				int,
+				unsigned int,
+				long int,
+				unsigned long int,
+				long long,
+				unsigned long long,
+				float,
+				double,
+				date,
+				time,
+				timestamp,
+				std::string,
+				wide_string
 			>
 		> values;
 	};

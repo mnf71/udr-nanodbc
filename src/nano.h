@@ -192,6 +192,9 @@ namespace
 namespace nano
 {
 
+//-----------------------------------------------------------------------------
+//
+
 #define ERROR_MESSAGE_LENGTH	512
 #define	NANO_THROW_ERROR(error_message)	\
 	ISC_STATUS_ARRAY vector =	\
@@ -331,6 +334,44 @@ enum fb_char_set
 
 void utf8_to_loc(char* dest, const char* src);
 void loc_to_utf8(char* dest, const char* src);
+
+//-----------------------------------------------------------------------------
+//
+
+struct date
+{
+	unsigned year;  
+	unsigned month;
+	unsigned day;
+};
+
+struct time
+{
+	unsigned hour;
+	unsigned min;
+	unsigned sec;
+	unsigned fract;
+};
+
+struct timestamp
+{
+	unsigned year;
+	unsigned month;
+	unsigned day;
+	unsigned hour;
+	unsigned min;
+	unsigned sec;
+	unsigned fract;
+};
+
+
+nanodbc::timestamp set_timestamp(nano::timestamp* tm);
+nanodbc::date set_date(nano::date* d);
+nanodbc::time set_time(nano::time* t);
+
+nano::timestamp get_timestamp(nanodbc::timestamp* tm);
+nano::date get_date(nanodbc::date* d);
+nano::time get_time(nanodbc::time* t);
 
 }
 #endif	/* NANO_H */

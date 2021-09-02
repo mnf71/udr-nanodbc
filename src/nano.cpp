@@ -29,8 +29,6 @@
 namespace nano
 {
 
-char udr_locale[20] = "cp1251"; // default
-
 //-----------------------------------------------------------------------------
 //
 void fb_ptr(char* cptr, int64_t iptr)
@@ -89,6 +87,9 @@ nanodbc::result* rslt_ptr(const char* cptr)
 
 //-----------------------------------------------------------------------------
 //
+char udr_locale[20] = "cp1251"; // default
+
+
 void utf8_to_loc(char* dest, const char* src)
 {
 	try
@@ -130,6 +131,71 @@ void loc_to_utf8(char* dest, const char* src)
 	{
 		throw "iconv: cannot convert to UTF-8.";
 	}
+}
+
+//-----------------------------------------------------------------------------
+//
+
+nanodbc::timestamp set_timestamp(nano::timestamp* tm)
+{
+	nanodbc::timestamp tm_s;
+	tm_s.year = tm->year;
+	tm_s.month = tm->month;
+	tm_s.day = tm->day;
+	tm_s.hour = tm->hour;
+	tm_s.min = tm->min;
+	tm_s.sec = tm->sec;
+	tm_s.fract = tm->fract;
+	return tm_s;
+}
+
+nanodbc::date set_date(nano::date* d)
+{
+	nanodbc::date d_s;
+	d_s.year = d->year;
+	d_s.month = d->month;
+	d_s.day = d->day;
+	return d_s;
+}
+
+nanodbc::time set_time(nano::time* t)
+{
+	nanodbc::time t_s;
+	t_s.hour = t->hour;
+	t_s.min = t->min;
+	t_s.sec = t->sec;
+	return t_s;
+}
+
+nano::timestamp get_timestamp(nanodbc::timestamp* tm)
+{
+	nano::timestamp tm_s;
+	tm_s.year = tm->year;
+	tm_s.month = tm->month;
+	tm_s.day = tm->day;
+	tm_s.hour = tm->hour;
+	tm_s.min = tm->min;
+	tm_s.sec = tm->sec;
+	tm_s.fract = tm->fract;
+	return tm_s;
+}
+
+nano::date get_date(nanodbc::date* d)
+{
+	nano::date d_s;
+	d_s.year = d->year;
+	d_s.month = d->month;
+	d_s.day = d->day;
+	return d_s;
+}
+
+nano::time get_time(nanodbc::time* t)
+{
+	nano::time t_s;
+	t_s.hour = t->hour;
+	t_s.min = t->min;
+	t_s.sec = t->sec;
+	return t_s;
 }
 
 } // namespace nano
