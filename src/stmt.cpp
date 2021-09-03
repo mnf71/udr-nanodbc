@@ -1,3 +1,4 @@
+
 /*
  *  The contents of this file are subject to the Initial
  *  Developer's Public License Version 1.0 (the "License");
@@ -35,7 +36,88 @@ using namespace nanodbc;
 namespace nano
 {
 
-class params_array;
+//-----------------------------------------------------------------------------
+//
+
+class params_array
+{
+public:
+	params_array(short size)
+	{
+		data_ = new param_values[size];
+		size_ = size;
+	};
+
+	~params_array() noexcept
+	{
+		clear();
+		delete[] data_;
+	};
+
+	template <class T>
+	long push(short param_index, T const value)
+	{
+		data_[param_index].values.push_back(value);
+		return // batch_index
+			(long)(data_[param_index].values.size() - 1); 
+	};
+
+	void push_null(short param_index)
+	{
+		data_[param_index].values.push_back('\0');
+	};
+
+	template <class T>
+	T* value(short param_index, long batch_index)
+	{
+		T* p = (T*)(data_[param_index].values.data());
+		return &(p[batch_index]);
+	};
+	
+	template <class T>
+	std::vector<T> values(short param_index)
+	{
+		return data_[param_index].values;
+	};
+	
+	void clear()
+	{
+		for (std::size_t param_index = 0; param_index < size_; ++param_index)
+			data_[param_index].values.clear();
+	}
+
+	explicit operator bool() const
+	{
+		return static_cast<bool>(data_);
+	};
+
+private:
+	struct param_values
+	{
+		std::vector<
+			std::variant<
+			short,
+			unsigned short,
+			int,
+			unsigned int,
+			long int,
+			unsigned long int,
+			long long,
+			unsigned long long,
+			float,
+			double,
+			nanodbc::date,
+			nanodbc::time,
+			nanodbc::timestamp,
+			nanodbc::string,
+			wide_string
+			>
+		> values;
+	};
+
+	param_values* data_;
+	short size_;
+};
 
 params_array* batch_array;
 
@@ -100,6 +182,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_statement)
 				{
 					UTF8_IN(query);
 					stmt = new nanodbc::statement(*conn, NANODBC_TEXT(in->query.str), in->timeout);
+					nano::batch_array = new nano::params_array(stmt->parameters());
 				}
 				else
 					stmt = new nanodbc::statement(*conn);
@@ -144,9 +227,9 @@ FB_UDR_BEGIN_FUNCTION(stmt_dispose)
 		{
 			try
 			{
+				if (nano::batch_array) delete nano::batch_array;
 				delete nano::stmt_ptr(in->stmt.str);
 				out->stmtNull = FB_TRUE;
-				if (batch_array) delete& nano::batch_array;
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -378,9 +461,10 @@ FB_UDR_BEGIN_FUNCTION(stmt_close)
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
 			{
+				if (nano::batch_array) 
+					nano::batch_array->clear();
 				stmt->close();
 				out->blankNull = FB_FALSE;
-				if (batch_array) delete& nano::batch_array;
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -501,7 +585,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_prepare)
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
 			{
-				if (batch_array) delete& nano::batch_array;
+				if (nano::batch_array) delete nano::batch_array;
 
 				UTF8_IN(query);
 				if (!in->connNull)
@@ -511,6 +595,8 @@ FB_UDR_BEGIN_FUNCTION(stmt_prepare)
 				}
 				else
 					stmt->prepare(NANODBC_TEXT(in->query.str), in->timeout);
+	
+				nano::batch_array = new nano::params_array(stmt->parameters());
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -1029,9 +1115,10 @@ FB_UDR_BEGIN_FUNCTION(stmt_reset_parameters)
 			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
 			try
 			{
+				if (nano::batch_array) 
+					nano::batch_array->clear();
 				stmt->reset_parameters();
 				out->blankNull = FB_FALSE;
-				if (batch_array) delete& nano::batch_array;
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -1198,16 +1285,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 		{
 			out->blank = BLANK;
 			nanodbc::statement* stmt = nano::stmt_ptr((const char*)(in + in_offsets[in::stmt]));
-			const int single_batch = 1;
 			try
 			{
 				short param_index = *(ISC_SHORT*)(in + in_offsets[in::param_index]);
+				long batch_index;
 				switch (in_types[in::value])
 				{
 					case SQL_TEXT: // char, varchar
 					case SQL_VARYING: 
 					{
-						nanodbc::string param = NANODBC_TEXT("");
+						nanodbc::string param;
 						switch (in_types[in::value])
 						{
 							case SQL_TEXT: // char
@@ -1217,14 +1304,14 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 								break;
 							case SQL_VARYING: // varchar
 								param.assign(
-									(char*)(in + sizeof(ISC_USHORT) + in_offsets[in::value]),
-									*(ISC_USHORT*)(in + in_offsets[in::value]));
+									(char*)(in + sizeof(ISC_USHORT) + in_offsets[in::value]), *(ISC_USHORT*)(in + in_offsets[in::value])
+								);
 								break;
-
 						}
-						if (in_char_sets[in::value] == fb_char_set::CS_UTF8) 
-							utf8_to_loc((char*)param.c_str(), (const char*)param.c_str());
-						stmt->bind(param_index, param.c_str());
+						batch_index = nano::batch_array->push(param_index, param);
+						char* bind_param = (char*)(nano::batch_array->value<nanodbc::string>(param_index, batch_index)->c_str());
+						if (in_char_sets[in::value] == fb_char_set::CS_UTF8) utf8_to_loc(bind_param, (const char*)bind_param);
+						stmt->bind(param_index, bind_param);
 						break;
 					}
 					case SQL_SHORT: // smallint 
@@ -1418,86 +1505,6 @@ FB_UDR_BEGIN_FUNCTION(stmt_describe_parameters)
 	}
 
 FB_UDR_END_FUNCTION
-
-//-----------------------------------------------------------------------------
-class params_array
-{
-	params_array(std::size_t size)
-	{
-		data_ = new param_values[size];
-		size_ = size;
-	};
-
-	~params_array() noexcept
-	{
-		clear();
-		delete[] data_;
-	};
-
-public:
-	template <class T>
-	void push(std::size_t index, T const* value)
-	{
-		data_[index].values.push_back(&value);
-	};
-
-	void push_null(std::size_t index)
-	{
-		data_[index].values.push_back('\0');
-	};
-
-	template <class T>
-	std::vector<T> data(std::size_t index)
-	{
-		return data_[index].values;
-	};
-
-	template <class T>
-	T* data(std::size_t index)
-	{
-		return (T*)data_[index].data();
-	};
-	
-	void clear()
-	{
-		for (std::size_t i = 0; i < size_; ++i) 
-			data_[i].values.clear();
-		size_ = 0;
-	}
-	
-	explicit operator bool() const
-	{
-		return static_cast<bool>(data_);
-	};
-
-private:
-	struct param_values
-	{
-		std::vector<
-			std::variant<
-				short,
-				unsigned short,
-				int,
-				unsigned int,
-				long int,
-				unsigned long int,
-				long long,
-				unsigned long long,
-				float,
-				double,
-				date,
-				time,
-				timestamp,
-				std::string,
-				wide_string
-			>
-		> values;
-	};
-	param_values* data_;
-	std::size_t size_;
-
-};
-
 
 } // namespace nano
 
