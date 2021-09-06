@@ -1371,10 +1371,10 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind_null)
 		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
-			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str)->impl();
+			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
 			try
 			{
-				stmt->bind_null(in->param_index, in->batch_size);
+				impl->bind_null(in->param_index, in->batch_size);
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1425,10 +1425,10 @@ FB_UDR_BEGIN_FUNCTION(stmt_describe_parameters)
 		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
-			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str)->impl();
+			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
 			try
 			{
-				stmt->describe_parameters
+				impl->describe_parameters
 					(std::vector<short>(in->idx), std::vector<short>(in->type), std::vector<unsigned long>(in->size), 
 					 std::vector<short>(in->scale));
 				out->blankNull = FB_FALSE;
