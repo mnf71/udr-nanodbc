@@ -52,7 +52,7 @@ FB_BOOLEAN fb_bool(bool value)
 
 bool native_bool(const FB_BOOLEAN value)
 {	
-	return (value ? true : !value ? false : throw "Invalid FB_BOOLEAN value.");
+	return (value == FB_TRUE ? true : value == FB_FALSE ? false : throw "Invalid FB_BOOLEAN value.");
 }
 
 //-----------------------------------------------------------------------------
@@ -71,11 +71,11 @@ nanodbc::transaction* tnx_ptr(const char* cptr)
 	return (nanodbc::transaction*)tnx;
 }
 
-nanodbc::statement* stmt_ptr(const char* cptr)
+nano::statement* /* ! */ stmt_ptr(const char* cptr)
 {
 	int64_t stmt = 0;
 	memcpy(&stmt, cptr, 8);
-	return (nanodbc::statement*)stmt;
+	return (nano::statement*)stmt;
 }
 
 nanodbc::result* rslt_ptr(const char* cptr)

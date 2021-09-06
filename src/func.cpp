@@ -31,6 +31,8 @@ using namespace Firebird;
 
 using namespace nanodbc;
 
+#include "stmt.h"
+
 namespace nano
 {
 
@@ -218,10 +220,10 @@ FB_UDR_BEGIN_FUNCTION(func_execute_stmt)
 	{
 		if (!in->stmtNull)
 		{
-			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
+			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
 			try
 			{
-				nanodbc::result rslt = nanodbc::execute(*stmt, in->batch_operations);
+				nanodbc::result rslt = nanodbc::execute(*impl, in->batch_operations);
 				nano::fb_ptr(out->rslt.str, (int64_t)&rslt);
 				out->rsltNull = FB_FALSE;
 			}
@@ -267,10 +269,10 @@ FB_UDR_BEGIN_FUNCTION(func_just_execute_stmt)
 		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
-			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
+			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
 			try
 			{
-				nanodbc::just_execute(*stmt, in->batch_operations);
+				nanodbc::just_execute(*impl, in->batch_operations);
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -314,10 +316,10 @@ FB_UDR_BEGIN_FUNCTION(func_transact_stmt)
 	{
 		if (!in->stmtNull)
 		{
-			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
+			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
 			try
 			{
-				nanodbc::result rslt = nanodbc::transact(*stmt, in->batch_operations);
+				nanodbc::result rslt = nanodbc::transact(*impl, in->batch_operations);
 				nano::fb_ptr(out->rslt.str, (int64_t)&rslt);
 				out->rsltNull = FB_FALSE;
 			}
@@ -363,10 +365,10 @@ FB_UDR_BEGIN_FUNCTION(func_just_transact_stmt)
 		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
-			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
+			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
 			try
 			{
-				nanodbc::just_transact(*stmt, in->batch_operations);
+				nanodbc::just_transact(*impl, in->batch_operations);
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -433,11 +435,11 @@ FB_UDR_BEGIN_FUNCTION(func_prepare_stmt)
 		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
-			nanodbc::statement* stmt = nano::stmt_ptr(in->stmt.str);
+			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
 			try
 			{
 				UTF8_IN(query);
-				nanodbc::prepare(*stmt, (NANODBC_TEXT(in->query.str)), in->timeout);
+				nanodbc::prepare(*impl, (NANODBC_TEXT(in->query.str)), in->timeout);
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)

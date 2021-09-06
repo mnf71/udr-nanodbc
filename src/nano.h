@@ -225,7 +225,13 @@ bool native_bool(const ISC_UCHAR value);
 
 nanodbc::connection* conn_ptr(const char* cptr);
 nanodbc::transaction* tnx_ptr(const char* cptr);
-nanodbc::statement* stmt_ptr(const char* cptr);
+
+//------------
+// stmt.h
+
+class statement; 
+nano::statement* stmt_ptr(const char* cptr);
+
 nanodbc::result* rslt_ptr(const char* cptr);
         
 //-----------------------------------------------------------------------------
