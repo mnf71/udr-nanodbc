@@ -20,61 +20,71 @@
  *  Contributor(s): ______________________________________.
  */
 
+#ifndef STMT_H
+#define STMT_H
+
+ //-----------------------------------------------------------------------------
+ // package nano$stmt
+ //
+
 #include <nanodbc.h> 
 
 #include <variant>
 
-namespace nano
+namespace nanoudr
 {
 
-class params_array
+//-----------------------------------------------------------------------------
+//
+
+class params_batch
 {
 public:
-	params_array(short size)
+	params_batch(short size)
 	{
-		data_ = new param_values[size];
+		params = new param[size];
 		size_ = size;
 	};
 
-	~params_array() noexcept
+	~params_batch() noexcept
 	{
 		clear();
-		delete[] data_;
+		delete[] params;
 	};
 
 	template <class T>
 	long push(short param_index, T const value)
 	{
-		data_[param_index].values.push_back(value);
-		return (long)(data_[param_index].values.size() - 1); // batch_index 
+		params[param_index].values.push_back(value);
+		return (long)(params[param_index].values.size() - 1); // batch_index 
 	};
 
 	void push_null(short param_index)
 	{
-		data_[param_index].values.push_back('\0');
+		params[param_index].values.push_back('\0');
 	};
 
 	void clear()
 	{
 		for (std::size_t param_index = 0; param_index < size_; ++param_index)
-			data_[param_index].values.clear();
-	}
+			params[param_index].values.clear();
+	};
 
 	template <class T>
 	T* value(short param_index, long batch_index)
 	{
-		T* p = (T*)(data_[param_index].values.data());
+		T* p = (T*)(params[param_index].values.data());
 		return &(p[batch_index]);
 	};
 
 	template <class T>
 	std::vector<T> values(short param_index)
 	{
-		return data_[param_index].values;
+		return params[param_index].values;
 	};
 
 private:
-	struct param_values
+	struct param
 	{
 		std::vector<
 			std::variant<
@@ -92,60 +102,86 @@ private:
 				nanodbc::time,
 				nanodbc::timestamp,
 				nanodbc::string,
-				wide_string
+				nanodbc::wide_string
 			>
 		> values;
 	};
 
-	param_values* data_;
+	param* params;
 	short size_;
 };
 
 //-----------------------------------------------------------------------------
 //
 
-class statement
+class statement : public nanodbc::statement
 {
 public:
-	statement()
+	statement() : nanodbc::statement()
 	{
-		impl_ = new nanodbc::statement();
-		batch_array = nullptr;
+		params_batch = nullptr;
 	};
 
-	explicit statement(class connection& conn)
+	explicit statement(class nanoudr::connection& conn) 
+		: nanodbc::statement(conn)
 	{
-		impl_ = new nanodbc::statement(conn);
-		batch_array = nullptr;
+		params_batch = nullptr;
+		conn_ = &conn;
 	};
 
-	statement(class connection& conn, const string& query, long timeout = 0)
+	statement(class nanoudr::connection& conn, const nanodbc::string& query, long timeout = 0) 
+		: nanodbc::statement(conn, query, timeout) 
 	{
-		impl_ = new nanodbc::statement(conn, query, timeout);
-		short parameters_count = impl_->parameters();
-		batch_array = nullptr;
+		short parameters_count = parameters();
+		params_batch = nullptr;
 		if (parameters_count != 0)
-			batch_array = new nano::params_array(parameters_count);
+			params_batch = new nanoudr::params_batch(parameters_count);
+		conn_ = &conn;
 	};
 
 	~statement() noexcept
 	{
-		if (batch_array != nullptr)
-		{
-			delete batch_array;
-		}
-		delete impl_;
+		if (params_batch != nullptr) delete params_batch;
+		nanodbc::statement::~statement();
 	};
 
-	nanodbc::statement* impl()
+	void open(class connection& conn)
 	{
-		return impl_;
+		nanodbc::statement::open(conn);
+		conn_ = &conn;
 	};
 
-	params_array* batch_array;
+	nanoudr::connection* connection()
+	{
+		return conn_;
+	};
+
+	void prepare(class nanoudr::connection& conn, const nanodbc::string& query, long timeout = 0)
+	{
+		nanodbc::statement::prepare(conn, query, timeout);
+		conn_ = &conn;
+	};
+
+	class nanodbc::result execute_direct(class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0)
+	{
+		nanodbc::result rslt = 
+			nanodbc::statement::execute_direct(conn, query, batch_operations, timeout = 0);
+		conn_ = &conn;
+		return rslt;
+	};
+
+	void just_execute_direct(class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0)
+	{
+		nanodbc::statement::just_execute_direct(conn, query, batch_operations, timeout);
+		conn_ = &conn;
+	};
+
+	params_batch* params_batch;
 
 private:
-	nanodbc::statement* impl_;
+	nanoudr::connection* conn_;
 };
 
-} // namespace nano
+} // namespace nanoudr
+
+#endif	/* STMT_H */

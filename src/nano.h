@@ -184,12 +184,20 @@ namespace
 	};
 }
 
-//-----------------------------------------------------------------------------
-//
+/*
+ *  The Original Code was created by Maxim Filatov for the
+ *  Firebird Open Source RDBMS project.
+ *
+ *  Copyright (c) 2021 Maxim Filatov <2chemist@mail.ru>
+ *  and all contributors signed below.
+ *
+ *  All Rights Reserved.
+ *  Contributor(s): ______________________________________.
+ */
 
 #include <nanodbc.h> 
 
-namespace nano
+namespace nanoudr
 {
 
 //-----------------------------------------------------------------------------
@@ -200,7 +208,7 @@ namespace nano
 	ISC_STATUS_ARRAY vector =	\
 		{ isc_arg_gds, isc_random, isc_arg_string, (ISC_STATUS)(error_message), isc_arg_end };	\
 	status->setErrors(vector);	\
-	strncpy_s(nano::last_error_message, ERROR_MESSAGE_LENGTH + 1, (error_message), _TRUNCATE);  /* NANO_THROW_ERROR */
+	strncpy_s(nanoudr::last_error_message, ERROR_MESSAGE_LENGTH + 1, (error_message), _TRUNCATE);  /* NANO_THROW_ERROR */
 
 extern char last_error_message[ERROR_MESSAGE_LENGTH];
 
@@ -220,20 +228,22 @@ extern char last_error_message[ERROR_MESSAGE_LENGTH];
 void fb_ptr(char* cptr, int64_t iptr);
 int64_t native_ptr(const char* cptr);
 
-FB_BOOLEAN fb_bool(bool value);
-bool native_bool(const ISC_UCHAR value);
+class connection; // conn.h
+nanoudr::connection* conn_ptr(const char* cptr);
 
-nanodbc::connection* conn_ptr(const char* cptr);
 nanodbc::transaction* tnx_ptr(const char* cptr);
 
-//------------
-// stmt.h
-
-class statement; 
-nano::statement* stmt_ptr(const char* cptr);
+class statement; // stmt.h
+nanoudr::statement* stmt_ptr(const char* cptr);
 
 nanodbc::result* rslt_ptr(const char* cptr);
         
+//-----------------------------------------------------------------------------
+//
+
+FB_BOOLEAN fb_bool(bool value);
+bool native_bool(const ISC_UCHAR value);
+
 //-----------------------------------------------------------------------------
 //
 
@@ -260,6 +270,9 @@ nanodbc::result* rslt_ptr(const char* cptr);
 //
 
 extern char udr_locale[20];
+
+void utf8_to_loc(char* dest, const char* src);
+void loc_to_utf8(char* dest, const char* src);
 
 enum fb_char_set
 {
@@ -338,9 +351,6 @@ enum fb_char_set
 	CS_GB18030 = 69		// GB18030	- 4b
 };
 
-void utf8_to_loc(char* dest, const char* src);
-void loc_to_utf8(char* dest, const char* src);
-
 //-----------------------------------------------------------------------------
 //
 
@@ -370,14 +380,14 @@ struct timestamp
 	unsigned fract;
 };
 
+nanodbc::timestamp set_timestamp(nanoudr::timestamp* tm);
+nanodbc::date set_date(nanoudr::date* d);
+nanodbc::time set_time(nanoudr::time* t);
 
-nanodbc::timestamp set_timestamp(nano::timestamp* tm);
-nanodbc::date set_date(nano::date* d);
-nanodbc::time set_time(nano::time* t);
+nanoudr::timestamp get_timestamp(nanodbc::timestamp* tm);
+nanoudr::date get_date(nanodbc::date* d);
+nanoudr::time get_time(nanodbc::time* t);
 
-nano::timestamp get_timestamp(nanodbc::timestamp* tm);
-nano::date get_date(nanodbc::date* d);
-nano::time get_time(nanodbc::time* t);
+} // namespace nanoudr
 
-}
 #endif	/* NANO_H */

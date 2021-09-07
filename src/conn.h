@@ -10,7 +10,7 @@
  *  See the License for the specific language governing rights
  *  and limitations under the License.
  *
- *  The Original Code was created by Maxim Filatov for the 
+ *  The Original Code was created by Maxim Filatov for the
  *  Firebird Open Source RDBMS project.
  *
  *  Copyright (c) 2021 Maxim Filatov <2chemist@mail.ru>
@@ -20,16 +20,41 @@
  *  Contributor(s): ______________________________________.
  */
 
-#include "nano.h"
+ //-----------------------------------------------------------------------------
+ // package nano$conn
+ //
 
-using namespace Firebird;
-
-//-----------------------------------------------------------------------------
-// package nano$ctlg
-//
+#include <nanodbc.h> 
 
 namespace nanoudr
 {
 
+//-----------------------------------------------------------------------------
+//
+
+class connection : public nanodbc::connection
+{
+public:
+	connection() : nanodbc::connection()
+	{
+	};
+
+	connection(const nanodbc::string& dsn, const nanodbc::string& user, const nanodbc::string& pass, long timeout = 0) 
+		: nanodbc::connection(dsn, user, pass, timeout)
+	{
+	};
+
+	connection(const nanodbc::string& connection_string, long timeout = 0) 
+		: nanodbc::connection(connection_string, timeout)
+	{
+	};
+
+	~connection() noexcept
+	{
+		nanodbc::connection::~connection();
+	};
+
+	std::vector<nanoudr::statement*> statements;
+};
 
 } // namespace nanoudr

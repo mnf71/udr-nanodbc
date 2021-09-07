@@ -28,16 +28,13 @@ using namespace Firebird;
 // package nano$conn
 //
 
-using namespace nanodbc;
+#include "conn.h"
 
-namespace nano
+namespace nanoudr
 {
-
-char last_error_message[ERROR_MESSAGE_LENGTH] = { 0 };
 
 //-----------------------------------------------------------------------------
 // create function connection (
-//	 udr_locale varchar(20) character set none not null default '.1251',
 //	 attr varchar(512) character set utf8 default null, 
 //	 user_ varchar(63) character set utf8 default null, 
 //	 pass varchar(63) character set utf8 default null, 
@@ -47,9 +44,9 @@ char last_error_message[ERROR_MESSAGE_LENGTH] = { 0 };
 //	engine udr; 
 //
 // \brief
-// connection (?, null, null, null, ...) returns new connection object, initially not connected	
-// connection (?, ?, null, null, ...) returns new connection object and immediately connect by SQLDriverConnect
-// connection (?, ?, ?, ?, ...) returns new connection object and immediately connect by SQLConnect
+// connection (null, null, null, ...) returns new connection object, initially not connected	
+// connection (?, null, null, ...) returns new connection object and immediately connect by SQLDriverConnect
+// connection (?, ?, ?, ...) returns new connection object and immediately connect by SQLConnect
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_connection)
@@ -57,7 +54,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 	unsigned in_count;
 
 	enum in : short {
-		udr_locale = 0, attr, user, pass, timeout
+		attr = 0, user, pass, timeout
 	};
 
 	AutoArrayDelete<unsigned> in_char_sets;
@@ -76,7 +73,6 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 
 	FB_UDR_MESSAGE(
 		InMessage,
-		(FB_VARCHAR(20), udr_locale)
 		(FB_VARCHAR(512 * 4), attr)
 		(FB_VARCHAR(63 * 4), user)
 		(FB_VARCHAR(63 * 4), pass)
@@ -92,27 +88,23 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 	{
 		try
 		{
-			strncpy_s(
-				nano::udr_locale, in->udr_locale.length + 1, in->udr_locale.str, _TRUNCATE
-			); // initialize locale
-
 			UTF8_IN(attr);
 			UTF8_IN(user);
 			UTF8_IN(pass);
 
-			nanodbc::connection* conn;
+			nanoudr::connection* conn;
 			if (in->userNull && in->passNull)
 			{
 				if (!in->attrNull) 
-					conn = new nanodbc::connection(NANODBC_TEXT(in->attr.str), in->timeout);
+					conn = new nanoudr::connection(NANODBC_TEXT(in->attr.str), in->timeout);
 				else
-					conn = new nanodbc::connection();
+					conn = new nanoudr::connection();
 			}
 			else
 				conn =
-					new nanodbc::connection
+					new nanoudr::connection
 						(NANODBC_TEXT(in->attr.str), NANODBC_TEXT(in->user.str), NANODBC_TEXT(in->pass.str), in->timeout);
-			nano::fb_ptr(out->conn.str, (int64_t)conn);
+			nanoudr::fb_ptr(out->conn.str, (int64_t)conn);
 			out->connNull = FB_FALSE;
 		}
 		catch (std::runtime_error const& e)
@@ -150,12 +142,12 @@ FB_UDR_BEGIN_FUNCTION(conn_dispose)
 		{
 			try
 			{
-				delete nano::conn_ptr(in->conn.str);
+				delete nanoudr::conn_ptr(in->conn.str);
 				out->connNull = FB_TRUE;
 			}
 			catch (std::runtime_error const& e)
 			{
-				nano::fb_ptr(out->conn.str, nano::native_ptr(in->conn.str));
+				nanoudr::fb_ptr(out->conn.str, nanoudr::native_ptr(in->conn.str));
 				out->connNull = FB_FALSE;
 				NANO_THROW_ERROR(e.what());
 			}
@@ -194,7 +186,7 @@ FB_UDR_BEGIN_FUNCTION(conn_allocate)
 		if (!in->connNull) 
 		{
 			out->blank = BLANK;
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				conn->allocate();
@@ -240,7 +232,7 @@ FB_UDR_BEGIN_FUNCTION(conn_deallocate)
 		if (!in->connNull)
 		{
 			out->blank = BLANK;
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				conn->deallocate();
@@ -323,7 +315,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 			UTF8_IN(user);
 			UTF8_IN(pass);
 
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				if (in->userNull && in->passNull)
@@ -372,10 +364,10 @@ FB_UDR_BEGIN_FUNCTION(conn_connected)
 	{
 		if (!in->connNull)
 		{
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
-				out->connected = nano::fb_bool(conn->connected());
+				out->connected = nanoudr::fb_bool(conn->connected());
 				out->connectedNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -418,7 +410,7 @@ FB_UDR_BEGIN_FUNCTION(conn_disconnect)
 		if (!in->connNull)
 		{
 			out->blank = BLANK;
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				conn->disconnect();
@@ -463,7 +455,7 @@ FB_UDR_BEGIN_FUNCTION(conn_transactions)
 	{
 		if (!in->connNull)
 		{
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				out->transactions = (ISC_LONG)conn->transactions();
@@ -530,10 +522,10 @@ unsigned out_count;
 	{
 		if (!in->connNull)
 		{
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
-				FB_STRING(out->info, conn->get_info<string>(in->info_type));
+				FB_STRING(out->info, conn->get_info<nanodbc::string>(in->info_type));
 				out->infoNull = FB_FALSE;
 				UTF8_OUT(info);
 			}
@@ -596,7 +588,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 	{
 		if (!in->connNull)
 		{
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				FB_STRING(out->dbms_name, conn->dbms_name());
@@ -662,7 +654,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 	{
 		if (!in->connNull)
 		{
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				FB_STRING(out->version, conn->dbms_version());
@@ -728,7 +720,7 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 	{
 		if (!in->connNull)
 		{
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				FB_STRING(out->drv_name, conn->driver_name());
@@ -794,7 +786,7 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 	{
 		if (!in->connNull)
 		{
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				FB_STRING(out->db_name, conn->database_name());
@@ -860,7 +852,7 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 	{
 		if (!in->connNull)
 		{
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				FB_STRING(out->ctlg_name, conn->catalog_name());
@@ -882,47 +874,4 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 
 FB_UDR_END_FUNCTION
 
-//-----------------------------------------------------------------------------
-// create function e_message 
-//	returns varchar(512) character set utf8
-//	external name 'nano!conn_e_message'
-//	engine udr; 
-//
-
-FB_UDR_BEGIN_FUNCTION(conn_e_message)
-	
-	unsigned out_count;
-
-	enum out : short {
-		e_msg = 0
-	};
-
-	AutoArrayDelete<unsigned> out_char_sets;
-
-	FB_UDR_CONSTRUCTOR
-	{
-		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
-
-		out_count = out_metadata->getCount(status);
-		out_char_sets.reset(new unsigned[out_count]);
-		for (unsigned i = 0; i < out_count; ++i)
-		{
-			out_char_sets[i] = out_metadata->getCharSet(status, i);
-		}
-	}
-
-	FB_UDR_MESSAGE(
-		OutMessage,
-		(FB_VARCHAR(512 * 4), e_msg)
-	);
-
-	FB_UDR_EXECUTE_FUNCTION
-	{
-		FB_STRING(out->e_msg, (std::string)(nano::last_error_message));
-		out->e_msgNull = FB_FALSE;
-		UTF8_OUT(e_msg);
-	}
-
-FB_UDR_END_FUNCTION
-
-} // namespace nano
+} // namespace nanoudr

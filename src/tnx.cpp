@@ -28,9 +28,9 @@ using namespace Firebird;
 // package nano$tnx
 //
 
-using namespace nanodbc;
+#include "conn.h"
 
-namespace nano 
+namespace nanoudr
 {
 
 //-----------------------------------------------------------------------------
@@ -57,11 +57,11 @@ FB_UDR_BEGIN_FUNCTION(tnx_transaction)
 	{
 		if (!in->connNull)
 		{
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				nanodbc::transaction* tnx = new nanodbc::transaction(*conn);
-				nano::fb_ptr(out->tnx.str, (int64_t)tnx);
+				nanoudr::fb_ptr(out->tnx.str, (int64_t)tnx);
 				out->tnxNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -105,12 +105,12 @@ FB_UDR_BEGIN_FUNCTION(tnx_dispose)
 		{
 			try
 			{
-				delete nano::tnx_ptr(in->tnx.str);
+				delete nanoudr::tnx_ptr(in->tnx.str);
 				out->tnxNull = FB_TRUE;
 			}
 			catch (std::runtime_error const& e)
 			{
-				nano::fb_ptr(out->tnx.str, nano::native_ptr(in->tnx.str));
+				nanoudr::fb_ptr(out->tnx.str, nanoudr::native_ptr(in->tnx.str));
 				out->tnxNull = FB_FALSE;
 				NANO_THROW_ERROR(e.what());
 			}
@@ -149,7 +149,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_commit)
 		if (!in->tnxNull)
 		{
 			out->blank = BLANK;
-			nanodbc::transaction* tnx = nano::tnx_ptr(in->tnx.str);
+			nanodbc::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
 			try
 			{
 				tnx->commit();
@@ -195,7 +195,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 		if (!in->tnxNull)
 		{
 			out->blank = BLANK;
-			nanodbc::transaction* tnx = nano::tnx_ptr(in->tnx.str);
+			nanodbc::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
 			try
 			{
 				tnx->rollback();
@@ -240,11 +240,11 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 	{
 		if (!in->tnxNull)
 		{
-			nanodbc::transaction* tnx = nano::tnx_ptr(in->tnx.str);
+			nanodbc::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
 			try
 			{
 				nanodbc::connection conn = tnx->connection();
-				nano::fb_ptr(out->conn.str, (int64_t)&conn);
+				nanoudr::fb_ptr(out->conn.str, (int64_t)&conn);
 				out->connNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -262,4 +262,4 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 
 FB_UDR_END_FUNCTION
 
-} // namespace nano
+} // namespace nanoudr

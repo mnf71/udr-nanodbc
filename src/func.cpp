@@ -29,11 +29,10 @@ using namespace Firebird;
 // package nano$func
 //
 
-using namespace nanodbc;
-
+#include "conn.h"
 #include "stmt.h"
 
-namespace nano
+namespace nanoudr
 {
 
 //-----------------------------------------------------------------------------
@@ -96,13 +95,13 @@ FB_UDR_BEGIN_FUNCTION(func_execute_conn)
 	{
 		if (!in->connNull)
 		{
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				UTF8_IN(query);
 				nanodbc::result rslt = 
 					nanodbc::execute(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
-				nano::fb_ptr(out->rslt.str, (int64_t)&rslt);
+				nanoudr::fb_ptr(out->rslt.str, (int64_t)&rslt);
 				out->rsltNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -171,7 +170,7 @@ FB_UDR_BEGIN_FUNCTION(func_just_execute_conn)
 		if (!in->connNull)
 		{
 			out->blank = BLANK;
-			nanodbc::connection* conn = nano::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
 			try
 			{
 				UTF8_IN(query);
@@ -220,11 +219,11 @@ FB_UDR_BEGIN_FUNCTION(func_execute_stmt)
 	{
 		if (!in->stmtNull)
 		{
-			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
+			nanoudr::statement* stmt = nanoudr::stmt_ptr(in->stmt.str);
 			try
 			{
-				nanodbc::result rslt = nanodbc::execute(*impl, in->batch_operations);
-				nano::fb_ptr(out->rslt.str, (int64_t)&rslt);
+				nanodbc::result rslt = nanodbc::execute(*stmt, in->batch_operations);
+				nanoudr::fb_ptr(out->rslt.str, (int64_t)&rslt);
 				out->rsltNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -269,10 +268,10 @@ FB_UDR_BEGIN_FUNCTION(func_just_execute_stmt)
 		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
-			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
+			nanoudr::statement* stmt = nanoudr::stmt_ptr(in->stmt.str);
 			try
 			{
-				nanodbc::just_execute(*impl, in->batch_operations);
+				nanodbc::just_execute(*stmt, in->batch_operations);
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -316,11 +315,11 @@ FB_UDR_BEGIN_FUNCTION(func_transact_stmt)
 	{
 		if (!in->stmtNull)
 		{
-			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
+			nanoudr::statement* stmt = nanoudr::stmt_ptr(in->stmt.str);
 			try
 			{
-				nanodbc::result rslt = nanodbc::transact(*impl, in->batch_operations);
-				nano::fb_ptr(out->rslt.str, (int64_t)&rslt);
+				nanodbc::result rslt = nanodbc::transact(*stmt, in->batch_operations);
+				nanoudr::fb_ptr(out->rslt.str, (int64_t)&rslt);
 				out->rsltNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -365,10 +364,10 @@ FB_UDR_BEGIN_FUNCTION(func_just_transact_stmt)
 		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
-			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
+			nanoudr::statement* stmt = nanoudr::stmt_ptr(in->stmt.str);
 			try
 			{
-				nanodbc::just_transact(*impl, in->batch_operations);
+				nanodbc::just_transact(*stmt, in->batch_operations);
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -435,11 +434,11 @@ FB_UDR_BEGIN_FUNCTION(func_prepare_stmt)
 		if (!in->stmtNull)
 		{
 			out->blank = BLANK;
-			nanodbc::statement* impl = nano::stmt_ptr(in->stmt.str)->impl();
+			nanoudr::statement* stmt = nanoudr::stmt_ptr(in->stmt.str);
 			try
 			{
 				UTF8_IN(query);
-				nanodbc::prepare(*impl, (NANODBC_TEXT(in->query.str)), in->timeout);
+				nanodbc::prepare(*stmt, (NANODBC_TEXT(in->query.str)), in->timeout);
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -457,5 +456,5 @@ FB_UDR_BEGIN_FUNCTION(func_prepare_stmt)
 
 FB_UDR_END_FUNCTION
 
-} // namespace nano
+} // namespace nanoudr
 
