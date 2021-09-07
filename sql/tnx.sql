@@ -1,5 +1,3 @@
-SET TERM ^ ;
-
 CREATE OR ALTER PACKAGE NANO$TNX
 AS
 BEGIN
@@ -13,36 +11,4 @@ BEGIN
 
   FUNCTION connection(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER;
 
-END^
-
-RECREATE PACKAGE BODY NANO$TNX
-AS
-BEGIN
-
-  FUNCTION transaction_(conn TY$POINTER NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!tnx_transaction'
-    ENGINE UDR;
-
-  FUNCTION dispose(tnx ty$pointer NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!tnx_dispose'
-    ENGINE UDR;
-
-  FUNCTION commit_(tnx TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!tnx_commit'
-    ENGINE UDR;
-
-  FUNCTION rollback_(tnx TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!tnx_rollback'
-    ENGINE UDR;
-
-  FUNCTION connection(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!tnx_connection'
-    ENGINE UDR;
-
-END^
-
-SET TERM ; ^
-
-/* Existing privileges on this package */
-
-GRANT EXECUTE ON PACKAGE NANO$TNX TO SYSDBA;
+END
