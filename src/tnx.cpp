@@ -21,14 +21,10 @@
  */
 
 #include "nano.h"
- 
-using namespace Firebird;
 
 //-----------------------------------------------------------------------------
 // package nano$tnx
 //
-
-#include "conn.h"
 
 namespace nanoudr
 {

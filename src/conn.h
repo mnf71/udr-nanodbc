@@ -20,41 +20,39 @@
  *  Contributor(s): ______________________________________.
  */
 
- //-----------------------------------------------------------------------------
- // package nano$conn
- //
-
-#include <nanodbc.h> 
+#ifndef CONN_H
+#define CONN_H
 
 namespace nanoudr
 {
 
 //-----------------------------------------------------------------------------
+// UDR Connection class implementation
 //
+class statement;
 
 class connection : public nanodbc::connection
 {
 public:
-	connection() : nanodbc::connection()
-	{
-	};
+	connection();
+	connection(const nanodbc::string& dsn, const nanodbc::string& user, const nanodbc::string& pass, long timeout = 0);
+	connection(const nanodbc::string& connection_string, long timeout = 0);
+	~connection() noexcept;
 
-	connection(const nanodbc::string& dsn, const nanodbc::string& user, const nanodbc::string& pass, long timeout = 0) 
-		: nanodbc::connection(dsn, user, pass, timeout)
-	{
-	};
+	void retain_stmt(nanoudr::statement* stmt);
+	void retain_rslt(nanodbc::result* rslt);
 
-	connection(const nanodbc::string& connection_string, long timeout = 0) 
-		: nanodbc::connection(connection_string, timeout)
-	{
-	};
+	void release_stmt(nanoudr::statement* stmt);
+	void release_rslt(nanodbc::result* rslt);
 
-	~connection() noexcept
-	{
-		nanodbc::connection::~connection();
-	};
+	bool exists_stmt(nanoudr::statement* stmt);
+	bool exists_rslt(nanodbc::result* rslt);
 
+private:
 	std::vector<nanoudr::statement*> statements;
+	std::vector<nanodbc::result*> results;
 };
 
 } // namespace nanoudr
+
+#endif	/* CONN_H */

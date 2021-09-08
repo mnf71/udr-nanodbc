@@ -21,17 +21,73 @@
  */
 
 #include "nano.h"
- 
-using namespace Firebird;
 
 //-----------------------------------------------------------------------------
 // package nano$conn
 //
 
-#include "conn.h"
-
 namespace nanoudr
 {
+
+//-----------------------------------------------------------------------------
+// UDR Connection class implementation
+//
+
+nanoudr::connection::connection() : nanodbc::connection()
+{
+}
+
+nanoudr::connection::connection(
+	const nanodbc::string& dsn, const nanodbc::string& user, const nanodbc::string& pass, long timeout) 
+	: nanodbc::connection(dsn, user, pass, timeout)
+{
+}
+
+nanoudr::connection::connection(const nanodbc::string& connection_string, long timeout)
+	: nanodbc::connection(connection_string, timeout)
+{
+}
+
+nanoudr::connection::~connection()
+{
+	for (nanoudr::statement* stmt : statements)	delete stmt;
+	for (nanodbc::result* rslt : results) delete rslt;
+	nanodbc::connection::~connection();
+}
+
+void connection::retain_stmt(nanoudr::statement* stmt)
+{
+	statements.push_back(stmt);
+}
+
+void connection::retain_rslt(nanodbc::result* rslt)
+{
+	results.push_back(rslt);
+}
+
+void connection::release_stmt(nanoudr::statement* stmt)
+{
+	std::vector<nanoudr::statement*>::iterator
+		it = std::find(statements.begin(), statements.end(), stmt);
+	if (it != statements.end()) statements.erase(it);
+}
+
+void connection::release_rslt(nanodbc::result* rslt)
+{
+	std::vector<nanodbc::result*>::iterator
+		it = std::find(results.begin(), results.end(), rslt);
+	if (it != results.end()) results.erase(it);
+}
+
+bool connection::exists_stmt(nanoudr::statement* stmt)
+{
+	return find(statements.begin(), statements.end(), stmt) != statements.end();
+}
+
+bool connection::exists_rslt(nanodbc::result* rslt)
+{
+	return find(results.begin(), results.end(), rslt) != results.end();
+}
 
 //-----------------------------------------------------------------------------
 // create function connection (
@@ -43,7 +99,6 @@ namespace nanoudr
 //	external name 'nano!conn_connection'
 //	engine udr; 
 //
-// \brief
 // connection (null, null, null, ...) returns new connection object, initially not connected	
 // connection (?, null, null, ...) returns new connection object and immediately connect by SQLDriverConnect
 // connection (?, ?, ?, ...) returns new connection object and immediately connect by SQLConnect
@@ -264,7 +319,6 @@ FB_UDR_END_FUNCTION
 //	external name 'nano!conn_connect'
 //	engine udr; 
 //
-// \brief
 // connect (?, ?, null, null, ...) returns blank and connect to the given data source by SQLDriverConnect
 // connect (?, ?, ?, ?, ...) returns blank and connect to the given data source by by SQLConnect
 //

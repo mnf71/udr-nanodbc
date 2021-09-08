@@ -22,15 +22,10 @@
 
 #include "nano.h"
 
-using namespace Firebird;
-
 //-----------------------------------------------------------------------------
 // Convenience functions
 // package nano$func
 //
-
-#include "conn.h"
-#include "stmt.h"
 
 namespace nanoudr
 {

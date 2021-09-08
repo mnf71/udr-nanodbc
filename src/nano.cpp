@@ -22,8 +22,6 @@
 
 #include "nano.h"
 
-using namespace Firebird;
-
 #include <iconv.h>
 #include <string>
 
@@ -186,9 +184,9 @@ void utf8_to_loc(char* dest, const char* src)
 	{
 		iconv_t ic = iconv_open(nanoudr::udr_locale, "UTF-8");
 		char* in = (char*) src;
-		size_t in_length = strlen(in);
-		char* buf = new char[in_length + 1], * out = buf;
-		memset(buf, '\0', in_length + 1);
+		size_t in_length = strlen(in), buf_length = in_length;
+		char* buf = new char[buf_length + 1], *out = buf;
+		memset(buf, '\0', buf_length + 1);
 		size_t out_length = in_length;
 		iconv(ic, &in, &in_length, &out, &out_length);
 		strcpy(dest, buf);
@@ -207,9 +205,9 @@ void loc_to_utf8(char* dest, const char* src)
 	{
 		iconv_t ic = iconv_open("UTF-8", nanoudr::udr_locale);
 		char* in = (char*) src;
-		size_t in_length = strlen(in);
-		char* buf = new char[(in_length * 4) + 1], * out = buf;
-		memset(buf, '\0', (in_length * 4) + 1);
+		size_t in_length = strlen(in), buf_length = in_length * 4;
+		char* buf = new char[buf_length + 1], *out = buf;
+		memset(buf, '\0', buf_length + 1);
 		size_t out_length = in_length * 4;
 		// todo: иногда строка возвращается не полностью
 		iconv(ic, &in, &in_length, &out, &out_length);

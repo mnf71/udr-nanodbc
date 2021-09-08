@@ -22,8 +22,6 @@
 
 #include "nano.h"
 
-using namespace Firebird;
-
 //-----------------------------------------------------------------------------
 // package nano$ctlg
 //

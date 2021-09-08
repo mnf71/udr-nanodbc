@@ -197,6 +197,11 @@ namespace
 
 #include <nanodbc.h> 
 
+using namespace Firebird;
+
+#include "conn.h" 
+#include "stmt.h" 
+
 namespace nanoudr
 {
 
@@ -228,14 +233,9 @@ extern char last_error_message[ERROR_MESSAGE_LENGTH];
 void fb_ptr(char* cptr, int64_t iptr);
 int64_t native_ptr(const char* cptr);
 
-class connection; // conn.h
 nanoudr::connection* conn_ptr(const char* cptr);
-
 nanodbc::transaction* tnx_ptr(const char* cptr);
-
-class statement; // stmt.h
 nanoudr::statement* stmt_ptr(const char* cptr);
-
 nanodbc::result* rslt_ptr(const char* cptr);
         
 //-----------------------------------------------------------------------------

@@ -22,17 +22,157 @@
 
 #include "nano.h"
 
-using namespace Firebird;
-
 //-----------------------------------------------------------------------------
 // package nano$stmt
 //
 
-#include "conn.h"
-#include "stmt.h"
-
 namespace nanoudr
 {
+
+//-----------------------------------------------------------------------------
+// 
+
+params_batch::params_batch(short size)
+{
+	params = new param[size];
+	size_ = size;
+}
+
+params_batch::~params_batch() noexcept
+{
+	clear();
+	delete[] params;
+}
+
+template <class T>
+long params_batch::push(short param_index, T const value)
+{
+	params[param_index].values.push_back(value);
+	return (long)(params[param_index].values.size() - 1); // batch_index 
+}
+
+void params_batch::push_null(short param_index)
+{
+	params[param_index].values.push_back('\0');
+}
+
+void params_batch::clear()
+{
+	for (std::size_t param_index = 0; param_index < size_; ++param_index)
+		params[param_index].values.clear();
+}
+
+template <class T>
+T* params_batch::value(short param_index, long batch_index)
+{
+	T* p = (T*)(params[param_index].values.data());
+	return &(p[batch_index]);
+}
+
+template <class T>
+std::vector<T> params_batch::values(short param_index)
+{
+	return params[param_index].values;
+}
+
+//-----------------------------------------------------------------------------
+// UDR Statement class implementation
+
+statement::statement() : nanodbc::statement()
+{
+	params_batch = nullptr;
+}
+
+statement::statement(class nanoudr::connection& conn)
+	: nanodbc::statement(conn)
+{
+	params_batch = nullptr;
+	conn.retain_stmt(this);
+	conn_ = &conn;
+}
+
+statement::statement(class nanoudr::connection& conn, const nanodbc::string& query, long timeout)
+	: nanodbc::statement(conn, query, timeout)
+{
+	short parameters_count = parameters();
+	params_batch = nullptr;
+	if (parameters_count != 0)
+		params_batch = new nanoudr::params_batch(parameters_count);
+	conn.retain_stmt(this);
+	conn_ = &conn;
+}
+
+statement::~statement() 
+{
+	conn_->release_stmt(this);
+	if (params_batch != nullptr) delete params_batch;
+	nanodbc::statement::~statement();
+}
+
+void statement::open(class connection& conn)
+{
+	conn_->release_stmt(this);
+	nanodbc::statement::open(conn);
+	conn.retain_stmt(this);
+	conn_ = &conn;
+}
+
+nanoudr::connection* statement::connection()
+{
+	return conn_;
+}
+
+void statement::prepare(class nanoudr::connection& conn, const nanodbc::string& query, long timeout)
+{
+	conn_->release_stmt(this);
+	nanodbc::statement::prepare(conn, query, timeout);
+	initialize_params_batch();
+	conn.retain_stmt(this);
+	conn_ = &conn;
+}
+
+void statement::prepare(const nanodbc::string& query, long timeout)
+{
+	nanodbc::statement::prepare(query, timeout);
+	initialize_params_batch();
+}
+
+class nanodbc::result statement::execute_direct(
+	class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations, long timeout
+)
+{
+	conn_->release_stmt(this);
+	nanodbc::result rslt =
+		nanodbc::statement::execute_direct(conn, query, batch_operations, timeout);
+	conn.retain_stmt(this);
+	conn_ = &conn;
+	return rslt;
+}
+
+void statement::just_execute_direct(
+	class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations, long timeout
+)
+{
+	conn_->release_stmt(this);
+	nanodbc::statement::just_execute_direct(conn, query, batch_operations, timeout);
+	conn.retain_stmt(this);
+	conn_ = &conn;
+}
+
+void statement::initialize_params_batch()
+{
+	dispose_params_batch();
+	short parameters_count = parameters();
+	if (parameters_count != 0)
+		params_batch = new nanoudr::params_batch(parameters_count);
+}
+
+void statement::dispose_params_batch()
+{
+	if (params_batch != nullptr)
+		delete params_batch;
+	params_batch = nullptr;
+}
 
 //-----------------------------------------------------------------------------
 // create function statement_ (
@@ -43,7 +183,6 @@ namespace nanoudr
 //	external name 'nano!stmt_statement'
 //	engine udr; 
 //
-// \brief
 // statement (null, null, ...) returns new un-prepared statement
 // statement (?, null, ...) returns statement object and associates it to the given connection
 // statement (?, ?, ...) returns prepared a statement using the given connection and query
@@ -139,7 +278,9 @@ FB_UDR_BEGIN_FUNCTION(stmt_dispose)
 		{
 			try
 			{
-				delete nanoudr::stmt_ptr(in->stmt.str);
+				nanoudr::statement* stmt = nanoudr::stmt_ptr(in->stmt.str);
+				if ((nanoudr::connection*)(stmt->connection())->exists_stmt(stmt))
+					delete nanoudr::stmt_ptr(in->stmt.str);
 				out->stmtNull = FB_TRUE;
 			}
 			catch (std::runtime_error const& e)
@@ -439,23 +580,19 @@ FB_UDR_MESSAGE(
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function prepare_ (
+// create function prepare_direct (
 //	 stmt ty$pointer not null, 
-//	 conn ty$pointer, 
+//	 conn ty$pointer not null,  
 //   query varchar(8191) character set utf8 not null,
 // 	 timeout integer not null default 0 
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_prepare'
+//	external name 'nano!stmt_prepare_direct'
 //	engine udr; 
 //
-// \brief
-// prepare (?, ?, ?, ...) returns blank and prepares the given statement to execute its associated connection
-// prepare (?, null, ?, ...) returns blank and opens and prepares the given statement to execute on the given connection
-//
 
-FB_UDR_BEGIN_FUNCTION(stmt_prepare)
-	
-	unsigned in_count;
+FB_UDR_BEGIN_FUNCTION(stmt_prepare_direct)
+
+unsigned in_count;
 
 	enum in : short {
 		stmt = 0, conn, query, timeout
@@ -496,24 +633,79 @@ FB_UDR_BEGIN_FUNCTION(stmt_prepare)
 			nanoudr::statement* stmt = nanoudr::stmt_ptr(in->stmt.str);
 			try
 			{
-				if (stmt->params_batch != nullptr)
-				{
-					delete stmt->params_batch;
-					stmt->params_batch = nullptr;
-				}
-
 				UTF8_IN(query);
-				if (!in->connNull)
-				{
-					nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
-					stmt->prepare(*conn, NANODBC_TEXT(in->query.str), in->timeout);
-				}
-				else
-					((nanodbc::statement*)stmt)->prepare(NANODBC_TEXT(in->query.str), in->timeout);
+				nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+				stmt->prepare(*conn, NANODBC_TEXT(in->query.str), in->timeout);
+			}
+			catch (std::runtime_error const& e)
+			{
+				out->blankNull = FB_TRUE;
+				NANO_THROW_ERROR(e.what());
+			}
+		}
+		else
+		{
+			 out->blankNull = FB_TRUE;
+			 NANO_THROW_ERROR(INVALID_STMT_POINTER);
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function prepare_ (
+//	 stmt ty$pointer not null, 
+//   query varchar(8191) character set utf8 not null,
+// 	 timeout integer not null default 0 
+//	) returns ty$nano_blank
+//	external name 'nano!stmt_prepare'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(stmt_prepare)
 	
-				short parameters_count = stmt->parameters();
-				if (parameters_count != 0) 
-					stmt->params_batch = new nanoudr::params_batch(parameters_count);
+	unsigned in_count;
+
+	enum in : short {
+		stmt = 0, query, timeout
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+	}
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, stmt)
+		(FB_VARCHAR(8191 * 4), query)
+		(FB_INTEGER, timeout)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_BLANK, blank)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (!in->stmtNull)
+		{
+			out->blank = BLANK;
+			nanoudr::statement* stmt = nanoudr::stmt_ptr(in->stmt.str);
+			try
+			{
+				UTF8_IN(query);
+				stmt->prepare(NANODBC_TEXT(in->query.str), in->timeout);
 			}
 			catch (std::runtime_error const& e)
 			{
