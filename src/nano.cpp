@@ -77,13 +77,13 @@ FB_UDR_BEGIN_FUNCTION(set_locale)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function e_message 
+// create function err_msg 
 //	returns varchar(512) character set utf8
-//	external name 'nano!e_message'
+//	external name 'nano!error_message'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(e_message)
+FB_UDR_BEGIN_FUNCTION(error_message)
 
 	unsigned out_count;
 

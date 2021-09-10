@@ -4,12 +4,6 @@ CREATE OR ALTER PACKAGE NANO$FUNC
 AS
 BEGIN
 
-  FUNCTION set_locale(
-    udr_locale VARCHAR(20) CHARACTER SET NONE NOT NULL
-  ) RETURNS TY$NANO_BLANK;
-
-  ------------------------------------------------------------------------------
-
   FUNCTION execute_conn(
       conn TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
@@ -46,23 +40,11 @@ BEGIN
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
-  ------------------------------------------------------------------------------
-
-  FUNCTION e_message RETURNS VARCHAR(512) CHARACTER SET UTF8;
-
 END^
 
 RECREATE PACKAGE BODY NANO$FUNC
 AS
 BEGIN
-
-  FUNCTION set_locale(
-    udr_locale VARCHAR(20) CHARACTER SET NONE NOT NULL
-    ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!set_locale'
-    ENGINE UDR;
-
-  ------------------------------------------------------------------------------
 
   FUNCTION execute_conn(
       conn TY$POINTER NOT NULL,
@@ -116,12 +98,6 @@ BEGIN
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!func_prepare_stmt'
-    ENGINE UDR;
-
-  ------------------------------------------------------------------------------
-
-  FUNCTION e_message RETURNS VARCHAR(512) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!e_message'
     ENGINE UDR;
 
 END^

@@ -91,81 +91,70 @@ BEGIN
   FUNCTION bind_smallint(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ SMALLINT,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ SMALLINT
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_integer(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ INTEGER,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ INTEGER
     ) RETURNS TY$NANO_BLANK;
 
 /*
   FUNCTION bind_bigint(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ BIGINT,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ BIGINT
     ) RETURNS TY$NANO_BLANK;
 */
 
   FUNCTION bind_float(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ FLOAT,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ FLOAT
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_double(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ DOUBLE PRECISION,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ DOUBLE PRECISION
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_string(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ VARCHAR(32765) CHARACTER SET NONE,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ VARCHAR(32765) CHARACTER SET NONE
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_utf8(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ VARCHAR(8191) CHARACTER SET UTF8,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ VARCHAR(8191) CHARACTER SET UTF8
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_blob(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ BLOB CHARACTER SET NONE,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ BLOB CHARACTER SET NONE
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_boolean(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ BOOLEAN,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ BOOLEAN
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_date(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ DATE,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ DATE
     ) RETURNS TY$NANO_BLANK;
 
 /*
   FUNCTION bind_time(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ TIME,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ TIME
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -174,8 +163,7 @@ BEGIN
   FUNCTION bind_timestamp(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ TIMESTAMP,
-      batch_operation BOOLEAN DEFAULT FALSE
+      value_ TIMESTAMP
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_null(
@@ -336,8 +324,7 @@ BEGIN
   FUNCTION bind_smallint(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ SMALLINT,
-      batch_operation BOOLEAN
+      value_ SMALLINT
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -345,8 +332,7 @@ BEGIN
   FUNCTION bind_integer(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ INTEGER,
-      batch_operation BOOLEAN
+      value_ INTEGER
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -355,8 +341,7 @@ BEGIN
   FUNCTION bind_bigint(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      v_integer BIGINT,
-      batch_operation BOOLEAN
+      v_integer BIGINT
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -365,8 +350,7 @@ BEGIN
   FUNCTION bind_float(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ FLOAT,
-      batch_operation BOOLEAN
+      value_ FLOAT
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -374,8 +358,7 @@ BEGIN
   FUNCTION bind_double(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ DOUBLE PRECISION,
-      batch_operation BOOLEAN
+      value_ DOUBLE PRECISION
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -383,8 +366,7 @@ BEGIN
   FUNCTION bind_string(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ VARCHAR(32765) CHARACTER SET NONE,
-      batch_operation BOOLEAN
+      value_ VARCHAR(32765) CHARACTER SET NONE
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -392,8 +374,7 @@ BEGIN
   FUNCTION bind_utf8(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ VARCHAR(8191) CHARACTER SET UTF8,
-      batch_operation BOOLEAN
+      value_ VARCHAR(8191) CHARACTER SET UTF8
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -401,8 +382,7 @@ BEGIN
   FUNCTION bind_blob(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ BLOB CHARACTER SET NONE,
-      batch_operation BOOLEAN
+      value_ BLOB CHARACTER SET NONE
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -410,8 +390,7 @@ BEGIN
   FUNCTION bind_boolean(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ BOOLEAN,
-      batch_operation BOOLEAN
+      value_ BOOLEAN
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -419,8 +398,7 @@ BEGIN
   FUNCTION bind_date(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ DATE,
-      batch_operation BOOLEAN
+      value_ DATE
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -429,8 +407,7 @@ BEGIN
   FUNCTION bind_time(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ TIME,
-      batch_operation BOOLEAN
+      value_ TIME
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
@@ -439,8 +416,7 @@ BEGIN
   FUNCTION bind_timestamp(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ TIMESTAMP,
-      batch_operation BOOLEAN
+      value_ TIMESTAMP
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;

@@ -29,6 +29,7 @@ namespace nanoudr
 //-----------------------------------------------------------------------------
 // UDR Connection class implementation
 //
+
 class statement;
 
 class connection : public nanodbc::connection

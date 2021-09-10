@@ -31,7 +31,23 @@ namespace nanoudr
 class connection;
 
 //-----------------------------------------------------------------------------
+// Params batch (values pointers for binding) see NANODBC_INSTANTIATE_BINDS
 //
+
+enum nanodbc_type : short {
+	NANODBC_SHORT = 0, NANODBC_USHORT, NANODBC_INT, NANODBC_UINT,
+	NANODBC_LONG, NANODBC_ULONG, NANODBC_INT64, NANODBC_UINT64,	NANODBC_FLOAT, NANODBC_DOUBLE, 
+	NANODBC_DATE, NANODBC_TIME, NANODBC_TIMESTAMP,
+	NANODBC_STRING, NANODBC_WIDE_STRING,
+	NANODBC_UNKNOWN
+};
+
+typedef std::variant <
+	short, unsigned short, int, unsigned int, 
+	long int, unsigned long int, long long, unsigned long long, float, double, 
+	nanodbc::date, nanodbc::time, nanodbc::timestamp,
+	nanodbc::string, nanodbc::wide_string
+> nanodbc_types;
 
 class params_batch
 {
@@ -40,40 +56,30 @@ public:
 	~params_batch() noexcept;
 
 	template <class T>
-	long push(short param_index, T const value);
-
-	void push_null(short param_index);
+	long push(short param_index, T const value, const bool null = false);
+	template <class T>
+	long null(short param_index);
 	
+	short size();
 	void clear();
 
-	template <class T>
+	nanodbc_types* batch(short param_index);
+	nanodbc_type touch(short param_index);
+
+	template <class T> 
 	T* value(short param_index, long batch_index);
 
-	template <class T>
-	std::vector<T> values(short param_index);
+	template <class T> 
+	T* batch(short param_index);
+
+	bool is_null(short param_index, long batch_index);
+	bool* nulls(short param_index);
 
 private:
 	struct param
 	{
-		std::vector<
-			std::variant<
-				short,
-				unsigned short,
-				int,
-				unsigned int,
-				long int,
-				unsigned long int,
-				long long,
-				unsigned long long,
-				float,
-				double,
-				nanodbc::date,
-				nanodbc::time,
-				nanodbc::timestamp,
-				nanodbc::string,
-				nanodbc::wide_string
-			>
-		> values;
+		std::vector<nanodbc_types> batch;
+		std::vector<bool> nulls;
 	};
 
 	param* params;
@@ -81,6 +87,7 @@ private:
 };
 
 //-----------------------------------------------------------------------------
+// UDR Statement class implementation
 //
 
 class statement : public nanodbc::statement
@@ -99,15 +106,18 @@ public:
 
 	class nanodbc::result execute_direct(class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
 	void just_execute_direct(class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
+	
+	void bind_params(long batch_operations = 1);
 
-	params_batch* params_batch;
+	params_batch* params();
 
 protected:
-	void initialize_params_batch();
-	void dispose_params_batch();
+	void init_params();
+	void release_params();
 
 private:
 	nanoudr::connection* conn_;
+	params_batch* params_;
 };
 
 } // namespace nanoudr

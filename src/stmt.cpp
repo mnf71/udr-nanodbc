@@ -30,7 +30,8 @@ namespace nanoudr
 {
 
 //-----------------------------------------------------------------------------
-// 
+// Params batch (values pointers for binding)
+//
 
 params_batch::params_batch(short size)
 {
@@ -45,48 +46,96 @@ params_batch::~params_batch() noexcept
 }
 
 template <class T>
-long params_batch::push(short param_index, T const value)
+long params_batch::push(short param_index, T const value, const bool null)
 {
-	params[param_index].values.push_back(value);
-	return (long)(params[param_index].values.size() - 1); // batch_index 
+	param* p = &params[param_index];
+	p->batch.push_back(value);
+	p->nulls.push_back(null);
+	return static_cast<long>(p->batch.size() - 1); // batch_index
 }
 
-void params_batch::push_null(short param_index)
+short params_batch::size()
 {
-	params[param_index].values.push_back('\0');
+	return size_;
 }
 
 void params_batch::clear()
 {
+	param* p;
 	for (std::size_t param_index = 0; param_index < size_; ++param_index)
-		params[param_index].values.clear();
+	{
+		p = &params[param_index];
+		p->batch.clear();
+		p->nulls.clear();
+	}
+}
+
+nanodbc_types* params_batch::batch(short param_index)
+{
+	nanodbc_types* b = params[param_index].batch.data();
+	return b;
+}
+
+nanodbc_type params_batch::touch(short param_index)
+{
+	nanodbc_types* b = batch(param_index);
+	return
+		std::holds_alternative<short>(*b) ? nanodbc_type::NANODBC_SHORT :
+		std::holds_alternative<unsigned short>(*b) ? nanodbc_type::NANODBC_USHORT :
+		std::holds_alternative<int>(*b) ? nanodbc_type::NANODBC_INT :
+		std::holds_alternative<unsigned int>(*b) ? nanodbc_type::NANODBC_UINT :
+		std::holds_alternative<long int>(*b) ? nanodbc_type::NANODBC_LONG :
+		std::holds_alternative<unsigned long int>(*b) ? nanodbc_type::NANODBC_ULONG :
+		std::holds_alternative<long long>(*b) ? nanodbc_type::NANODBC_INT64 :
+		std::holds_alternative<unsigned long long>(*b) ? nanodbc_type::NANODBC_UINT64 :
+		std::holds_alternative<float>(*b) ? nanodbc_type::NANODBC_FLOAT :
+		std::holds_alternative<double>(*b) ? nanodbc_type::NANODBC_DOUBLE :
+		std::holds_alternative<nanodbc::date>(*b) ? nanodbc_type::NANODBC_DATE :
+		std::holds_alternative<nanodbc::time>(*b) ? nanodbc_type::NANODBC_TIME :
+		std::holds_alternative<nanodbc::timestamp>(*b) ? nanodbc_type::NANODBC_TIMESTAMP :
+		std::holds_alternative<nanodbc::string>(*b) ? nanodbc_type::NANODBC_STRING :
+		std::holds_alternative<nanodbc::wide_string>(*b) ? nanodbc_type::NANODBC_WIDE_STRING :
+		nanodbc_type::NANODBC_UNKNOWN;
 }
 
 template <class T>
 T* params_batch::value(short param_index, long batch_index)
 {
-	T* p = (T*)(params[param_index].values.data());
+	T* p = (T*)(params[param_index].batch.data());
 	return &(p[batch_index]);
 }
 
 template <class T>
-std::vector<T> params_batch::values(short param_index)
+T* params_batch::batch(short param_index)
 {
-	return params[param_index].values;
+	T* p = (T*)(params[param_index].batch.data());
+	return &(p[0]);
+}
+
+bool params_batch::is_null(short param_index, long batch_index)
+{
+	return params[param_index].nulls.at(batch_index);
+}
+
+bool* params_batch::nulls(short param_index)
+{
+	bool* n = (bool*)&(params[param_index].nulls);
+	return &n[0];
 }
 
 //-----------------------------------------------------------------------------
 // UDR Statement class implementation
+//
 
 statement::statement() : nanodbc::statement()
 {
-	params_batch = nullptr;
+	params_ = nullptr;
 }
 
 statement::statement(class nanoudr::connection& conn)
 	: nanodbc::statement(conn)
 {
-	params_batch = nullptr;
+	params_ = nullptr;
 	conn.retain_stmt(this);
 	conn_ = &conn;
 }
@@ -94,18 +143,15 @@ statement::statement(class nanoudr::connection& conn)
 statement::statement(class nanoudr::connection& conn, const nanodbc::string& query, long timeout)
 	: nanodbc::statement(conn, query, timeout)
 {
-	short parameters_count = parameters();
-	params_batch = nullptr;
-	if (parameters_count != 0)
-		params_batch = new nanoudr::params_batch(parameters_count);
+	init_params();
 	conn.retain_stmt(this);
 	conn_ = &conn;
 }
 
 statement::~statement() 
 {
+	release_params();
 	conn_->release_stmt(this);
-	if (params_batch != nullptr) delete params_batch;
 	nanodbc::statement::~statement();
 }
 
@@ -124,17 +170,19 @@ nanoudr::connection* statement::connection()
 
 void statement::prepare(class nanoudr::connection& conn, const nanodbc::string& query, long timeout)
 {
+	release_params();
 	conn_->release_stmt(this);
 	nanodbc::statement::prepare(conn, query, timeout);
-	initialize_params_batch();
+	init_params();
 	conn.retain_stmt(this);
 	conn_ = &conn;
 }
 
 void statement::prepare(const nanodbc::string& query, long timeout)
 {
+	release_params();
 	nanodbc::statement::prepare(query, timeout);
-	initialize_params_batch();
+	init_params();
 }
 
 class nanodbc::result statement::execute_direct(
@@ -159,19 +207,275 @@ void statement::just_execute_direct(
 	conn_ = &conn;
 }
 
-void statement::initialize_params_batch()
+void statement::init_params()
 {
-	dispose_params_batch();
+	params_ = nullptr;
 	short parameters_count = parameters();
 	if (parameters_count != 0)
-		params_batch = new nanoudr::params_batch(parameters_count);
+		params_ = new nanoudr::params_batch(parameters_count);
 }
 
-void statement::dispose_params_batch()
+void statement::release_params()
 {
-	if (params_batch != nullptr)
-		delete params_batch;
-	params_batch = nullptr;
+	if (params_ != nullptr) delete params_;
+	params_ = nullptr;
+}
+
+void statement::bind_params(long batch_operations)
+{
+	if (params_)
+	{
+		bool batch_operation = !(batch_operations == 1);
+		for (short param_index = 0; param_index < params_->size(); ++param_index)
+		{
+			switch (params_->touch(param_index))
+			{
+			case nanodbc_type::NANODBC_SHORT:
+			{
+				if (batch_operation)
+					bind(param_index,
+						(short*)(params_->batch<short>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (short*)(params_->value<short>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_USHORT:
+			{
+				if (batch_operation)
+					bind(param_index,
+						(unsigned short*)(params_->batch<unsigned short>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (unsigned short*)(params_->value<unsigned short>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_INT:
+			{
+				if (batch_operation)
+					bind(param_index, (int*)(params_->batch<int>(param_index)), batch_operations);
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (int*)(params_->value<int>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_UINT:
+			{
+				if (batch_operation)
+					bind(param_index,
+						(unsigned int*)(params_->batch<unsigned int>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (unsigned int*)(params_->value<unsigned int>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_LONG:
+			{
+				if (batch_operation)
+					bind(param_index, 
+						(long int*)(params_->batch<long int>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (long int*)(params_->value<long int>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_ULONG:
+			{
+				if (batch_operation)
+					bind(param_index,
+						(unsigned long int*)(params_->batch<unsigned long int>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (unsigned long int*)(params_->value<unsigned long int>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_INT64:
+			{
+				if (batch_operation)
+					bind(
+						param_index,
+						(long long*)(params_->batch<long long>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (long long*)(params_->value<long long>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_UINT64:
+			{
+				if (batch_operation)
+					bind(
+						param_index,
+						(unsigned long long*)(params_->batch<unsigned long long>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (unsigned long long*)(params_->value<unsigned long long>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_FLOAT:
+			{
+				if (batch_operation)
+					bind(
+						param_index,
+						(float*)(params_->batch<float>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (float*)(params_->value<float>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_DOUBLE:
+			{
+				if (batch_operation)
+					bind(
+						param_index,
+						(double*)(params_->batch<double>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (double*)(params_->value<double>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_DATE:
+			{
+				if (batch_operation)
+					bind(
+						param_index,
+						(nanodbc::date*)(params_->batch<nanodbc::date>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (nanodbc::date*)(params_->value<nanodbc::date>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_TIME:
+			{
+				if (batch_operation)
+					bind(
+						param_index,
+						(nanodbc::time*)(params_->batch<nanodbc::time>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (nanodbc::time*)(params_->value<nanodbc::time>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_TIMESTAMP:
+			{
+				if (batch_operation)
+					bind(
+						param_index,
+						(nanodbc::timestamp*)(params_->batch<nanodbc::timestamp>(param_index)), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (nanodbc::timestamp*)(params_->value<nanodbc::timestamp>(param_index, 0)));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_STRING:
+			{
+				if (batch_operation)
+					bind(
+						param_index,
+						(char*)(params_->batch<nanodbc::string>(param_index))->c_str(), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (char*)(params_->value<nanodbc::string>(param_index, 0)->c_str()));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_WIDE_STRING:
+			{
+				if (batch_operation)
+					bind(
+						param_index,
+						(nanodbc::wide_char_t*)(params_->batch<nanodbc::wide_string>(param_index))->c_str(), batch_operations,
+						params_->nulls(param_index));
+				else
+				{
+					if (!params_->is_null(param_index, 0))
+						bind(param_index, (nanodbc::wide_char_t*)(params_->value<nanodbc::wide_string>(param_index, 0)->c_str()));
+					else
+						bind_null(param_index);
+				}
+				break;
+			}
+			case nanodbc_type::NANODBC_UNKNOWN:
+			default:
+			{
+				throw("Binding unknow NANODBC datatype .");
+				break;
+			}
+			}
+		}
+	}
+}
+
+params_batch* statement::params()
+{
+	return params_;
 }
 
 //-----------------------------------------------------------------------------
@@ -515,7 +819,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_close)
 			try
 			{
 				stmt->close();
-				if (stmt->params_batch != nullptr) stmt->params_batch->clear();
+				if (stmt->params() != nullptr) stmt->params()->clear();
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -956,6 +1260,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute)
 			nanoudr::statement* stmt = nanoudr::stmt_ptr(in->stmt.str);
 			try
 			{
+				stmt->bind_params(in->batch_operations);
 				nanodbc::result rslt = stmt->execute(in->batch_operations, in->timeout);
 				nanoudr::fb_ptr(out->rslt.str, (int64_t)&rslt);
 				out->rsltNull = FB_FALSE;
@@ -1007,6 +1312,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute)
 			nanoudr::statement* stmt = nanoudr::stmt_ptr(in->stmt.str);
 			try
 			{
+				stmt->bind_params(in->batch_operations);
 				stmt->just_execute(in->batch_operations, in->timeout);
 				out->blankNull = FB_FALSE;
 			}
@@ -1225,7 +1531,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_reset_parameters)
 			try
 			{
 				stmt->reset_parameters();
-				if (stmt->params_batch != nullptr) stmt->params_batch->clear();
+				if (stmt->params() != nullptr) stmt->params()->clear();
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1342,8 +1648,7 @@ FB_UDR_END_FUNCTION
 // create function bind_[fb_type] (
 //	 stmt ty$pointer not null,
 // 	 param_index smallint not null,
-//   value_	[fb_type],
-//   batch_operation boolean not nul default false
+//   value_	[fb_type]
 //	) returns ty$nano_blank
 //	external name 'nano!stmt_bind'
 //	engine udr; 
@@ -1353,7 +1658,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 	unsigned in_count;
 
 	enum in : short {
-		stmt = 0, param_index, value, batch_operation
+		stmt = 0, param_index, value
 	};
 
 	AutoArrayDelete<unsigned> in_offsets;
@@ -1396,133 +1701,146 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 			nanoudr::statement* stmt = nanoudr::stmt_ptr((char*)(in + in_offsets[in::stmt]));
 			try
 			{
-				short param_index = *(ISC_SHORT*)(in + in_offsets[in::param_index]);
-				bool batch_operation = nanoudr::native_bool(*(FB_BOOLEAN*)(in + in_offsets[in::batch_operation]));
-				long batch_index = 0;
-				switch (in_types[in::value])
+				params_batch* params = stmt->params();
+				if (params) 
 				{
-					case SQL_TEXT: // char, varchar
-					case SQL_VARYING: 
+					short param_index = *(ISC_SHORT*)(in + in_offsets[in::param_index]);
+					bool null_flag = *(ISC_SHORT*)(in + in_null_offsets[in::value]) ? true : false;
+					switch (in_types[in::value])
 					{
-						std::size_t length =
-							(in_types[in::value] == SQL_TEXT ? strlen((char*)(in + in_offsets[in::value])) : *(ISC_USHORT*)(in + in_offsets[in::value])) *
-							(in_char_sets[in::value] == fb_char_set::CS_UTF8 ? 4 : 1);
-						char* param = new char[length + 1];
-						memcpy(
-							param, 
-							in_types[in::value] == SQL_TEXT ? (char*)(in + in_offsets[in::value]) : (char*)(in + sizeof(ISC_USHORT) + in_offsets[in::value]), 
-							length
-						);
-						param[length] = '\0';
-						if (in_char_sets[in::value] == fb_char_set::CS_UTF8) utf8_to_loc(param, param);
-						batch_index = stmt->params_batch->push(param_index, NANODBC_TEXT(param));
-						if(!batch_operation)
-							stmt->bind(
-								param_index, 
-								(char*)(stmt->params_batch->value<nanodbc::string>(param_index, batch_index)->c_str())
-							);
-						delete[] param;
-						break;
+						case SQL_TEXT: // char, varchar
+						case SQL_VARYING: 
+						{
+							if (null_flag)
+								params->push(param_index, NANODBC_TEXT(""), null_flag);
+							else 
+							{
+								std::size_t length =
+									(in_types[in::value] == SQL_TEXT ? strlen((char*)(in + in_offsets[in::value])) : *(ISC_USHORT*)(in + in_offsets[in::value])) *
+									(in_char_sets[in::value] == fb_char_set::CS_UTF8 ? 4 : 1);
+								char* param = new char[length + 1];
+								memcpy(
+									param, 
+									in_types[in::value] == SQL_TEXT ? (char*)(in + in_offsets[in::value]) : (char*)(in + sizeof(ISC_USHORT) + in_offsets[in::value]), 
+									length
+								);
+								param[length] = '\0';
+								if (in_char_sets[in::value] == fb_char_set::CS_UTF8) utf8_to_loc(param, param);
+								params->push(param_index, NANODBC_TEXT(param), null_flag);
+								delete[] param;
+							}
+							break;
+						}
+						case SQL_SHORT: // smallint
+							params->push(param_index, *(ISC_SHORT*)(in + in_offsets[in::value]), null_flag);
+							break;
+						case SQL_LONG: // integer 
+							params->push(param_index, *(ISC_LONG*)(in + in_offsets[in::value]), null_flag);
+							break;
+						case SQL_FLOAT: // float
+							params->push(param_index, *(float*)(in + in_offsets[in::value]), null_flag);
+							break;
+						case SQL_DOUBLE: // double precision 
+						case SQL_D_FLOAT: 
+							params->push(param_index, *(double*)(in + in_offsets[in::value]), null_flag);
+							break;
+						case SQL_TIMESTAMP: // timestamp
+						{
+							nanodbc::timestamp param;
+							if (null_flag)
+							{
+								param.year = 1900; param.month = 1;	param.day = 1;
+								param.hour = 23; param.min = 59; param.sec = 59; param.fract = 0;
+							}
+							else
+							{
+								Firebird::FbTimestamp fb; 
+								// This class has memory layout identical to ISC_TIMESTAMP
+								memcpy(&fb, (ISC_TIMESTAMP*)(in + in_offsets[in::value]), sizeof(FbTimestamp));
+								struct nanoudr::timestamp tm;
+								fb.date.decode(utl, &tm.year, &tm.month, &tm.day);
+								fb.time.decode(utl, &tm.hour, &tm.min, &tm.sec, &tm.fract);
+								param = nanoudr::set_timestamp(&tm);
+							}
+							params->push(param_index, param, null_flag);
+							break;
+						}
+						case SQL_BLOB: // blob
+						{
+							if (null_flag)
+								params->push(param_index, NANODBC_TEXT(""), null_flag);
+							else
+							{
+							}
+							break;
+						}
+						case SQL_ARRAY: // array
+							throw("Binding SQL_ARRAY datatype not support.");
+							break;
+						case SQL_QUAD: // blob_id 
+							break;
+						case SQL_TYPE_TIME: // time
+						{
+							nanodbc::time param;
+							if (null_flag)
+							{
+								param.hour = 23; param.min = 59; param.sec = 59; 
+							}
+							else
+							{
+								Firebird::FbTime fb;
+								// This class has memory layout identical to ISC_TIME
+								memcpy(&fb, (ISC_TIME*)(in + in_offsets[in::value]), sizeof(FbTime));
+								struct nanoudr::time t;
+								fb.decode(utl, &t.hour, &t.min, &t.sec, &t.fract);
+								nanodbc::time param = nanoudr::set_time(&t);
+							}
+							params->push(param_index, param, null_flag);
+							break;
+						}
+						case SQL_TYPE_DATE: // date
+						{
+							nanodbc::date param;
+							if (null_flag)
+							{
+								param.year = 1900; param.month = 1;	param.day = 1;
+							}
+							else
+							{
+								Firebird::FbDate fb;
+								// This class has memory layout identical to ISC_DATE
+								memcpy(&fb, (ISC_DATE*)(in + in_offsets[in::value]), sizeof(FbDate));
+								struct nanoudr::date d;
+								fb.decode(utl, &d.year, &d.month, &d.day);
+								nanodbc::date param = nanoudr::set_date(&d);
+							}
+							params->push(param_index, param, null_flag);
+							break;
+						}
+						case SQL_INT64: // bigint
+							params->push(param_index, *(ISC_INT64*)(in + in_offsets[in::value]), null_flag);
+							break;
+						case SQL_BOOLEAN: // boolean
+						{
+							bool param;
+							if (null_flag)
+								param = false;
+							else	
+								param = nanoudr::native_bool(*(FB_BOOLEAN*)(in + in_offsets[in::value]));
+							params->push(param_index, NANODBC_TEXT(param ? "True" : "False"), null_flag);
+							break; 
+						}
+						case SQL_NULL: // null
+						{
+							params->push(param_index, NANODBC_TEXT("Null"), true);
+							break;
+						}
+						default:
+						{
+							throw("Binding unknow Firebird SQL datatype.");
+							break;
+						}
 					}
-					case SQL_SHORT: // smallint 
-						batch_index = stmt->params_batch->push(param_index, *(ISC_SHORT*)(in + in_offsets[in::value]));
-						if (!batch_operation)
-							stmt->bind(param_index, (ISC_SHORT*)(stmt->params_batch->value<ISC_SHORT>(param_index, batch_index)));
-						break;
-					case SQL_LONG: // integer 
-						batch_index = stmt->params_batch->push(param_index, *(ISC_LONG*)(in + in_offsets[in::value]));
-						if (!batch_operation)
-							stmt->bind(param_index, (ISC_LONG*)(stmt->params_batch->value<ISC_LONG>(param_index, batch_index)));
-						break;
-					case SQL_FLOAT: // float
-						batch_index = stmt->params_batch->push(param_index, *(float*)(in + in_offsets[in::value]));
-						if (!batch_operation)
-							stmt->bind(param_index, (float*)(stmt->params_batch->value<float>(param_index, batch_index)));
-						break;
-					case SQL_DOUBLE: // double precision 
-					case SQL_D_FLOAT: 
-						batch_index = stmt->params_batch->push(param_index, *(double*)(in + in_offsets[in::value]));
-						if (!batch_operation)
-							stmt->bind(param_index, (double*)(stmt->params_batch->value<double>(param_index, batch_index)));
-						break;
-					case SQL_TIMESTAMP: // timestamp
-					{
-						Firebird::FbTimestamp fb; 
-						// This class has memory layout identical to ISC_TIMESTAMP
-						memcpy(&fb, (ISC_TIMESTAMP*)(in + in_offsets[in::value]), sizeof(FbTimestamp));
-						struct nanoudr::timestamp tm;
-						fb.date.decode(utl, &tm.year, &tm.month, &tm.day);
-						fb.time.decode(utl, &tm.hour, &tm.min, &tm.sec, &tm.fract);
-						nanodbc::timestamp param = nanoudr::set_timestamp(&tm);
-						batch_index = stmt->params_batch->push(param_index, param);
-						if (!batch_operation)
-							stmt->bind(
-								param_index, 
-								(nanodbc::timestamp*)(stmt->params_batch->value<nanodbc::timestamp>(param_index, batch_index))
-							);
-						break;
-					}
-					case SQL_BLOB: // blob
-						break;
-					case SQL_ARRAY: // array
-						break;
-					case SQL_QUAD: // blob_id 
-						break;
-					case SQL_TYPE_TIME: // time
-					{
-						Firebird::FbTime fb;
-						// This class has memory layout identical to ISC_TIME
-						memcpy(&fb, (ISC_TIME*)(in + in_offsets[in::value]), sizeof(FbTime));
-						struct nanoudr::time t;
-						fb.decode(utl, &t.hour, &t.min, &t.sec, &t.fract);
-						nanodbc::time param = nanoudr::set_time(&t);
-						batch_index = stmt->params_batch->push(param_index, param);
-						if (!batch_operation)
-							stmt->bind(
-								param_index,
-								(nanodbc::time*)(stmt->params_batch->value<nanodbc::time>(param_index, batch_index))
-							);
-						break;
-					}
-					case SQL_TYPE_DATE: // date
-					{
-						Firebird::FbDate fb;
-						// This class has memory layout identical to ISC_DATE
-						memcpy(&fb, (ISC_DATE*)(in + in_offsets[in::value]), sizeof(FbDate));
-						struct nanoudr::date d;
-						fb.decode(utl, &d.year, &d.month, &d.day);
-						nanodbc::date param = nanoudr::set_date(&d);
-						batch_index = stmt->params_batch->push(param_index, param);
-						if (!batch_operation)
-							stmt->bind(
-								param_index,
-								(nanodbc::date*)(stmt->params_batch->value<nanodbc::date>(param_index, batch_index))
-							);
-						break;
-					}
-					case SQL_INT64: // bigint
-						batch_index = stmt->params_batch->push(param_index, *(ISC_INT64*)(in + in_offsets[in::value]));
-						if (!batch_operation)
-							stmt->bind(param_index, (ISC_INT64*)(stmt->params_batch->value<ISC_INT64>(param_index, batch_index)));
-						break;
-					case SQL_BOOLEAN: // boolean
-					{
-						bool param = nanoudr::native_bool(*(FB_BOOLEAN*)(in + in_offsets[in::value]));
-						batch_index = stmt->params_batch->push(param_index, NANODBC_TEXT(param ? "true" : "false"));
-						if (!batch_operation)
-							stmt->bind(
-								param_index,
-								(char*)(stmt->params_batch->value<nanodbc::string>(param_index, batch_index)->c_str())
-							);
-						break; 
-					}
-					case SQL_NULL: // null
-						stmt->params_batch->push_null(param_index);
-						if (!batch_operation)
-							stmt->bind_null(param_index);
-						break;
-					default:
-						break;
 				}
 				out->blankNull = FB_FALSE;
 			}
