@@ -52,38 +52,34 @@ typedef std::variant <
 class params_batch
 {
 public:
-	params_batch(short size);
+	params_batch(short count);
 	~params_batch() noexcept;
 
 	template <class T>
 	long push(short param_index, T const value, const bool null = false);
-	template <class T>
-	long null(short param_index);
 	
-	short size();
 	void clear();
 
-	nanodbc_types* batch(short param_index);
 	nanodbc_type touch(short param_index);
 
-	template <class T> 
-	T* value(short param_index, long batch_index);
-
-	template <class T> 
-	T* batch(short param_index);
-
-	bool is_null(short param_index, long batch_index);
+	template <typename T> T* batch(short param_index);
+	template <class T> std::vector<T>* batch_vec(short param_index);
 	bool* nulls(short param_index);
 
+	template <typename T> T* value(short param_index, long batch_index);
+	bool is_null(short param_index, long batch_index);
+
+	short count();
+
 private:
-	struct param
+	struct parameter
 	{
-		std::vector<nanodbc_types> batch;
-		std::vector<bool> nulls;
+		std::vector<nanodbc_types> values;
+		std::vector<uint8_t> nulls; 
 	};
 
-	param* params;
-	short size_;
+	parameter* params_;
+	short count_;
 };
 
 //-----------------------------------------------------------------------------
