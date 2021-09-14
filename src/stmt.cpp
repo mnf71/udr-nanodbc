@@ -35,86 +35,93 @@ namespace nanoudr
 
 params_batch::params_batch(short count)
 {
-	params_ = new parameter[count];
+	params = new param[count];
 	count_ = count;
 }
 
 params_batch::~params_batch() noexcept
 {
 	clear();
-	delete[] params_;
+	delete[] params;
 }
 
 template <class T>
 long params_batch::push(short param_index, T const value, const bool null)
 {
-	parameter* p = &params_[param_index];
-	p->values.push_back(value);
+	param* p = &params[param_index];
+	
+	bind_types& vec = p->batch;
+	if (!std::holds_alternative<std::vector<T>>(vec)) 
+		vec = std::vector<T>{ value }; // init allocator
+	else		
+		std::get<std::vector<T>>(vec).push_back(value);
 	p->nulls.push_back(null);
-	return static_cast<long>(p->values.size() - 1); // batch_index
+	
+	return static_cast<long>(p->nulls.size() - 1); 
 }
 
 void params_batch::clear()
 {
-	parameter* p;
 	for (std::size_t param_index = 0; param_index < count_; ++param_index)
 	{
-		p = &params_[param_index];
-		p->values.clear();
+		param* p = &params[param_index];
+		std::visit([](auto&& arg) { arg.clear(); }, p->batch);
 		p->nulls.clear();
 	}
 }
 
-nanodbc_type params_batch::touch(short param_index)
+bind_type params_batch::touch(short param_index)
 {
-	nanodbc_types &b = 
-		*(params_[param_index].values.data());
+	bind_types& vec = params[param_index].batch;
 	return
-		std::holds_alternative<short>(b) ? nanodbc_type::NANODBC_SHORT :
-		std::holds_alternative<unsigned short>(b) ? nanodbc_type::NANODBC_USHORT :
-		std::holds_alternative<int>(b) ? nanodbc_type::NANODBC_INT :
-		std::holds_alternative<unsigned int>(b) ? nanodbc_type::NANODBC_UINT :
-		std::holds_alternative<long int>(b) ? nanodbc_type::NANODBC_LONG :
-		std::holds_alternative<unsigned long int>(b) ? nanodbc_type::NANODBC_ULONG :
-		std::holds_alternative<long long>(b) ? nanodbc_type::NANODBC_INT64 :
-		std::holds_alternative<unsigned long long>(b) ? nanodbc_type::NANODBC_UINT64 :
-		std::holds_alternative<float>(b) ? nanodbc_type::NANODBC_FLOAT :
-		std::holds_alternative<double>(b) ? nanodbc_type::NANODBC_DOUBLE :
-		std::holds_alternative<nanodbc::date>(b) ? nanodbc_type::NANODBC_DATE :
-		std::holds_alternative<nanodbc::time>(b) ? nanodbc_type::NANODBC_TIME :
-		std::holds_alternative<nanodbc::timestamp>(b) ? nanodbc_type::NANODBC_TIMESTAMP :
-		std::holds_alternative<nanodbc::string>(b) ? nanodbc_type::NANODBC_STRING :
-		std::holds_alternative<nanodbc::wide_string>(b) ? nanodbc_type::NANODBC_WIDE_STRING :
-		nanodbc_type::NANODBC_UNKNOWN;
+		std::holds_alternative<std::vector<short>>(vec) ? bind_type::NANODBC_SHORT
+		: std::holds_alternative<std::vector<unsigned short>>(vec) ? bind_type::NANODBC_USHORT
+		: std::holds_alternative<std::vector<int>>(vec) ? bind_type::NANODBC_INT
+		: std::holds_alternative<std::vector<unsigned int>>(vec) ? bind_type::NANODBC_UINT
+		: std::holds_alternative<std::vector<long int>>(vec) ? bind_type::NANODBC_LONG
+		: std::holds_alternative<std::vector<unsigned long int>>(vec) ? bind_type::NANODBC_ULONG
+		: std::holds_alternative<std::vector<long long>>(vec) ? bind_type::NANODBC_INT64 
+		: std::holds_alternative<std::vector<unsigned long long>>(vec) ? bind_type::NANODBC_UINT64
+		: std::holds_alternative<std::vector<float>>(vec) ? bind_type::NANODBC_FLOAT
+		: std::holds_alternative<std::vector<double>>(vec) ? bind_type::NANODBC_DOUBLE
+		: std::holds_alternative<std::vector<nanodbc::date>>(vec) ? bind_type::NANODBC_DATE
+		: std::holds_alternative<std::vector<nanodbc::time>>(vec) ? bind_type::NANODBC_TIME
+		: std::holds_alternative<std::vector<nanodbc::timestamp>>(vec) ? bind_type::NANODBC_TIMESTAMP
+		: std::holds_alternative<std::vector<nanodbc::string>>(vec) ? bind_type::NANODBC_STRING
+		: std::holds_alternative<std::vector<nanodbc::wide_string>>(vec) ? bind_type::NANODBC_WIDE_STRING
+		: bind_type::NANODBC_UNKNOWN;
 }
 
 template <typename T>
-T* params_batch::batch(short param_index)
+T* params_batch::data(short param_index)
 {
-	return reinterpret_cast<T*>(params_[param_index].values.data());
+	bind_types& vec = params[param_index].batch;
+	return std::get<std::vector<T>>(vec).data();
 }
 
 template <class T>
-std::vector<T>* params_batch::batch_vec(short param_index)
+T* params_batch::value(short param_index, long batch_index)
 {
-	return reinterpret_cast<std::vector<T>*>(&(params_[param_index].values));
+	bind_types& vec = params[param_index].batch;
+	T* v = std::get<std::vector<T>>(vec).data();
+	return &(v[batch_index]);
+}
+
+template <class T>
+std::vector<T>* params_batch::batch(short param_index)
+{
+	bind_types& vec = params[param_index].batch;
+	return &(std::get<std::vector<T>>(vec));
 }
 
 bool* params_batch::nulls(short param_index)
 {
-	return reinterpret_cast<bool*>(params_[param_index].nulls.data());
-}
-
-template <typename T>
-T* params_batch::value(short param_index, long batch_index)
-{
-	T* v = reinterpret_cast<T*>(params_[param_index].values.data());
-	return &(v[batch_index]);
+	return reinterpret_cast<bool*>(params[param_index].nulls.data());
 }
 
 bool params_batch::is_null(short param_index, long batch_index)
 {
-	return params_[param_index].nulls.at(batch_index);
+	return params[param_index].nulls.at(batch_index);
 }
 
 short params_batch::count()
@@ -238,133 +245,127 @@ void statement::bind_params(long batch_operations)
 
 			switch (params_->touch(param_index))
 			{
-				case nanodbc_type::NANODBC_SHORT:
+				case bind_type::NANODBC_SHORT:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<short>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<short>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<short>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_USHORT:
+				case bind_type::NANODBC_USHORT:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<unsigned short>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<unsigned short>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<unsigned short>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_INT:
+				case bind_type::NANODBC_INT:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<int>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<int>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<int>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_UINT:
+				case bind_type::NANODBC_UINT:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<unsigned int>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<unsigned int>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<unsigned int>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_LONG:
+				case bind_type::NANODBC_LONG:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<long int>(param_index), batch_operations,	nulls_flag);
+						bind(param_index, params_->data<long int>(param_index), batch_operations,	nulls_flag);
 					else
 						bind(param_index, params_->value<long int>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_ULONG:
+				case bind_type::NANODBC_ULONG:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<unsigned long int>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<unsigned long int>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<unsigned long int>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_INT64:
+				case bind_type::NANODBC_INT64:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<long long>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<long long>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<long long>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_UINT64:
+				case bind_type::NANODBC_UINT64:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<unsigned long long>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<unsigned long long>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<unsigned long long>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_FLOAT:
+				case bind_type::NANODBC_FLOAT:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<float>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<float>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<float>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_DOUBLE:
+				case bind_type::NANODBC_DOUBLE:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<double>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<double>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<double>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_DATE:
+				case bind_type::NANODBC_DATE:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<nanodbc::date>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<nanodbc::date>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<nanodbc::date>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_TIME:
+				case bind_type::NANODBC_TIME:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<nanodbc::time>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<nanodbc::time>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<nanodbc::time>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_TIMESTAMP:
+				case bind_type::NANODBC_TIMESTAMP:
 				{
 					if (batch_operation)
-						bind(param_index, params_->batch<nanodbc::timestamp>(param_index), batch_operations, nulls_flag);
+						bind(param_index, params_->data<nanodbc::timestamp>(param_index), batch_operations, nulls_flag);
 					else
 						bind(param_index, params_->value<nanodbc::timestamp>(param_index, 0));
 					break;
 				}
-				case nanodbc_type::NANODBC_STRING:
+				case bind_type::NANODBC_STRING:
 				{
 					if (batch_operation)
-					{
-					//	std::vector<nanodbc::string>* vec = params_->batch_vec<nanodbc::string>(param_index);
-					//	bind_strings(param_index, *(params_->batch_vec<nanodbc::string>(param_index)), nulls_flag);
-					}
+						bind_strings(param_index, *(params_->batch<nanodbc::string>(param_index)), nulls_flag);
 					else
 						bind(param_index, (char*)(params_->value<nanodbc::string>(param_index, 0)->c_str()));
 					break;
 				}
-				case nanodbc_type::NANODBC_WIDE_STRING:
+				case bind_type::NANODBC_WIDE_STRING:
 				{
 					if (batch_operation)
-					{
-						//	std::vector<nanodbc::string>* vec = params_->batch_vec<nanodbc::string>(param_index);
-						//	bind_strings(param_index, *(params_->batch_vec<nanodbc::string>(param_index)), nulls_flag);
-					}
+						bind_strings(param_index, *(params_->batch<nanodbc::wide_string>(param_index)), nulls_flag);
 					else
 						bind(param_index, (nanodbc::wide_char_t*)(params_->value<nanodbc::string>(param_index, 0)->c_str()));
 					break;
 				}
-				case nanodbc_type::NANODBC_UNKNOWN:
+				case bind_type::NANODBC_UNKNOWN:
 				default:
 				{
 					throw("Binding unknow NANODBC datatype .");
@@ -1613,8 +1614,8 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 						case SQL_TEXT: // char, varchar
 						case SQL_VARYING: 
 						{
-							if (null_flag)
-								params->push(param_index, NANODBC_TEXT(""), null_flag);
+							if (null_flag) 
+								params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), null_flag);
 							else 
 							{
 								std::size_t length =
@@ -1628,7 +1629,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 								);
 								param[length] = '\0';
 								if (in_char_sets[in::value] == fb_char_set::CS_UTF8) utf8_to_loc(param, param);
-								params->push(param_index, NANODBC_TEXT(param), null_flag);
+								params->push(param_index, (nanodbc::string)(NANODBC_TEXT(param)), null_flag);
 								delete[] param;
 							}
 							break;
@@ -1670,7 +1671,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 						case SQL_BLOB: // blob
 						{
 							if (null_flag)
-								params->push(param_index, NANODBC_TEXT(""), null_flag);
+								params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), null_flag);
 							else
 							{
 							}
@@ -1725,16 +1726,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 						case SQL_BOOLEAN: // boolean
 						{
 							bool param;
-							if (null_flag)
-								param = false;
+							if (null_flag) param = false;
 							else	
 								param = nanoudr::native_bool(*(FB_BOOLEAN*)(in + in_offsets[in::value]));
-							params->push(param_index, NANODBC_TEXT(param ? "True" : "False"), null_flag);
+							params->push(param_index, (nanodbc::string)(NANODBC_TEXT(param ? "True" : "False")), null_flag);
 							break; 
 						}
 						case SQL_NULL: // null
 						{
-							params->push(param_index, NANODBC_TEXT("Null"), true);
+							params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), true);
 							break;
 						}
 						default:

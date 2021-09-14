@@ -34,20 +34,22 @@ class connection;
 // Params batch (values pointers for binding) see NANODBC_INSTANTIATE_BINDS
 //
 
-enum nanodbc_type : short {
+enum bind_type : short {
 	NANODBC_SHORT = 0, NANODBC_USHORT, NANODBC_INT, NANODBC_UINT,
-	NANODBC_LONG, NANODBC_ULONG, NANODBC_INT64, NANODBC_UINT64,	NANODBC_FLOAT, NANODBC_DOUBLE, 
+	NANODBC_LONG, NANODBC_ULONG, NANODBC_INT64, NANODBC_UINT64, 
+	NANODBC_FLOAT, NANODBC_DOUBLE,
 	NANODBC_DATE, NANODBC_TIME, NANODBC_TIMESTAMP,
 	NANODBC_STRING, NANODBC_WIDE_STRING,
 	NANODBC_UNKNOWN
 };
 
-typedef std::variant <
-	short, unsigned short, int, unsigned int, 
-	long int, unsigned long int, long long, unsigned long long, float, double, 
-	nanodbc::date, nanodbc::time, nanodbc::timestamp,
-	nanodbc::string, nanodbc::wide_string
-> nanodbc_types;
+using bind_types = std::variant <
+	std::vector<short>, std::vector<unsigned short>, std::vector<int>, std::vector<unsigned int>,
+	std::vector<long int>, std::vector<unsigned long int>, std::vector<long long>, std::vector<unsigned long long>, 
+	std::vector<float>, std::vector<double>,
+	std::vector<nanodbc::date>, std::vector<nanodbc::time>, std::vector<nanodbc::timestamp>,
+	std::vector<nanodbc::string>, std::vector<nanodbc::wide_string>
+> ;
 
 class params_batch
 {
@@ -57,28 +59,30 @@ public:
 
 	template <class T>
 	long push(short param_index, T const value, const bool null = false);
-	
+
 	void clear();
 
-	nanodbc_type touch(short param_index);
+	bind_type touch(short param_index);
 
-	template <typename T> T* batch(short param_index);
-	template <class T> std::vector<T>* batch_vec(short param_index);
+	template <class T> T* data(short param_index);
+	template <class T> T* value(short param_index, long batch_index);
+	template <class T> std::vector<T>* batch(short param_index);
+
 	bool* nulls(short param_index);
 
-	template <typename T> T* value(short param_index, long batch_index);
 	bool is_null(short param_index, long batch_index);
 
 	short count();
 
 private:
-	struct parameter
+
+	struct param
 	{
-		std::vector<nanodbc_types> values;
-		std::vector<uint8_t> nulls; 
+		bind_types batch;
+		std::vector<uint8_t> nulls;
 	};
 
-	parameter* params_;
+	param* params;
 	short count_;
 };
 
@@ -102,7 +106,7 @@ public:
 
 	class nanodbc::result execute_direct(class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
 	void just_execute_direct(class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
-	
+
 	void bind_params(long batch_operations = 1);
 
 	params_batch* params();
