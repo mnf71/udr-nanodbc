@@ -69,7 +69,7 @@ FB_UDR_BEGIN_FUNCTION(set_locale)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				NANO_THROW_ERROR(e.what());
+				NANO_THROW(e.what());
 			}
 		}
 	}

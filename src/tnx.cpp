@@ -63,27 +63,27 @@ FB_UDR_BEGIN_FUNCTION(tnx_transaction)
 			catch (std::runtime_error const& e)
 			{
 				out->tnxNull = FB_TRUE;
-				NANO_THROW_ERROR(e.what());
+				NANO_THROW(e.what());
 			}
 		}
 		else
 		{
 			out->tnxNull = FB_TRUE;
-			NANO_THROW_ERROR(INVALID_CONN_POINTER);
+			NANO_THROW(INVALID_CONN_POINTER);
 		}
 	}
 
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function dispose (
+// create function release_ (
 //	 tnx ty$pointer not null, 
 // ) returns ty$pointer
-// external name 'nano!tnx_dispose'
+// external name 'nano!tnx_release'
 // engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(tnx_dispose)
+FB_UDR_BEGIN_FUNCTION(tnx_release)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -108,13 +108,13 @@ FB_UDR_BEGIN_FUNCTION(tnx_dispose)
 			{
 				nanoudr::fb_ptr(out->tnx.str, nanoudr::native_ptr(in->tnx.str));
 				out->tnxNull = FB_FALSE;
-				NANO_THROW_ERROR(e.what());
+				NANO_THROW(e.what());
 			}
 		}
 		else
 		{
 			 out->tnxNull = FB_TRUE;
-			 NANO_THROW_ERROR(INVALID_TNX_POINTER);
+			 NANO_THROW(INVALID_TNX_POINTER);
 		}
 	}
 
@@ -154,13 +154,13 @@ FB_UDR_BEGIN_FUNCTION(tnx_commit)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				NANO_THROW_ERROR(e.what());
+				NANO_THROW(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 NANO_THROW_ERROR(INVALID_TNX_POINTER);
+			 NANO_THROW(INVALID_TNX_POINTER);
 		}
 	}
 
@@ -200,13 +200,13 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				NANO_THROW_ERROR(e.what());
+				NANO_THROW(e.what());
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 NANO_THROW_ERROR(INVALID_TNX_POINTER);
+			 NANO_THROW(INVALID_TNX_POINTER);
 		}
 	}
 
@@ -246,13 +246,13 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 			catch (std::runtime_error const& e)
 			{
 				out->connNull = FB_TRUE;
-				NANO_THROW_ERROR(e.what());
+				NANO_THROW(e.what());
 			}
 		}
 		else
 		{
 			 out->connNull = FB_TRUE;
-			 NANO_THROW_ERROR(INVALID_TNX_POINTER);
+			 NANO_THROW(INVALID_TNX_POINTER);
 		}
 	}
 

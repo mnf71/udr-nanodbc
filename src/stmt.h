@@ -28,6 +28,7 @@
 namespace nanoudr
 {
 
+class udr_resours;
 class connection;
 
 //-----------------------------------------------------------------------------
@@ -94,11 +95,11 @@ class statement : public nanodbc::statement
 {
 public:
 	statement();
-	explicit statement(class connection& conn);
+	explicit statement(class nanoudr::connection& conn);
 	statement(class nanoudr::connection& conn, const nanodbc::string& query, long timeout = 0);
 	~statement() noexcept;
 
-	void open(class connection& conn);
+	void open(class nanoudr::connection& conn);
 	nanoudr::connection* connection();
 
 	void prepare(class nanoudr::connection& conn, const nanodbc::string& query, long timeout = 0);
@@ -111,8 +112,7 @@ public:
 
 	params_batch* params();
 
-protected:
-	void init_params();
+	void prepare_params();
 	void release_params();
 
 private:

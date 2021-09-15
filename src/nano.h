@@ -201,6 +201,7 @@ using namespace Firebird;
 
 #include "conn.h" 
 #include "stmt.h" 
+#include "rsrs.h" 
 
 namespace nanoudr
 {
@@ -209,11 +210,14 @@ namespace nanoudr
 //
 
 #define ERROR_MESSAGE_LENGTH	512
-#define	NANO_THROW_ERROR(error_message)	\
+#define	NANO_THROW(error_message)	\
+{	\
 	ISC_STATUS_ARRAY vector =	\
 		{ isc_arg_gds, isc_random, isc_arg_string, (ISC_STATUS)(error_message), isc_arg_end };	\
 	status->setErrors(vector);	\
-	strncpy_s(nanoudr::last_error_message, ERROR_MESSAGE_LENGTH + 1, (error_message), _TRUNCATE);  /* NANO_THROW_ERROR */
+	strncpy_s(nanoudr::last_error_message, ERROR_MESSAGE_LENGTH + 1, (error_message), _TRUNCATE);	\
+	return; \
+}	/* NANO_THROW_ERROR */
 
 extern char last_error_message[ERROR_MESSAGE_LENGTH];
 
@@ -285,7 +289,7 @@ enum fb_char_set
 	CS_SJIS = 5,		// SJIS		- 2b
 	CS_EUCJ = 6,		// EUC-J	- 2b
 
-	CS_JIS_0208 = 7,	// JIS 0208; 1990
+	CS_JIS_0208 = 7,		// JIS 0208; 1990
 	CS_UNICODE_UCS2 = 8,	// UNICODE v 1.10
 
 	CS_DOS_737 = 9,

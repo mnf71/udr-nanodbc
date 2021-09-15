@@ -26,11 +26,11 @@
 namespace nanoudr
 {
 
+class statement;
+
 //-----------------------------------------------------------------------------
 // UDR Connection class implementation
 //
-
-class statement;
 
 class connection : public nanodbc::connection
 {
@@ -39,19 +39,6 @@ public:
 	connection(const nanodbc::string& dsn, const nanodbc::string& user, const nanodbc::string& pass, long timeout = 0);
 	connection(const nanodbc::string& connection_string, long timeout = 0);
 	~connection() noexcept;
-
-	void retain_stmt(nanoudr::statement* stmt);
-	void retain_rslt(nanodbc::result* rslt);
-
-	void release_stmt(nanoudr::statement* stmt);
-	void release_rslt(nanodbc::result* rslt);
-
-	bool exists_stmt(nanoudr::statement* stmt);
-	bool exists_rslt(nanodbc::result* rslt);
-
-private:
-	std::vector<nanoudr::statement*> statements;
-	std::vector<nanodbc::result*> results;
 };
 
 } // namespace nanoudr
