@@ -26,10 +26,18 @@
 namespace nanoudr
 {
 
-class connection;
-class transaction;
-class statement;
-class result;
+#ifndef CONN_H 
+	class connection; 
+#endif
+#ifndef NANODBC_H
+	class transaction;
+#endif
+#ifndef STMT_H
+	class statement;
+#endif
+#ifndef NANODBC_H
+	class result;
+#endif
 
 class resours
 {

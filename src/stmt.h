@@ -28,9 +28,6 @@
 namespace nanoudr
 {
 
-class udr_resours;
-class connection;
-
 //-----------------------------------------------------------------------------
 // Params batch (values pointers for binding) see NANODBC_INSTANTIATE_BINDS
 //

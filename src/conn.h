@@ -26,8 +26,6 @@
 namespace nanoudr
 {
 
-class statement;
-
 //-----------------------------------------------------------------------------
 // UDR Connection class implementation
 //
