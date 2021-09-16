@@ -28,96 +28,11 @@
 namespace nanoudr
 {
 
-char last_error_message[ERROR_MESSAGE_LENGTH] = { '\0' };
-
-char udr_locale[20] = "cp1251"; // default locale
-
 //-----------------------------------------------------------------------------
-// package nano$rslt
-//
-// create function set_locale (
-//	 locale varchar(20) character set none not null default 'cp1251',
-//	) returns ty$nano_blank
-//	external name 'nano!set_locale'
-//	engine udr; 
+// Initialize resours class 
 //
 
-FB_UDR_BEGIN_FUNCTION(set_locale)
-
-	FB_UDR_MESSAGE(
-		InMessage,
-		(FB_VARCHAR(20), udr_locale)
-	);
-
-	FB_UDR_MESSAGE(
-		OutMessage,
-		(NANO_BLANK, blank)
-	);
-
-	FB_UDR_EXECUTE_FUNCTION
-	{
-		if (!in->udr_localeNull)
-		{
-			out->blank = BLANK;
-			try
-			{
-				strncpy_s(
-					nanoudr::udr_locale, in->udr_locale.length + 1, in->udr_locale.str, _TRUNCATE
-				); // initialize locale
-				out->blankNull = FB_FALSE;
-			}
-			catch (std::runtime_error const& e)
-			{
-				out->blankNull = FB_TRUE;
-				NANO_THROW(e.what());
-			}
-		}
-	}
-
-FB_UDR_END_FUNCTION
-
-//-----------------------------------------------------------------------------
-// create function err_msg 
-//	returns varchar(512) character set utf8
-//	external name 'nano!error_message'
-//	engine udr; 
-//
-
-FB_UDR_BEGIN_FUNCTION(error_message)
-
-	unsigned out_count;
-
-	enum out : short {
-		e_msg = 0
-	};
-
-	AutoArrayDelete<unsigned> out_char_sets;
-
-	FB_UDR_CONSTRUCTOR
-	{
-		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
-
-		out_count = out_metadata->getCount(status);
-		out_char_sets.reset(new unsigned[out_count]);
-		for (unsigned i = 0; i < out_count; ++i)
-		{
-			out_char_sets[i] = out_metadata->getCharSet(status, i);
-		}
-	}
-
-	FB_UDR_MESSAGE(
-		OutMessage,
-		(FB_VARCHAR(512 * 4), e_msg)
-	);
-
-	FB_UDR_EXECUTE_FUNCTION
-	{
-		FB_STRING(out->e_msg, (std::string)(nanoudr::last_error_message));
-		out->e_msgNull = FB_FALSE;
-		UTF8_OUT(e_msg);
-	}
-
-FB_UDR_END_FUNCTION
+nanoudr::resours udr_resours;
 
 //-----------------------------------------------------------------------------
 //
@@ -182,7 +97,7 @@ void utf8_to_loc(char* dest, const char* src)
 {
 	try
 	{
-		iconv_t ic = iconv_open(nanoudr::udr_locale, "UTF-8");
+		iconv_t ic = iconv_open(udr_resours.locale(), "UTF-8");
 		char* in = (char*) src;
 		size_t in_length = strlen(in), buf_length = in_length;
 		char* buf = new char[buf_length + 1], *out = buf;
@@ -203,7 +118,7 @@ void loc_to_utf8(char* dest, const char* src)
 {
 	try 
 	{
-		iconv_t ic = iconv_open("UTF-8", nanoudr::udr_locale);
+		iconv_t ic = iconv_open("UTF-8", udr_resours.locale());
 		char* in = (char*) src;
 		size_t in_length = strlen(in), buf_length = in_length * 4;
 		char* buf = new char[buf_length + 1], *out = buf;

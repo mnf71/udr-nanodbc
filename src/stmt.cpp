@@ -1,4 +1,4 @@
-/*
+/* 
  *  The contents of this file are subject to the Initial
  *  Developer's Public License Version 1.0 (the "License");
  *  you may not use this file except in compliance with the
@@ -10,7 +10,7 @@
  *  See the License for the specific language governing rights
  *  and limitations under the License.
  *
- *  The Original Code was created by Maxim Filatov for the 
+ *  The Original Code was created by Maxim Filatov for the  
  *  Firebird Open Source RDBMS project.
  *
  *  Copyright (c) 2021 Maxim Filatov <2chemist@mail.ru>
@@ -21,7 +21,6 @@
  */
 
 #include "nano.h"
-#include "rsrs.h" 
 
 //-----------------------------------------------------------------------------
 // package nano$stmt
@@ -443,7 +442,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_statement)
 						stmt = new nanoudr::statement(*conn);
 				}
 				else
-					NANO_THROW(INVALID_CONN_POINTER);
+					NANOUDR_THROW(INVALID_CONN_POINTER)
 			}
 			else
 				stmt = new nanoudr::statement();
@@ -452,7 +451,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_statement)
 		}	
 		catch (std::runtime_error const& e)
 		{
-			NANO_THROW(e.what());
+			RANDOM_THROW(e.what())
 		}
 	}
 
@@ -492,11 +491,11 @@ FB_UDR_BEGIN_FUNCTION(stmt_release)
 			{
 				nanoudr::fb_ptr(out->stmt.str, (int64_t)stmt);
 				out->stmtNull = FB_FALSE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 		
 FB_UDR_END_FUNCTION
@@ -572,18 +571,18 @@ FB_UDR_BEGIN_FUNCTION(stmt_open)
 						out->blankNull = FB_FALSE;
 					}
 					else
-						NANO_THROW(INVALID_CONN_POINTER);
+						NANOUDR_THROW(INVALID_CONN_POINTER)
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -622,15 +621,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_opened)
 					out->openedNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -670,15 +669,15 @@ FB_UDR_MESSAGE(
 					out->connectedNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -718,15 +717,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_connection)
 					out->connNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -767,15 +766,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_close)
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -816,15 +815,15 @@ FB_UDR_MESSAGE(
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -894,18 +893,18 @@ unsigned in_count;
 						out->blankNull = FB_FALSE;
 					}
 					else
-						NANO_THROW(INVALID_CONN_POINTER);
+						NANOUDR_THROW(INVALID_CONN_POINTER)
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -970,16 +969,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_prepare)
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1021,16 +1020,16 @@ FB_UDR_BEGIN_FUNCTION(stmt_timeout)
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1103,18 +1102,18 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute_direct)
 						out->rsltNull = FB_FALSE;
 					}
 					else
-						NANO_THROW(INVALID_CONN_POINTER);
+						NANOUDR_THROW(INVALID_CONN_POINTER)
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1186,18 +1185,18 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute_direct)
 						out->blankNull = FB_FALSE;
 					}
 					else
-						NANO_THROW(INVALID_CONN_POINTER);
+						NANOUDR_THROW(INVALID_CONN_POINTER)
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1242,15 +1241,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute)
 					out->rsltNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1295,15 +1294,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute)
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what());
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1377,15 +1376,15 @@ unsigned in_count;
 					out->rsltNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1424,15 +1423,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_affected_rows)
 					out->affectedNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1471,15 +1470,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_columns)
 					out->columnsNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1521,15 +1520,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_reset_parameters)
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			 NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1568,15 +1567,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameters)
 					out->parametersNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1618,15 +1617,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
 					out->sizeNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1836,15 +1835,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1888,15 +1887,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind_null)
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1947,15 +1946,15 @@ FB_UDR_BEGIN_FUNCTION(stmt_describe_parameters)
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANO_THROW(INVALID_STMT_POINTER);
+					NANOUDR_THROW(INVALID_STMT_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
-			 NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 	}
 
 FB_UDR_END_FUNCTION

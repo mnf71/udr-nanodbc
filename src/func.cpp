@@ -102,13 +102,13 @@ FB_UDR_BEGIN_FUNCTION(func_execute_conn)
 			catch (std::runtime_error const& e)
 			{
 				out->rsltNull = FB_TRUE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			out->rsltNull = FB_TRUE;
-			NANO_THROW(INVALID_CONN_POINTER);
+			NANOUDR_THROW(INVALID_CONN_POINTER)
 		}
 	}
 
@@ -176,13 +176,13 @@ FB_UDR_BEGIN_FUNCTION(func_just_execute_conn)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			out->blankNull = FB_TRUE;
-			NANO_THROW(INVALID_CONN_POINTER);
+			NANOUDR_THROW(INVALID_CONN_POINTER)
 		}
 	}
 
@@ -224,13 +224,13 @@ FB_UDR_BEGIN_FUNCTION(func_execute_stmt)
 			catch (std::runtime_error const& e)
 			{
 				out->rsltNull = FB_TRUE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			out->rsltNull = FB_TRUE;
-			NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 		}
 	}
 
@@ -272,13 +272,13 @@ FB_UDR_BEGIN_FUNCTION(func_just_execute_stmt)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			out->blankNull = FB_TRUE;
-			NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 		}
 	}
 
@@ -320,13 +320,13 @@ FB_UDR_BEGIN_FUNCTION(func_transact_stmt)
 			catch (std::runtime_error const& e)
 			{
 				out->rsltNull = FB_TRUE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			out->rsltNull = FB_TRUE;
-			NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 		}
 	}
 
@@ -368,13 +368,13 @@ FB_UDR_BEGIN_FUNCTION(func_just_transact_stmt)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			out->blankNull = FB_TRUE;
-			NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 		}
 	}
 
@@ -439,13 +439,13 @@ FB_UDR_BEGIN_FUNCTION(func_prepare_stmt)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			out->blankNull = FB_TRUE;
-			NANO_THROW(INVALID_STMT_POINTER);
+			NANOUDR_THROW(INVALID_STMT_POINTER)
 		}
 	}
 

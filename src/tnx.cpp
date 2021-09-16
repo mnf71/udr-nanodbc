@@ -63,13 +63,13 @@ FB_UDR_BEGIN_FUNCTION(tnx_transaction)
 			catch (std::runtime_error const& e)
 			{
 				out->tnxNull = FB_TRUE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			out->tnxNull = FB_TRUE;
-			NANO_THROW(INVALID_CONN_POINTER);
+			NANOUDR_THROW(INVALID_CONN_POINTER)
 		}
 	}
 
@@ -108,13 +108,13 @@ FB_UDR_BEGIN_FUNCTION(tnx_release)
 			{
 				nanoudr::fb_ptr(out->tnx.str, nanoudr::native_ptr(in->tnx.str));
 				out->tnxNull = FB_FALSE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			 out->tnxNull = FB_TRUE;
-			 NANO_THROW(INVALID_TNX_POINTER);
+			 NANOUDR_THROW(INVALID_TNX_POINTER)
 		}
 	}
 
@@ -154,13 +154,13 @@ FB_UDR_BEGIN_FUNCTION(tnx_commit)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 NANO_THROW(INVALID_TNX_POINTER);
+			 NANOUDR_THROW(INVALID_TNX_POINTER);
 		}
 	}
 
@@ -200,13 +200,13 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			 out->blankNull = FB_TRUE;
-			 NANO_THROW(INVALID_TNX_POINTER);
+			 NANOUDR_THROW(INVALID_TNX_POINTER)
 		}
 	}
 
@@ -246,13 +246,13 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 			catch (std::runtime_error const& e)
 			{
 				out->connNull = FB_TRUE;
-				NANO_THROW(e.what());
+				RANDOM_THROW(e.what())
 			}
 		}
 		else
 		{
 			 out->connNull = FB_TRUE;
-			 NANO_THROW(INVALID_TNX_POINTER);
+			 NANOUDR_THROW(INVALID_TNX_POINTER)
 		}
 	}
 

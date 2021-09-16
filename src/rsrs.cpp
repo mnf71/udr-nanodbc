@@ -29,7 +29,31 @@
 namespace nanoudr
 {
 
-nanoudr::resours udr_resours;
+//-----------------------------------------------------------------------------
+//
+
+resours::resours()
+{
+	udr_locale = "cp1251";
+	initialized_ = false;
+};
+
+resours::~resours() 
+{
+
+}
+
+const char* resours::locale(const char* set_locale)
+{
+	if (set_locale != nullptr) udr_locale = set_locale;
+	return udr_locale.c_str();
+}
+
+const char* resours::error_message(const char* last_error_message)
+{
+	if (last_error_message != nullptr) udr_error_message = last_error_message;
+	return udr_error_message.c_str();
+}
 
 void resours::retain_connection(nanoudr::connection* conn)
 {
@@ -75,7 +99,189 @@ void resours::release_statement(nanoudr::statement* stmt)
 	}
 }
 
+const long resours::exception_number(const char* name)
+{
+	for (short pos = 0; pos < sizeof(udr_exceptions); ++pos)
+		if (strcmp(udr_exceptions[pos].name, name) == 0) 
+			return udr_exceptions[pos].number;
+	return 0;
+}
 
+const char* resours::exception_message(const char* name)
+{
+	for (short pos = 0; pos < sizeof(udr_exceptions); ++pos)
+		if (strcmp(udr_exceptions[pos].name, name) == 0)
+			return udr_exceptions[pos].message;
+	return nullptr;
+}
+
+void resours::assign_exception(exception* udr_exception, short pos)
+{
+	memcpy(udr_exceptions[pos].name, udr_exception->name, sizeof(udr_exceptions[pos].name));
+	udr_exceptions[pos].number = udr_exception->number;
+	memcpy(udr_exceptions[pos].message, udr_exception->message, sizeof(udr_exceptions[pos].message));
+}
+
+//-----------------------------------------------------------------------------
+// package nano$udr
+//
+
+//-----------------------------------------------------------------------------
+// create function initialize (
+//	  udr_locale varchar(20) character set none not null default 'cp1251',
+//	) returns ty$nano_blank
+//	external name 'nano!initialize'
+//	engine udr; 
+//
+FB_UDR_BEGIN_FUNCTION(initialize)
+	
+	enum rslt : short {
+		name = 0, number, message
+	};
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(FB_VARCHAR(20), udr_locale)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_BLANK, blank)
+	);
+
+	AutoRelease<IAttachment> att;
+	AutoRelease<ITransaction> tra;
+	AutoRelease<IStatement> stmt;
+	AutoRelease<IMessageMetadata> meta;
+	AutoRelease<IResultSet> curs;
+
+	char* sqlStmt = "	\
+SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
+       ex.rdb$exception_number as number, ex.rdb$message as message	\
+  FROM rdb$exceptions ex	\
+  WHERE TRIM(ex.rdb$exception_name) STARTING WITH 'NANO$'";
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		if (!in->udr_localeNull)
+		{
+			out->blankNull = FB_TRUE;
+			try
+			{
+				att = context->getAttachment(status);
+				tra = context->getTransaction(status);
+				stmt.reset(att->prepare(status, tra, 0, sqlStmt, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
+				meta.reset(stmt->getOutputMetadata(status));
+				curs.reset(stmt->openCursor(status, tra, NULL,  NULL, meta, 0));
+				unsigned buf_length = meta->getMessageLength(status);
+				unsigned char* buffer = new unsigned char[buf_length];
+				nanoudr::exception udr_exception;
+				for (int i = 0; curs->fetchNext(status, buffer) == IStatus::RESULT_OK && i < EXCEPTION_ARRAY_SIZE; ++i)
+				{
+					memcpy( // SQL_CHAR -> SQL_VARYING
+						udr_exception.name, 
+						(buffer + 2 + meta->getOffset(status, rslt::name)), 
+						meta->getLength(status, rslt::name) - 2);
+					udr_exception.number = *(ISC_LONG*)(buffer + meta->getOffset(status, rslt::number));
+					memcpy( // SQL_VARYING
+						udr_exception.message, 
+						(buffer + 2 + meta->getOffset(status, rslt::message)), 
+						meta->getLength(status, rslt::message) - 2);
+					udr_resours.assign_exception(&udr_exception, i);
+				}
+				curs->close(status);
+			}
+			catch (std::runtime_error const& e)
+			{
+				RANDOM_THROW(e.what())
+			}
+		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function set_locale (
+//   udr_locale varchar(20) character set none not null default 'cp1251',
+//	) returns ty$nano_blank
+//	external name 'nano!set_locale'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(set_locale)
+
+FB_UDR_MESSAGE(
+	InMessage,
+	(FB_VARCHAR(20), udr_locale)
+);
+
+FB_UDR_MESSAGE(
+	OutMessage,
+	(NANO_BLANK, blank)
+);
+
+FB_UDR_EXECUTE_FUNCTION
+{
+	if (!in->udr_localeNull)
+	{
+		out->blankNull = FB_TRUE;
+		try
+		{
+			udr_resours.locale(in->udr_locale.str);
+			out->blank = BLANK;
+			out->blankNull = FB_FALSE;
+		}
+		catch (std::runtime_error const& e)
+		{
+			RANDOM_THROW(e.what())
+		}
+	}
+}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function error_message
+//	returns varchar(512) character set utf8
+//	external name 'nano!error_message'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(error_message)
+
+unsigned out_count;
+
+	enum out : short {
+		e_msg = 0
+	};
+
+	AutoArrayDelete<unsigned> out_char_sets;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		out_count = out_metadata->getCount(status);
+		out_char_sets.reset(new unsigned[out_count]);
+		for (unsigned i = 0; i < out_count; ++i)
+		{
+			out_char_sets[i] = out_metadata->getCharSet(status, i);
+		}
+	}
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_VARCHAR(512 * 4), e_msg)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		FB_STRING(out->e_msg, (std::string)(udr_resours.error_message()));
+		out->e_msgNull = FB_FALSE;
+		UTF8_OUT(e_msg);
+	}
+
+FB_UDR_END_FUNCTION
 
 
 } // namespace nanoudr
