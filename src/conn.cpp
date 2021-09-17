@@ -109,8 +109,17 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 	FB_UDR_EXECUTE_FUNCTION
 	{
 		out->connNull = FB_TRUE;
-		//if (!udr_resours.initialized())
-			//ANY_THROW("Need call nano$urd.initialize.")
+
+		if (!udr_resours.ready())
+		try
+		{
+			udr_resours.make_ready(status, context);
+		}
+		catch (std::runtime_error const& e)
+		{
+			ANY_THROW(e.what())
+		}
+		
 		try
 		{
 			UTF8_IN(attr);
@@ -134,7 +143,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 		}
 		catch (std::runtime_error const& e)
 		{
-			RANDOM_THROW(e.what())
+			NANODBC_THROW(e.what())
 		}
 	}
 
@@ -174,7 +183,7 @@ FB_UDR_BEGIN_FUNCTION(conn_release)
 			{
 				nanoudr::fb_ptr(out->conn.str, (int64_t)conn);
 				out->connNull = FB_FALSE;
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -254,7 +263,7 @@ FB_UDR_BEGIN_FUNCTION(conn_allocate)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -302,7 +311,7 @@ FB_UDR_BEGIN_FUNCTION(conn_deallocate)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -389,7 +398,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -436,7 +445,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connected)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -484,7 +493,7 @@ FB_UDR_BEGIN_FUNCTION(conn_disconnect)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -531,7 +540,7 @@ FB_UDR_BEGIN_FUNCTION(conn_transactions)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -601,7 +610,7 @@ unsigned out_count;
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -669,7 +678,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -737,7 +746,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -805,7 +814,7 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -873,7 +882,7 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -941,7 +950,7 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else

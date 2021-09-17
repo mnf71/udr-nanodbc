@@ -451,7 +451,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_statement)
 		}	
 		catch (std::runtime_error const& e)
 		{
-			RANDOM_THROW(e.what())
+			NANODBC_THROW(e.what())
 		}
 	}
 
@@ -491,7 +491,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_release)
 			{
 				nanoudr::fb_ptr(out->stmt.str, (int64_t)stmt);
 				out->stmtNull = FB_FALSE;
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -578,7 +578,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_open)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -625,7 +625,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_opened)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -673,7 +673,7 @@ FB_UDR_MESSAGE(
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -721,7 +721,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_connection)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -770,7 +770,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_close)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -819,7 +819,7 @@ FB_UDR_MESSAGE(
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -900,7 +900,7 @@ unsigned in_count;
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -974,7 +974,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_prepare)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1025,7 +1025,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_timeout)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1109,7 +1109,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute_direct)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1192,7 +1192,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute_direct)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1245,7 +1245,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1298,7 +1298,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_just_execute)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what());
+				NANODBC_THROW(e.what());
 			}
 		}
 		else
@@ -1380,7 +1380,7 @@ unsigned in_count;
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1427,7 +1427,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_affected_rows)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1474,7 +1474,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_columns)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1524,7 +1524,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_reset_parameters)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1571,7 +1571,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameters)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1621,7 +1621,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1839,7 +1839,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1891,7 +1891,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind_null)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1950,7 +1950,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_describe_parameters)
 			}
 			catch (std::runtime_error const& e)
 			{
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else

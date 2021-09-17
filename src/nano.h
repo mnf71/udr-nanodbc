@@ -211,42 +211,69 @@ namespace nanoudr
 //-----------------------------------------------------------------------------
 //
 
+extern IMaster* udr_master;
+
+//-----------------------------------------------------------------------------
+//
+
 #define	ANY_THROW(exception_message)	\
 {	\
 	udr_resours.error_message((exception_message));	\
 	ISC_STATUS_ARRAY vector = {	\
 		isc_arg_gds,	\
-		isc_random, isc_arg_string, (ISC_STATUS)(udr_resours.error_message(nullptr)),	\
+		isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
 		isc_arg_end};	\
 	status->setErrors(vector);	\
 	return; \
 }	/* ANY_THROW */
 
-#define	RANDOM_THROW(exception_message)	\
+#define	NANODBC_THROW(exception_message)	\
 {	\
-	long exception_number = udr_resours.exception_number((RANDOM_ERROR_MESSAGE)) ;	\
-	udr_resours.error_message((exception_message));	\
-	if (exception_number == 0) ANY_THROW(udr_resours.error_message(nullptr))	\
-	ISC_STATUS_ARRAY vector = {	\
-		isc_arg_gds,	\
-		isc_except, isc_arg_number, exception_number,	\
-		isc_random, isc_arg_string, (ISC_STATUS)(udr_resours.error_message(nullptr)),	\
-		isc_arg_end};	\
-	status->setErrors(vector);	\
+	ISC_LONG exception_number = udr_resours.exception_number((NANODBC_ERR_MESSAGE));	\
+	if (exception_number == 0)	\
+	{	\
+		ISC_STATUS_ARRAY vector = {	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, (ISC_STATUS)(udr_resours.error_message()),	\
+			isc_arg_end};	\
+		status->setErrors(vector);	\
+	}	\
+	else	\
+	{	\
+		udr_resours.error_message((exception_message));	\
+		ISC_STATUS_ARRAY vector = {	\
+			isc_arg_gds,	\
+			isc_except, isc_arg_number, exception_number,	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+			isc_arg_end};	\
+		status->setErrors(vector);	\
+	}	\
 	return; \
 }	/* RANDOM_THROW */
 
 #define	NANOUDR_THROW(exception_name)	\
 {	\
-	long exception_number = udr_resours.exception_number((exception_name)) ;	\
-	udr_resours.error_message(udr_resours.exception_message(exception_name));	\
-	if (exception_number == 0) ANY_THROW(udr_resours.error_message(nullptr))	\
-	ISC_STATUS_ARRAY vector = {	\
-		isc_arg_gds,	\
-		isc_except, isc_arg_number, exception_number,	\
-		isc_exception_name, isc_arg_string, (ISC_STATUS)(udr_resours.error_message(nullptr)),	\
-		isc_arg_end};	\
-	status->setErrors(vector);	\
+	ISC_LONG exception_number = udr_resours.exception_number((exception_name));		\
+	udr_resours.error_message(udr_resours.exception_message((exception_name)));	\
+	if (exception_number == 0)	\
+	{	\
+		ISC_STATUS vector[] = {	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, (ISC_STATUS)(udr_resours.error_message()),	\
+			isc_arg_end};	\
+		status->setErrors(vector);	\
+	}	\
+	else	\
+	{	\
+		ISC_STATUS vector[] = {	\
+			isc_arg_gds,	\
+			isc_except, isc_arg_number, exception_number,	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, (ISC_STATUS)(udr_resours.error_message()),	\
+			isc_arg_end};	\
+		status->setErrors(vector);	\
+	}	\
 	return; \
 }	/* NANOUDR_THROW */
 

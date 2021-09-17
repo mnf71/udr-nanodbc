@@ -63,7 +63,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_transaction)
 			catch (std::runtime_error const& e)
 			{
 				out->tnxNull = FB_TRUE;
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -108,7 +108,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_release)
 			{
 				nanoudr::fb_ptr(out->tnx.str, nanoudr::native_ptr(in->tnx.str));
 				out->tnxNull = FB_FALSE;
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -154,7 +154,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_commit)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -200,7 +200,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 			catch (std::runtime_error const& e)
 			{
 				out->blankNull = FB_TRUE;
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -246,7 +246,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 			catch (std::runtime_error const& e)
 			{
 				out->connNull = FB_TRUE;
-				RANDOM_THROW(e.what())
+				NANODBC_THROW(e.what())
 			}
 		}
 		else

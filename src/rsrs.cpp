@@ -34,8 +34,8 @@ namespace nanoudr
 
 resours::resours()
 {
+	ready_ = false;
 	udr_locale = "cp1251";
-	initialized_ = false;
 };
 
 resours::~resours() 
@@ -45,13 +45,15 @@ resours::~resours()
 
 const char* resours::locale(const char* set_locale)
 {
-	if (set_locale != nullptr) udr_locale = set_locale;
+	if (set_locale) 
+		udr_locale = set_locale;
 	return udr_locale.c_str();
 }
 
 const char* resours::error_message(const char* last_error_message)
 {
-	if (last_error_message != nullptr) udr_error_message = last_error_message;
+	if (last_error_message) 
+		udr_error_message = last_error_message;
 	return udr_error_message.c_str();
 }
 
@@ -122,23 +124,77 @@ void resours::assign_exception(exception* udr_exception, short pos)
 	memcpy(udr_exceptions[pos].message, udr_exception->message, sizeof(udr_exceptions[pos].message));
 }
 
+void resours::make_ready(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
+{
+	IAttachment* att;
+	ITransaction* tra;
+	AutoRelease<IStatement> stmt;
+	AutoRelease<IMessageMetadata> meta;
+	AutoRelease<IResultSet> curs;
+
+	enum sql_rslt : short { name = 0, number, message };
+
+	char* sql_stmt = "	\
+SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
+       ex.rdb$exception_number as number, ex.rdb$message as message	\
+  FROM rdb$exceptions ex	\
+  WHERE TRIM(ex.rdb$exception_name) STARTING WITH 'NANO$'";
+
+	ready_ = false;
+	try
+	{ 
+		att = context->getAttachment(status);
+		tra = context->getTransaction(status);
+		stmt.reset(att->prepare(status, tra, 0, sql_stmt, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
+		meta.reset(stmt->getOutputMetadata(status));
+		curs.reset(stmt->openCursor(status, tra, NULL, NULL, meta, 0));
+		unsigned buf_length = meta->getMessageLength(status);
+		unsigned char* buffer = new unsigned char[buf_length];
+		nanoudr::exception udr_exception = {"", 0, ""};
+		for (int i = 0; i < EXCEPTION_ARRAY_SIZE; ++i)
+		{
+			udr_resours.assign_exception(&udr_exception, i);
+		}
+		for (int i = 0; curs->fetchNext(status, buffer) == IStatus::RESULT_OK && i < EXCEPTION_ARRAY_SIZE; ++i)
+		{
+			memcpy( // this SQL_VARYING, see sql_stmt
+				udr_exception.name,
+				(buffer + 2 + meta->getOffset(status, sql_rslt::name)),
+				meta->getLength(status, sql_rslt::name) - 2);
+			udr_exception.number = *(ISC_LONG*)(buffer + meta->getOffset(status, sql_rslt::number));
+			memcpy( // SQL_VARYING
+				udr_exception.message,
+				(buffer + 2 + meta->getOffset(status, sql_rslt::message)),
+				meta->getLength(status, sql_rslt::message) - 2);
+			udr_resours.assign_exception(&udr_exception, i);
+		}
+		curs->close(status);
+		ready_ = true;
+	}
+	catch (...)
+	{
+		throw("Make exceptions crashed.");
+	}
+}
+
+bool resours::ready()
+{
+	return ready_;
+}
+
 //-----------------------------------------------------------------------------
 // package nano$udr
 //
 
 //-----------------------------------------------------------------------------
-// create function initialize (
+// create function make_ready (
 //	  udr_locale varchar(20) character set none not null default 'cp1251',
 //	) returns ty$nano_blank
-//	external name 'nano!initialize'
+//	external name 'nano!make_ready'
 //	engine udr; 
 //
-FB_UDR_BEGIN_FUNCTION(initialize)
+FB_UDR_BEGIN_FUNCTION(make_ready)
 	
-	enum rslt : short {
-		name = 0, number, message
-	};
-
 	FB_UDR_MESSAGE(
 		InMessage,
 		(FB_VARCHAR(20), udr_locale)
@@ -149,52 +205,19 @@ FB_UDR_BEGIN_FUNCTION(initialize)
 		(NANO_BLANK, blank)
 	);
 
-	AutoRelease<IAttachment> att;
-	AutoRelease<ITransaction> tra;
-	AutoRelease<IStatement> stmt;
-	AutoRelease<IMessageMetadata> meta;
-	AutoRelease<IResultSet> curs;
-
-	char* sqlStmt = "	\
-SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
-       ex.rdb$exception_number as number, ex.rdb$message as message	\
-  FROM rdb$exceptions ex	\
-  WHERE TRIM(ex.rdb$exception_name) STARTING WITH 'NANO$'";
-
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		if (!in->udr_localeNull)
+		out->blankNull = FB_TRUE;
+		try
 		{
-			out->blankNull = FB_TRUE;
-			try
-			{
-				att = context->getAttachment(status);
-				tra = context->getTransaction(status);
-				stmt.reset(att->prepare(status, tra, 0, sqlStmt, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
-				meta.reset(stmt->getOutputMetadata(status));
-				curs.reset(stmt->openCursor(status, tra, NULL,  NULL, meta, 0));
-				unsigned buf_length = meta->getMessageLength(status);
-				unsigned char* buffer = new unsigned char[buf_length];
-				nanoudr::exception udr_exception;
-				for (int i = 0; curs->fetchNext(status, buffer) == IStatus::RESULT_OK && i < EXCEPTION_ARRAY_SIZE; ++i)
-				{
-					memcpy( // SQL_CHAR -> SQL_VARYING
-						udr_exception.name, 
-						(buffer + 2 + meta->getOffset(status, rslt::name)), 
-						meta->getLength(status, rslt::name) - 2);
-					udr_exception.number = *(ISC_LONG*)(buffer + meta->getOffset(status, rslt::number));
-					memcpy( // SQL_VARYING
-						udr_exception.message, 
-						(buffer + 2 + meta->getOffset(status, rslt::message)), 
-						meta->getLength(status, rslt::message) - 2);
-					udr_resours.assign_exception(&udr_exception, i);
-				}
-				curs->close(status);
-			}
-			catch (std::runtime_error const& e)
-			{
-				RANDOM_THROW(e.what())
-			}
+			udr_resours.make_ready(status, context);
+			if (!in->udr_localeNull) udr_resours.locale(in->udr_locale.str);
+			out->blank = BLANK;
+			out->blankNull = FB_FALSE;
+		}
+		catch (std::runtime_error const& e)
+		{
+			ANY_THROW(e.what())
 		}
 	}
 
@@ -233,7 +256,7 @@ FB_UDR_EXECUTE_FUNCTION
 		}
 		catch (std::runtime_error const& e)
 		{
-			RANDOM_THROW(e.what())
+			NANODBC_THROW(e.what())
 		}
 	}
 }

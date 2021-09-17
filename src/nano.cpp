@@ -32,6 +32,8 @@ namespace nanoudr
 // Initialize resours class 
 //
 
+static IMaster* udr_master = fb_get_master_interface();
+
 nanoudr::resours udr_resours;
 
 //-----------------------------------------------------------------------------

@@ -26,10 +26,12 @@
 namespace nanoudr
 {
 
+#include <UdrCppEngine.h>
+
 #define EXCEPTION_ARRAY_SIZE	100
 #define ERROR_MESSAGE_LENGTH	1024
 
-#define RANDOM_ERROR_MESSAGE	"NANO$RANDOM_ERROR_MESSAGE"
+#define NANODBC_ERR_MESSAGE		"NANO$NANODBC_ERR_MESSAGE"
 #define INVALID_CONN_POINTER	"NANO$INVALID_CONN_POINTER"
 #define INVALID_TNX_POINTER		"NANO$INVALID_TNX_POINTER"
 #define INVALID_STMT_POINTER	"NANO$INVALID_STMT_POINTER"
@@ -48,8 +50,8 @@ public:
 	resours();
 	~resours();
 
-	const char* locale(const char* set_locale = nullptr);
-	const char* error_message(const char* last_error_message = nullptr);
+	const char* locale(const char* set_locale = NULL);
+	const char* error_message(const char* last_error_message = NULL);
 
 	void retain_connection(nanoudr::connection* conn);
 	bool is_valid_connection(nanoudr::connection* conn);
@@ -67,40 +69,33 @@ public:
 	bool is_valid_result(nanodbc::result* rslt);
 	void release_result(nanodbc::result* rslt);
 
-	const long exception_number(const char* name);
+	const ISC_LONG exception_number(const char* name);
 	const char* exception_message(const char* name);
-	void assign_exception(exception* udr_exception, short pos);
 
-	bool initialized();
+	void make_ready(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
+	bool ready();
 
 private:
+	void assign_exception(exception* udr_exception, short pos);
+
 	std::vector<nanoudr::connection*> connections;
 	std::vector<nanodbc::transaction*> transactions;
 	std::vector<nanoudr::statement*> statements;
 	std::vector<nanodbc::result*> results;
 
+	// if number is zero then sended ANY_THROW, see make_ready()
 	exception udr_exceptions[EXCEPTION_ARRAY_SIZE] = {
-		{RANDOM_ERROR_MESSAGE,	0, ""},
+		{NANODBC_ERR_MESSAGE,	0, ""},
 		{INVALID_CONN_POINTER,	0, "Input parameter CONNECTION invalid."},
 		{INVALID_TNX_POINTER,	0, "Input parameter TRANSACTION invalid."},
 		{INVALID_STMT_POINTER,	0, "Input parameter STATEMENT invalid."},
 		{INVALID_RSLT_POINTER,	0, "Input parameter RESULT invalid."}, 
-		{"",	0, ""},
-		{"",	0, ""},
-		{"",	0, ""},
-		{"",	0, ""},
-		{"",	0, ""},
-		{"",	0, ""},
-		{"",	0, ""},
-		{"",	0, ""},
-		{"",	0, ""},
-		{"",	0, ""}
 	};
 
 	std::string udr_error_message;
 	std::string udr_locale;
 
-	bool initialized_;
+	bool ready_;
 };
 
 extern resours udr_resours;
