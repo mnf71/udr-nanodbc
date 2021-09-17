@@ -33,25 +33,25 @@ namespace nanoudr
 // UDR Connection class implementation
 //
 
-nanoudr::connection::connection() : nanodbc::connection() 
+connection::connection() : nanodbc::connection() 
 {
 	udr_resours.retain_connection(this);
 }
 
-nanoudr::connection::connection(
+connection::connection(
 	const nanodbc::string& dsn, const nanodbc::string& user, const nanodbc::string& pass, long timeout) 
 	: nanodbc::connection(dsn, user, pass, timeout)
 {
 	udr_resours.retain_connection(this);
 }
 
-nanoudr::connection::connection(const nanodbc::string& connection_string, long timeout)
+connection::connection(const nanodbc::string& connection_string, long timeout)
 	: nanodbc::connection(connection_string, timeout)
 {
 	udr_resours.retain_connection(this);
 }
 
-nanoudr::connection::~connection()
+connection::~connection()
 {
 	nanodbc::connection::~connection();
 }
@@ -143,8 +143,57 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 		}
 		catch (std::runtime_error const& e)
 		{
-			NANODBC_THROW(e.what(), 'entry point conn_connection')
+			NANODBC_THROW(e.what())
 		}
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function expunge (
+//	 conn ty$pointer not null, 
+//	) returns ty$nano_blank
+//	external name 'nano!conn_expunge'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(conn_expunge)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, conn)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_BLANK, blank)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		out->blankNull = FB_TRUE;
+		if (!in->connNull)
+		{
+			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			try
+			{
+				if (udr_resours.is_valid_connection(conn))
+				{
+					udr_resours.expunge_connection(conn);
+					out->blank = BLANK;
+					out->blankNull = FB_FALSE;
+				}
+				else
+					NANOUDR_THROW(INVALID_CONN_POINTER)
+			}
+			catch (std::runtime_error const& e)
+			{
+				out->blankNull = FB_TRUE;
+				NANODBC_THROW(e.what())
+			}
+		}
+		else
+			NANOUDR_THROW(INVALID_CONN_POINTER)
 	}
 
 FB_UDR_END_FUNCTION

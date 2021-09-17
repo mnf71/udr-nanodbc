@@ -40,7 +40,6 @@ resours::resours()
 
 resours::~resours() 
 {
-
 }
 
 const char* resours::locale(const char* set_locale)
@@ -67,16 +66,48 @@ bool resours::is_valid_connection(nanoudr::connection* conn)
 	return find(connections.begin(), connections.end(), conn) != connections.end();
 }
 
+void resours::expunge_connection(nanoudr::connection* conn)
+{
+	std::vector<nanoudr::connection*>::iterator it =
+		std::find(connections.begin(), connections.end(), conn);
+	if (it != connections.end())
+	{
+		for (auto t : transactions)	if (t->connection() == conn) release_transaction(t);
+		for (auto s : statements) if (s->connection() == conn) release_statement(s);
+	}
+}
+
 void resours::release_connection(nanoudr::connection* conn)
 {
-	std::vector<nanoudr::connection*>::iterator
-		it = std::find(connections.begin(), connections.end(), conn);
+	std::vector<nanoudr::connection*>::iterator it = 
+		std::find(connections.begin(), connections.end(), conn);
 	if (it != connections.end()) 
 	{
-		for (auto s : statements) 
-			if (s->connection() == conn) release_statement(s);
+		for (auto t : transactions)	if (t->connection() == conn) release_transaction(t);
+		for (auto s : statements) if (s->connection() == conn) release_statement(s);
 		delete (nanoudr::connection*)(conn);
 		connections.erase(it);
+	}
+}
+
+void resours::retain_transaction(nanoudr::transaction* tnx)
+{
+	transactions.push_back(tnx);
+}
+
+bool resours::is_valid_transaction(nanoudr::transaction* tnx)
+{
+	return find(transactions.begin(), transactions.end(), tnx) != transactions.end();
+}
+
+void resours::release_transaction(nanoudr::transaction* tnx)
+{
+	std::vector<nanoudr::transaction*>::iterator it = 
+		std::find(transactions.begin(), transactions.end(), tnx);
+	if (it != transactions.end())
+	{
+		delete (nanoudr::transaction*)(tnx);
+		transactions.erase(it);
 	}
 }
 
@@ -92,13 +123,18 @@ bool resours::is_valid_statement(nanoudr::statement* stmt)
 
 void resours::release_statement(nanoudr::statement* stmt)
 {
-	std::vector<nanoudr::statement*>::iterator
-		it = std::find(statements.begin(), statements.end(), stmt);
+	std::vector<nanoudr::statement*>::iterator it = 
+		std::find(statements.begin(), statements.end(), stmt);
 	if (it != statements.end())
 	{
 		delete (nanoudr::statement*)(stmt);
 		statements.erase(it);
 	}
+}
+
+void resours::expunge()
+{
+	for (auto c : connections) release_connection(c);
 }
 
 const long resours::exception_number(const char* name)
@@ -306,5 +342,33 @@ unsigned out_count;
 
 FB_UDR_END_FUNCTION
 
+//-----------------------------------------------------------------------------
+// create function expunge returns ty$nano_blank
+//	external name 'nano!expunge'
+//	engine udr; 
+//
+FB_UDR_BEGIN_FUNCTION(expunge)
+
+FB_UDR_MESSAGE(
+	OutMessage,
+	(NANO_BLANK, blank)
+);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		out->blankNull = FB_TRUE;
+		try
+		{
+			udr_resours.expunge();
+			out->blank = BLANK;
+			out->blankNull = FB_FALSE;
+		}
+		catch (std::runtime_error const& e)
+		{
+			NANODBC_THROW(e.what())
+		}
+	}
+
+FB_UDR_END_FUNCTION
 
 } // namespace nanoudr

@@ -58,11 +58,11 @@ nanoudr::connection* conn_ptr(const char* cptr)
 	return (nanoudr::connection*)conn;
 }
 
-nanodbc::transaction* tnx_ptr(const char* cptr)
+nanoudr::transaction* tnx_ptr(const char* cptr)
 {
 	int64_t tnx = 0;
 	memcpy(&tnx, cptr, 8);
-	return (nanodbc::transaction*)tnx;
+	return (nanoudr::transaction*)tnx;
 }
 
 nanoudr::statement* stmt_ptr(const char* cptr)

@@ -30,6 +30,27 @@ namespace nanoudr
 {
 
 //-----------------------------------------------------------------------------
+// UDR Transaction class implementation
+//
+
+transaction::transaction(class nanoudr::connection& conn)
+	: nanodbc::transaction(conn)
+{
+	udr_resours.retain_transaction(this);
+	conn_ = &conn;
+}
+
+transaction::~transaction()
+{
+	nanodbc::transaction::~transaction();
+}
+
+nanoudr::connection* transaction::connection()
+{
+	return conn_;
+}
+
+//-----------------------------------------------------------------------------
 // create function transaction_ (
 //	 conn ty$pointer not null 
 //	) returns ty$pointer
@@ -51,26 +72,28 @@ FB_UDR_BEGIN_FUNCTION(tnx_transaction)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
+		out->tnxNull = FB_TRUE;
 		if (!in->connNull)
 		{
 			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
-			try
+			if (udr_resours.is_valid_connection(conn))
 			{
-				nanodbc::transaction* tnx = new nanodbc::transaction(*conn);
-				nanoudr::fb_ptr(out->tnx.str, (int64_t)tnx);
-				out->tnxNull = FB_FALSE;
+				try
+				{
+					nanodbc::transaction* tnx = new nanodbc::transaction(*conn);
+					nanoudr::fb_ptr(out->tnx.str, (int64_t)tnx);
+					out->tnxNull = FB_FALSE;
+				}
+				catch (std::runtime_error const& e)
+				{
+					NANODBC_THROW(e.what())
+				}
 			}
-			catch (std::runtime_error const& e)
-			{
-				out->tnxNull = FB_TRUE;
-				NANODBC_THROW(e.what())
-			}
+			else
+				NANOUDR_THROW(INVALID_CONN_POINTER)
 		}
 		else
-		{
-			out->tnxNull = FB_TRUE;
 			NANOUDR_THROW(INVALID_CONN_POINTER)
-		}
 	}
 
 FB_UDR_END_FUNCTION
@@ -97,12 +120,13 @@ FB_UDR_BEGIN_FUNCTION(tnx_release)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
+		out->tnxNull = FB_TRUE;
 		if (!in->tnxNull)
 		{
+			nanoudr::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
 			try
 			{
-				delete nanoudr::tnx_ptr(in->tnx.str);
-				out->tnxNull = FB_TRUE;
+				udr_resours.release_transaction(tnx);
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -112,10 +136,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_release)
 			}
 		}
 		else
-		{
-			 out->tnxNull = FB_TRUE;
 			 NANOUDR_THROW(INVALID_TNX_POINTER)
-		}
 	}
 
 FB_UDR_END_FUNCTION
@@ -142,26 +163,28 @@ FB_UDR_BEGIN_FUNCTION(tnx_commit)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
+		out->blankNull = FB_TRUE;
 		if (!in->tnxNull)
 		{
-			out->blank = BLANK;
-			nanodbc::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
+			nanoudr::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
 			try
 			{
-				tnx->commit();
-				out->blankNull = FB_FALSE;
+				if (udr_resours.is_valid_transaction(tnx))
+				{
+					tnx->commit();
+					out->blank = BLANK;
+					out->blankNull = FB_FALSE;
+				}
+				else
+					NANOUDR_THROW(INVALID_TNX_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				out->blankNull = FB_TRUE;
 				NANODBC_THROW(e.what())
 			}
 		}
 		else
-		{
-			 out->blankNull = FB_TRUE;
-			 NANOUDR_THROW(INVALID_TNX_POINTER);
-		}
+			 NANOUDR_THROW(INVALID_TNX_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -191,23 +214,25 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 		if (!in->tnxNull)
 		{
 			out->blank = BLANK;
-			nanodbc::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
+			nanoudr::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
 			try
 			{
-				tnx->rollback();
-				out->blankNull = FB_FALSE;
+				if (udr_resours.is_valid_transaction(tnx))
+				{
+					tnx->rollback();
+					out->blank = BLANK;
+					out->blankNull = FB_FALSE;
+				}
+				else
+					NANOUDR_THROW(INVALID_TNX_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				out->blankNull = FB_TRUE;
 				NANODBC_THROW(e.what())
 			}
 		}
 		else
-		{
-			 out->blankNull = FB_TRUE;
 			 NANOUDR_THROW(INVALID_TNX_POINTER)
-		}
 	}
 
 FB_UDR_END_FUNCTION
@@ -234,26 +259,28 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
+		 out->connNull = FB_TRUE;
 		if (!in->tnxNull)
 		{
-			nanodbc::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
+			nanoudr::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
 			try
 			{
-				nanodbc::connection conn = tnx->connection();
-				nanoudr::fb_ptr(out->conn.str, (int64_t)&conn);
-				out->connNull = FB_FALSE;
+				if (udr_resours.is_valid_transaction(tnx))
+				{
+					nanoudr::connection* conn = tnx->connection();
+					nanoudr::fb_ptr(out->conn.str, (int64_t)&conn);
+					out->connNull = FB_FALSE;
+				}
+				else
+					NANOUDR_THROW(INVALID_TNX_POINTER)
 			}
 			catch (std::runtime_error const& e)
 			{
-				out->connNull = FB_TRUE;
 				NANODBC_THROW(e.what())
 			}
 		}
 		else
-		{
-			 out->connNull = FB_TRUE;
 			 NANOUDR_THROW(INVALID_TNX_POINTER)
-		}
 	}
 
 FB_UDR_END_FUNCTION

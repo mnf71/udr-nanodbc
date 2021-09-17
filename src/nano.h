@@ -288,7 +288,7 @@ void fb_ptr(char* cptr, int64_t iptr);
 int64_t native_ptr(const char* cptr);
 
 nanoudr::connection* conn_ptr(const char* cptr);
-nanodbc::transaction* tnx_ptr(const char* cptr);
+nanoudr::transaction* tnx_ptr(const char* cptr);
 nanoudr::statement* stmt_ptr(const char* cptr);
 nanodbc::result* rslt_ptr(const char* cptr);
         

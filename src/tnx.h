@@ -30,9 +30,17 @@ namespace nanoudr
 // UDR Transaction class implementation
 //
 
-//class transaction : public nanodbc::transaction
-//{
-//};
+class transaction : public nanodbc::transaction
+{
+public:
+	explicit transaction(class nanoudr::connection& conn);
+	~transaction() noexcept;
+
+	nanoudr::connection* connection();
+
+private:
+	nanoudr::connection* conn_;
+};
 
 } // namespace nanoudr
 

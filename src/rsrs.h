@@ -55,19 +55,23 @@ public:
 
 	void retain_connection(nanoudr::connection* conn);
 	bool is_valid_connection(nanoudr::connection* conn);
+	void expunge_connection(nanoudr::connection* conn);
 	void release_connection(nanoudr::connection* conn);
 
-	void retain_transaction(nanodbc::transaction* tnx);
-	bool is_valid_transaction(nanodbc::transaction* tnx);
-	void release_transaction(nanodbc::transaction* tnx);
+	void retain_transaction(nanoudr::transaction* tnx);
+	bool is_valid_transaction(nanoudr::transaction* tnx);
+	void release_transaction(nanoudr::transaction* tnx);
 
 	void retain_statement(nanoudr::statement* stmt);
 	bool is_valid_statement(nanoudr::statement* stmt);
+	void expunge_statement(nanoudr::connection* conn);
 	void release_statement(nanoudr::statement* stmt);
 
 	void retain_result(nanodbc::result* rslt);
 	bool is_valid_result(nanodbc::result* rslt);
 	void release_result(nanodbc::result* rslt);
+
+	void expunge();
 
 	const ISC_LONG exception_number(const char* name);
 	const char* exception_message(const char* name);
@@ -79,7 +83,7 @@ private:
 	void assign_exception(exception* udr_exception, short pos);
 
 	std::vector<nanoudr::connection*> connections;
-	std::vector<nanodbc::transaction*> transactions;
+	std::vector<nanoudr::transaction*> transactions;
 	std::vector<nanoudr::statement*> statements;
 	std::vector<nanodbc::result*> results;
 
