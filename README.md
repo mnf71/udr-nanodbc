@@ -39,26 +39,26 @@ BEGIN
     /*
       other bind ...
     */
-    nano$stmt.just_execute_(stmt);
+    stmt = nano$stmt.just_execute_(stmt); -- NULL if success
     /*  with transaction
       nano$tnx.commit_(tnx);
     */
-    nano$conn.release_(stmt); /* not necessarily */
+    nano$stmt.release_(stmt); /* not necessarily */
     /*  with transaction
-      nano$tnx.release_(tnx);
+      tnx = nano$tnx.release_(tnx);
     */
-    nano$conn.release_(conn);
+    conn = nano$conn.release_(conn);
 
     WHEN EXCEPTION NANO$INVALID_CONN_POINTER, EXCEPTION NANO$INVALID_STMT_POINTER,
          EXCEPTION NANO$NANODBC_ERR_MESSAGE
     DO
     BEGIN
       e = 'Execute block failed: ' || nano$udr.error_message();
-      nano$conn.release_(stmt); /* not necessarily */
+      stmt = nano$stmt.release_(stmt); /* not necessarily */
       /* with transaction, auto rollback
-        nano$tnx.release_(tnx);
+        tnx = nano$tnx.release_(tnx);
       */
-      nano$conn.release_(conn);
+      conn = nano$conn.release_(conn);
       SUSPEND;
       EXIT;
     END
