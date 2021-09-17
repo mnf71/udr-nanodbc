@@ -39,11 +39,11 @@ BEGIN
     /*
       other bind ...
     */
-    stmt = nano$stmt.just_execute_(stmt); -- NULL if success
+    nano$stmt.just_execute_(stmt); 
     /*  with transaction
       nano$tnx.commit_(tnx);
     */
-    nano$stmt.release_(stmt); /* not necessarily */
+    stmt = nano$stmt.release_(stmt); /* not necessarily */ -- NULL if success
     /*  with transaction
       tnx = nano$tnx.release_(tnx);
     */
