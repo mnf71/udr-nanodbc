@@ -211,11 +211,6 @@ namespace nanoudr
 //-----------------------------------------------------------------------------
 //
 
-extern IMaster* udr_master;
-
-//-----------------------------------------------------------------------------
-//
-
 #define	ANY_THROW(exception_message)	\
 {	\
 	udr_resours.error_message((exception_message));	\

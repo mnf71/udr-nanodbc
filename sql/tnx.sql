@@ -6,7 +6,7 @@ BEGIN
  
   FUNCTION transaction_(conn TY$POINTER NOT NULL) RETURNS TY$POINTER;
 
-  FUNCTION dispose(tnx ty$pointer NOT NULL) RETURNS TY$POINTER;
+  FUNCTION release_(tnx ty$pointer NOT NULL) RETURNS TY$POINTER;
 
   FUNCTION commit_(tnx TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK;
   FUNCTION rollback_(tnx TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK;
@@ -23,8 +23,8 @@ BEGIN
     EXTERNAL NAME 'nano!tnx_transaction'
     ENGINE UDR;
 
-  FUNCTION dispose(tnx ty$pointer NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!tnx_dispose'
+  FUNCTION release_(tnx ty$pointer NOT NULL) RETURNS TY$POINTER
+    EXTERNAL NAME 'nano!tnx_release'
     ENGINE UDR;
 
   FUNCTION commit_(tnx TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
