@@ -224,10 +224,12 @@ namespace nanoudr
 
 #define	NANODBC_THROW(exception_message)	\
 {	\
-	ISC_LONG exception_number = udr_resours.exception_number((NANODBC_ERR_MESSAGE));	\
+	ISC_LONG exception_number = udr_resours.exception_number(NANODBC_ERR_MESSAGE);	\
 	if (exception_number == 0)	\
 	{	\
 		ISC_STATUS_ARRAY vector = {	\
+			isc_arg_gds,	\
+			isc_exception_name, isc_arg_string, (ISC_STATUS)(NANODBC_ERR_MESSAGE),	\
 			isc_arg_gds,	\
 			isc_random, isc_arg_string, (ISC_STATUS)(udr_resours.error_message()),	\
 			isc_arg_end};	\
@@ -245,7 +247,7 @@ namespace nanoudr
 		status->setErrors(vector);	\
 	}	\
 	return; \
-}	/* RANDOM_THROW */
+}	/* NANODBC_THROW */
 
 #define	NANOUDR_THROW(exception_name)	\
 {	\
@@ -254,6 +256,8 @@ namespace nanoudr
 	if (exception_number == 0)	\
 	{	\
 		ISC_STATUS vector[] = {	\
+			isc_arg_gds,	\
+			isc_exception_name, isc_arg_string, (ISC_STATUS)(exception_name),	\
 			isc_arg_gds,	\
 			isc_random, isc_arg_string, (ISC_STATUS)(udr_resours.error_message()),	\
 			isc_arg_end};	\

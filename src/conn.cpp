@@ -143,7 +143,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 		}
 		catch (std::runtime_error const& e)
 		{
-			NANODBC_THROW(e.what())
+			NANODBC_THROW(e.what(), 'entry point conn_connection')
 		}
 	}
 
