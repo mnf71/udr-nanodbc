@@ -63,6 +63,9 @@ BEGIN
       EXIT;
     END
   END
+  
+  e = 'ok!';
+  SUSPEND;
 END
 ```
 
