@@ -30,8 +30,8 @@ namespace nanoudr
 // UDR Result class implementation
 //
 
-#ifndef STMT_H
-	class statement;
+#ifndef CONN_H
+	class connection;
 #endif
 
 class result 
