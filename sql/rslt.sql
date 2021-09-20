@@ -4,7 +4,11 @@ CREATE OR ALTER PACKAGE NANO$RSLT
 AS
 BEGIN
 
-  FUNCTION release_(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER;
+  FUNCTION release_(rslt TY$POINTER NOT NULL) RETURNS TY$POINTER;
+
+  FUNCTION is_valid(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
+
+  FUNCTION connection(rslt TY$POINTER NOT NULL) RETURNS TY$POINTER;
 
   FUNCTION rowset_size(rslt TY$POINTER NOT NULL) RETURNS INTEGER;
   FUNCTION affected_rows(rslt TY$POINTER NOT NULL) RETURNS INTEGER;
@@ -57,6 +61,8 @@ BEGIN
 
   FUNCTION next_result(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
 
+  ------------------------------------------------------------------------------
+
   FUNCTION exist(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
 
 END^
@@ -65,8 +71,16 @@ RECREATE PACKAGE BODY NANO$RSLT
 AS
 BEGIN
 
-  FUNCTION release_(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER
+  FUNCTION release_(rslt TY$POINTER NOT NULL) RETURNS TY$POINTER
     EXTERNAL NAME 'nano!rslt_release'
+    ENGINE UDR;
+
+  FUNCTION is_valid(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
+    EXTERNAL NAME 'nano!rslt_is_valid'
+    ENGINE UDR;
+
+  FUNCTION connection(rslt TY$POINTER NOT NULL) RETURNS TY$POINTER
+    EXTERNAL NAME 'nano!rslt_connection'
     ENGINE UDR;
 
   FUNCTION rowset_size(rslt TY$POINTER NOT NULL) RETURNS INTEGER
@@ -178,6 +192,8 @@ BEGIN
   FUNCTION next_result(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
     EXTERNAL NAME 'nano!rslt_next_result'
     ENGINE UDR;
+
+  ------------------------------------------------------------------------------
 
   FUNCTION exist(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
     EXTERNAL NAME 'nano!rslt_exist'

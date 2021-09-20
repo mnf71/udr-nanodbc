@@ -75,13 +75,13 @@ FB_UDR_BEGIN_FUNCTION(tnx_transaction)
 		out->tnxNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			if (udr_resours.is_valid_connection(conn))
 			{
 				try
 				{
 					nanodbc::transaction* tnx = new nanodbc::transaction(*conn);
-					nanoudr::fb_ptr(out->tnx.str, (int64_t)tnx);
+					udr_helper.fb_ptr(out->tnx.str, (int64_t)tnx);
 					out->tnxNull = FB_FALSE;
 				}
 				catch (std::runtime_error const& e)
@@ -123,20 +123,99 @@ FB_UDR_BEGIN_FUNCTION(tnx_release)
 		out->tnxNull = FB_TRUE;
 		if (!in->tnxNull)
 		{
-			nanoudr::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
+			nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
 			try
 			{
 				udr_resours.release_transaction(tnx);
 			}
 			catch (std::runtime_error const& e)
 			{
-				nanoudr::fb_ptr(out->tnx.str, nanoudr::native_ptr(in->tnx.str));
+				udr_helper.fb_ptr(out->tnx.str, udr_helper.native_ptr(in->tnx.str));
 				out->tnxNull = FB_FALSE;
 				NANODBC_THROW(e.what())
 			}
 		}
 		else
 			 NANOUDR_THROW(INVALID_TNX_POINTER)
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function is_valid (
+//	 tnx ty$pointer not null, 
+//	) returns boolean
+//	external name 'nano!tnx_is_valid'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(tnx_is_valid)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, tnx)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_BOOLEAN, valid)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		out->valid =
+			in->tnxNull ?
+			udr_helper.fb_bool(false) :
+			udr_resours.is_valid_transaction(udr_helper.tnx_ptr(in->tnx.str));
+		out->validNull = FB_FALSE;
+	}
+
+FB_UDR_END_FUNCTION
+			
+//-----------------------------------------------------------------------------
+// create function connection (
+//	 tnx ty$pointer not null 
+//	) returns ty$pointer
+//	external name 'nano!tnx_connection'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(tnx_connection)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, tnx)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_POINTER, conn)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+			out->connNull = FB_TRUE;
+		if (!in->tnxNull)
+		{
+			nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
+			try
+			{
+				if (udr_resours.is_valid_transaction(tnx))
+				{
+					nanoudr::connection* conn = tnx->connection();
+					udr_helper.fb_ptr(out->conn.str, (int64_t)conn);
+					out->connNull = FB_FALSE;
+				}
+				else
+					NANOUDR_THROW(INVALID_TNX_POINTER)
+			}
+			catch (std::runtime_error const& e)
+			{
+				NANODBC_THROW(e.what())
+			}
+		}
+		else
+				NANOUDR_THROW(INVALID_TNX_POINTER)
 	}
 
 FB_UDR_END_FUNCTION
@@ -166,7 +245,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_commit)
 		out->blankNull = FB_TRUE;
 		if (!in->tnxNull)
 		{
-			nanoudr::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
+			nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
 			try
 			{
 				if (udr_resours.is_valid_transaction(tnx))
@@ -214,7 +293,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 		if (!in->tnxNull)
 		{
 			out->blank = BLANK;
-			nanoudr::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
+			nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
 			try
 			{
 				if (udr_resours.is_valid_transaction(tnx))
@@ -222,54 +301,6 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 					tnx->rollback();
 					out->blank = BLANK;
 					out->blankNull = FB_FALSE;
-				}
-				else
-					NANOUDR_THROW(INVALID_TNX_POINTER)
-			}
-			catch (std::runtime_error const& e)
-			{
-				NANODBC_THROW(e.what())
-			}
-		}
-		else
-			 NANOUDR_THROW(INVALID_TNX_POINTER)
-	}
-
-FB_UDR_END_FUNCTION
-
-//-----------------------------------------------------------------------------
-// create function connection (
-//	 tnx ty$pointer not null 
-//	) returns ty$pointer
-//	external name 'nano!tnx_connection'
-//	engine udr; 
-//
-
-FB_UDR_BEGIN_FUNCTION(tnx_connection)
-
-	FB_UDR_MESSAGE(
-		InMessage,
-		(NANO_POINTER, tnx)
-	);
-
-	FB_UDR_MESSAGE(
-		OutMessage,
-		(NANO_POINTER, conn)
-	);
-
-	FB_UDR_EXECUTE_FUNCTION
-	{
-		 out->connNull = FB_TRUE;
-		if (!in->tnxNull)
-		{
-			nanoudr::transaction* tnx = nanoudr::tnx_ptr(in->tnx.str);
-			try
-			{
-				if (udr_resours.is_valid_transaction(tnx))
-				{
-					nanoudr::connection* conn = tnx->connection();
-					nanoudr::fb_ptr(out->conn.str, (int64_t)&conn);
-					out->connNull = FB_FALSE;
 				}
 				else
 					NANOUDR_THROW(INVALID_TNX_POINTER)

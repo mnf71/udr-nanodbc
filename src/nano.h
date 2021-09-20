@@ -211,6 +211,15 @@ namespace nanoudr
 //-----------------------------------------------------------------------------
 //
 
+#define POINTER_SIZE			8	
+#define	NANO_POINTER			FB_CHAR(POINTER_SIZE)	// domain types
+#define	NANO_BLANK				FB_INTEGER	// domain types
+#define	BLANK					-1	// void function emulation
+
+
+//-----------------------------------------------------------------------------
+//
+
 #define	ANY_THROW(exception_message)	\
 {	\
 	udr_resours.error_message((exception_message));	\
@@ -276,28 +285,6 @@ namespace nanoudr
 	return; \
 }	/* NANOUDR_THROW */
 
-#define	NANO_POINTER			FB_CHAR(8)	// domain types
-#define	NANO_BLANK				FB_INTEGER	//
-
-#define	BLANK					-1			// void function emulation
-
-//-----------------------------------------------------------------------------
-//
-
-void fb_ptr(char* cptr, int64_t iptr);
-int64_t native_ptr(const char* cptr);
-
-nanoudr::connection* conn_ptr(const char* cptr);
-nanoudr::transaction* tnx_ptr(const char* cptr);
-nanoudr::statement* stmt_ptr(const char* cptr);
-nanodbc::result* rslt_ptr(const char* cptr);
-        
-//-----------------------------------------------------------------------------
-//
-
-FB_BOOLEAN fb_bool(bool value);
-bool native_bool(const ISC_UCHAR value);
-
 //-----------------------------------------------------------------------------
 //
 
@@ -307,26 +294,6 @@ bool native_bool(const ISC_UCHAR value);
 	(fb).length = (fb).length <= s_length ? (fb).length : s_length;	\
 	memcpy((fb).str, (s).c_str(), (fb).length);	\
 	(fb).str[(fb).length] = '\0';	/* FB_STRING */
-
-#define UTF8_IN(param)	\
-	if (in_char_sets[in::##param] == fb_char_set::CS_UTF8)	\
-	{	\
-		utf8_to_loc(in->##param.str, in->##param.str);	\
-	}	/* UTF8_IN */  
-
-#define UTF8_OUT(param)	\
-	if (out_char_sets[out::##param] == fb_char_set::CS_UTF8)	\
-	{	\
-		loc_to_utf8(out->##param.str, out->##param.str);	\
-	}	/* UTF8_OUT */
-
-//-----------------------------------------------------------------------------
-//
-
-extern char udr_locale[20];
-
-void utf8_to_loc(char* dest, const char* src);
-void loc_to_utf8(char* dest, const char* src);
 
 enum fb_char_set
 {
@@ -405,12 +372,24 @@ enum fb_char_set
 	CS_GB18030 = 69		// GB18030	- 4b
 };
 
+#define UTF8_IN(param)	\
+	if (in_char_sets[in::##param] == fb_char_set::CS_UTF8)	\
+	{	\
+		udr_helper.utf8_to_loc(in->##param.str, in->##param.str);	\
+	}	/* UTF8_IN */  
+
+#define UTF8_OUT(param)	\
+	if (out_char_sets[out::##param] == fb_char_set::CS_UTF8)	\
+	{	\
+		udr_helper.loc_to_utf8(out->##param.str, out->##param.str);	\
+	}	/* UTF8_OUT */
+
 //-----------------------------------------------------------------------------
 //
 
 struct date
 {
-	unsigned year;  
+	unsigned year;
 	unsigned month;
 	unsigned day;
 };
@@ -434,13 +413,33 @@ struct timestamp
 	unsigned fract;
 };
 
-nanodbc::timestamp set_timestamp(nanoudr::timestamp* tm);
-nanodbc::date set_date(nanoudr::date* d);
-nanodbc::time set_time(nanoudr::time* t);
+class helper
+{
+public:
+	void fb_ptr(char* cptr, int64_t iptr);
+	int64_t native_ptr(const char* cptr);
 
-nanoudr::timestamp get_timestamp(nanodbc::timestamp* tm);
-nanoudr::date get_date(nanodbc::date* d);
-nanoudr::time get_time(nanodbc::time* t);
+	nanoudr::connection* conn_ptr(const char* cptr);
+	nanoudr::transaction* tnx_ptr(const char* cptr);
+	nanoudr::statement* stmt_ptr(const char* cptr);
+	nanoudr::result* rslt_ptr(const char* cptr);
+
+	FB_BOOLEAN fb_bool(bool value);
+	bool native_bool(const ISC_UCHAR value);
+
+	void utf8_to_loc(char* dest, const char* src);
+	void loc_to_utf8(char* dest, const char* src);
+
+	nanodbc::timestamp set_timestamp(nanoudr::timestamp* tm);
+	nanodbc::date set_date(nanoudr::date* d);
+	nanodbc::time set_time(nanoudr::time* t);
+
+	nanoudr::timestamp get_timestamp(nanodbc::timestamp* tm);
+	nanoudr::date get_date(nanodbc::date* d);
+	nanoudr::time get_time(nanodbc::time* t);
+};
+
+extern helper udr_helper;
 
 } // namespace nanoudr
 

@@ -113,7 +113,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 		if (!udr_resours.ready())
 		try
 		{
-			udr_resours.make_ready(status, context);
+			udr_resours.initialize(status, context);
 		}
 		catch (std::runtime_error const& e)
 		{
@@ -138,7 +138,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 				conn =
 					new nanoudr::connection
 						(NANODBC_TEXT(in->attr.str), NANODBC_TEXT(in->user.str), NANODBC_TEXT(in->pass.str), in->timeout);
-			nanoudr::fb_ptr(out->conn.str, (int64_t)conn);
+			udr_helper.fb_ptr(out->conn.str, (int64_t)conn);
 			out->connNull = FB_FALSE;
 		}
 		catch (std::runtime_error const& e)
@@ -174,7 +174,7 @@ FB_UDR_BEGIN_FUNCTION(conn_expunge)
 		out->blankNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
@@ -223,14 +223,14 @@ FB_UDR_BEGIN_FUNCTION(conn_release)
 		out->connNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				udr_resours.release_connection(conn);
 			}
 			catch (std::runtime_error const& e)
 			{
-				nanoudr::fb_ptr(out->conn.str, (int64_t)conn);
+				udr_helper.fb_ptr(out->conn.str, (int64_t)conn);
 				out->connNull = FB_FALSE;
 				NANODBC_THROW(e.what())
 			}
@@ -265,8 +265,8 @@ FB_UDR_BEGIN_FUNCTION(conn_is_valid)
 	{
 		out->valid =
 			in->connNull ?
-			nanoudr::fb_bool(false) :
-			udr_resours.is_valid_connection(nanoudr::conn_ptr(in->conn.str));
+			udr_helper.fb_bool(false) :
+			udr_resours.is_valid_connection(udr_helper.conn_ptr(in->conn.str));
 		out->validNull = FB_FALSE;
 	}
 
@@ -297,7 +297,7 @@ FB_UDR_BEGIN_FUNCTION(conn_allocate)
 		out->blankNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
@@ -346,7 +346,7 @@ FB_UDR_BEGIN_FUNCTION(conn_deallocate)
 		out->blankNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
@@ -429,7 +429,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 			UTF8_IN(user);
 			UTF8_IN(pass);
 
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
@@ -481,12 +481,12 @@ FB_UDR_BEGIN_FUNCTION(conn_connected)
 		out->connectedNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
 				{
-					out->connected = nanoudr::fb_bool(conn->connected());
+					out->connected = udr_helper.fb_bool(conn->connected());
 					out->connectedNull = FB_FALSE;
 				}
 				else
@@ -528,7 +528,7 @@ FB_UDR_BEGIN_FUNCTION(conn_disconnect)
 		out->blankNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
@@ -576,7 +576,7 @@ FB_UDR_BEGIN_FUNCTION(conn_transactions)
 		out->transactionsNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
@@ -645,7 +645,7 @@ unsigned out_count;
 		out->infoNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
@@ -713,7 +713,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 		out->dbms_nameNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
@@ -781,7 +781,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 		out->versionNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
@@ -849,7 +849,7 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 		out->drv_nameNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
@@ -917,7 +917,7 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 		out->db_nameNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))
@@ -985,7 +985,7 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 		out->ctlg_nameNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = nanoudr::conn_ptr(in->conn.str);
+			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
 				if (udr_resours.is_valid_connection(conn))

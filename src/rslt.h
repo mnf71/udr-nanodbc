@@ -30,9 +30,24 @@ namespace nanoudr
 // UDR Result class implementation
 //
 
-//class result : public nanodbc::result
-//{
-//};
+#ifndef STMT_H
+	class statement;
+#endif
+
+class result 
+{
+public:
+	nanodbc::result* native();
+
+	explicit result(class nanoudr::connection& conn, class nanodbc::result& rslt);
+	~result() noexcept;
+
+	nanoudr::connection* connection();
+
+private:
+	class nanodbc::result rslt_;
+	nanoudr::connection* conn_;
+};
 
 } // namespace nanoudr
 

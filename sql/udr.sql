@@ -4,7 +4,7 @@ CREATE OR ALTER PACKAGE NANO$UDR
 AS
 BEGIN
 
-  FUNCTION make_ready(
+  FUNCTION initialize(
       udr_locale VARCHAR(20) CHARACTER SET NONE DEFAULT 'cp1251'
     ) RETURNS TY$NANO_BLANK;
 
@@ -14,16 +14,18 @@ BEGIN
 
   FUNCTION error_message RETURNS VARCHAR(512) CHARACTER SET UTF8;
 
+  FUNCTION expunge RETURNS TY$NANO_BLANK;
+
 END^
 
 RECREATE PACKAGE BODY NANO$UDR
 AS
 BEGIN
 
-  FUNCTION make_ready(
+  FUNCTION initialize(
       udr_locale VARCHAR(20) CHARACTER SET NONE
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!make_ready'
+    EXTERNAL NAME 'nano!initialize'
     ENGINE UDR;
 
   FUNCTION set_locale(
@@ -34,6 +36,10 @@ BEGIN
 
   FUNCTION error_message RETURNS VARCHAR(512) CHARACTER SET UTF8
     EXTERNAL NAME 'nano!error_message'
+    ENGINE UDR;
+
+  FUNCTION expunge RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!expunge'
     ENGINE UDR;
 
 END^

@@ -88,6 +88,14 @@ private:
 // UDR Statement class implementation
 //
 
+#ifndef CONN_H
+	class connection;
+#endif
+
+#ifndef RSLT_H
+	class result;
+#endif
+
 class statement : public nanodbc::statement
 {
 public:
@@ -102,8 +110,11 @@ public:
 	void prepare(class nanoudr::connection& conn, const nanodbc::string& query, long timeout = 0);
 	void prepare(const nanodbc::string& query, long timeout = 0);
 
-	class nanodbc::result execute_direct(class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
+	nanoudr::result* execute_direct(class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
 	void just_execute_direct(class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
+
+	nanoudr::result* execute(long batch_operations = 1, long timeout = 0);
+	void just_execute(long batch_operations = 1, long timeout = 0);
 
 	void bind_params(long batch_operations = 1);
 

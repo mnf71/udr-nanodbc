@@ -44,6 +44,22 @@ struct exception
 	char message[ERROR_MESSAGE_LENGTH];
 };
 
+#ifndef CONN_H
+	class connection;
+#endif
+
+#ifndef TNX_H
+	class transaction;
+#endif
+
+#ifndef STMT_H
+	class statement;
+#endif
+
+#ifndef RSLT_H
+	class result;
+#endif
+
 class resours
 {
 public:
@@ -67,16 +83,16 @@ public:
 	void expunge_statement(nanoudr::connection* conn);
 	void release_statement(nanoudr::statement* stmt);
 
-	void retain_result(nanodbc::result* rslt);
-	bool is_valid_result(nanodbc::result* rslt);
-	void release_result(nanodbc::result* rslt);
+	void retain_result(nanoudr::result* rslt);
+	bool is_valid_result(nanoudr::result* rslt);
+	void release_result(nanoudr::result* rslt);
 
 	void expunge();
 
 	const ISC_LONG exception_number(const char* name);
 	const char* exception_message(const char* name);
 
-	void make_ready(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
+	void initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
 	bool ready();
 
 private:
@@ -85,7 +101,7 @@ private:
 	std::vector<nanoudr::connection*> connections;
 	std::vector<nanoudr::transaction*> transactions;
 	std::vector<nanoudr::statement*> statements;
-	std::vector<nanodbc::result*> results;
+	std::vector<nanoudr::result*> results;
 
 	// if number is zero then sended ANY_THROW, see make_ready()
 	exception udr_exceptions[EXCEPTION_ARRAY_SIZE] = {

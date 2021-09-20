@@ -40,19 +40,18 @@ resours::resours()
 
 resours::~resours() 
 {
+	expunge();
 }
 
 const char* resours::locale(const char* set_locale)
 {
-	if (set_locale) 
-		udr_locale = set_locale;
+	if (set_locale) udr_locale = set_locale;
 	return udr_locale.c_str();
 }
 
 const char* resours::error_message(const char* last_error_message)
 {
-	if (last_error_message) 
-		udr_error_message = last_error_message;
+	if (last_error_message) udr_error_message = last_error_message;
 	return udr_error_message.c_str();
 }
 
@@ -68,23 +67,23 @@ bool resours::is_valid_connection(nanoudr::connection* conn)
 
 void resours::expunge_connection(nanoudr::connection* conn)
 {
-	std::vector<nanoudr::connection*>::iterator it =
-		std::find(connections.begin(), connections.end(), conn);
+	std::vector<nanoudr::connection*>::iterator it = std::find(connections.begin(), connections.end(), conn);
 	if (it != connections.end())
 	{
 		for (auto t : transactions)	if (t->connection() == conn) release_transaction(t);
 		for (auto s : statements) if (s->connection() == conn) release_statement(s);
+		for (auto r : results)	if (r->connection() == conn) release_result(r);
 	}
 }
 
 void resours::release_connection(nanoudr::connection* conn)
 {
-	std::vector<nanoudr::connection*>::iterator it = 
-		std::find(connections.begin(), connections.end(), conn);
+	std::vector<nanoudr::connection*>::iterator it = std::find(connections.begin(), connections.end(), conn);
 	if (it != connections.end()) 
 	{
 		for (auto t : transactions)	if (t->connection() == conn) release_transaction(t);
 		for (auto s : statements) if (s->connection() == conn) release_statement(s);
+		for (auto r : results)	if (r->connection() == conn) release_result(r);
 		delete (nanoudr::connection*)(conn);
 		connections.erase(it);
 	}
@@ -102,8 +101,7 @@ bool resours::is_valid_transaction(nanoudr::transaction* tnx)
 
 void resours::release_transaction(nanoudr::transaction* tnx)
 {
-	std::vector<nanoudr::transaction*>::iterator it = 
-		std::find(transactions.begin(), transactions.end(), tnx);
+	std::vector<nanoudr::transaction*>::iterator it = std::find(transactions.begin(), transactions.end(), tnx);
 	if (it != transactions.end())
 	{
 		delete (nanoudr::transaction*)(tnx);
@@ -123,12 +121,31 @@ bool resours::is_valid_statement(nanoudr::statement* stmt)
 
 void resours::release_statement(nanoudr::statement* stmt)
 {
-	std::vector<nanoudr::statement*>::iterator it = 
-		std::find(statements.begin(), statements.end(), stmt);
+	std::vector<nanoudr::statement*>::iterator it = std::find(statements.begin(), statements.end(), stmt);
 	if (it != statements.end())
 	{
 		delete (nanoudr::statement*)(stmt);
 		statements.erase(it);
+	}
+}
+
+void resours::retain_result(nanoudr::result* rslt)
+{
+	results.push_back(rslt);
+}
+
+bool resours::is_valid_result(nanoudr::result* rslt)
+{
+	return find(results.begin(), results.end(), rslt) != results.end();
+}
+
+void resours::release_result(nanoudr::result* rslt)
+{
+	std::vector<nanoudr::result*>::iterator it = std::find(results.begin(), results.end(), rslt);
+	if (it != results.end())
+	{
+		delete (nanoudr::result*)(rslt);
+		results.erase(it);
 	}
 }
 
@@ -139,13 +156,13 @@ void resours::expunge()
 
 const long resours::exception_number(const char* name)
 {
-	for (short pos = 0; pos < sizeof(udr_exceptions); ++pos)
-		if (strcmp(udr_exceptions[pos].name, name) == 0) 
-			return udr_exceptions[pos].number;
+	for (auto x : udr_exceptions) 
+			if (strcmp(x.name, name) == 0)
+				return x.number;
 	return 0;
 }
 
-const char* resours::exception_message(const char* name)
+const char* resours::exception_message(const char* name) // simple find
 {
 	for (short pos = 0; pos < sizeof(udr_exceptions); ++pos)
 		if (strcmp(udr_exceptions[pos].name, name) == 0)
@@ -160,7 +177,7 @@ void resours::assign_exception(exception* udr_exception, short pos)
 	memcpy(udr_exceptions[pos].message, udr_exception->message, sizeof(udr_exceptions[pos].message));
 }
 
-void resours::make_ready(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
+void resours::initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
 {
 	IAttachment* att;
 	ITransaction* tra;
@@ -223,13 +240,13 @@ bool resours::ready()
 //
 
 //-----------------------------------------------------------------------------
-// create function make_ready (
+// create function initialize (
 //	  udr_locale varchar(20) character set none not null default 'cp1251',
 //	) returns ty$nano_blank
-//	external name 'nano!make_ready'
+//	external name 'nano!initialize'
 //	engine udr; 
 //
-FB_UDR_BEGIN_FUNCTION(make_ready)
+FB_UDR_BEGIN_FUNCTION(initialize)
 	
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -246,7 +263,7 @@ FB_UDR_BEGIN_FUNCTION(make_ready)
 		out->blankNull = FB_TRUE;
 		try
 		{
-			udr_resours.make_ready(status, context);
+			udr_resours.initialize(status, context);
 			if (!in->udr_localeNull) udr_resours.locale(in->udr_locale.str);
 			out->blank = BLANK;
 			out->blankNull = FB_FALSE;

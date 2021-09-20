@@ -29,65 +29,64 @@ namespace nanoudr
 {
 
 //-----------------------------------------------------------------------------
-// Initialize resours class 
+// Initialize global class 
 //
 
-static IMaster* udr_master = fb_get_master_interface();
-
 nanoudr::resours udr_resours;
+nanoudr::helper udr_helper;
 
 //-----------------------------------------------------------------------------
 //
 
-void fb_ptr(char* cptr, int64_t iptr)
+void helper::fb_ptr(char* cptr, int64_t iptr)
 {
-	memcpy(cptr, &iptr, 8);
+	memcpy(cptr, &iptr, POINTER_SIZE);
 }
 
-int64_t native_ptr(const char* cptr)
+int64_t helper::native_ptr(const char* cptr)
 {
 	int64_t iptr = 0;
-	memcpy(&iptr, cptr, 8);
+	memcpy(&iptr, cptr, POINTER_SIZE);
 	return iptr;
 }
 
-nanoudr::connection* conn_ptr(const char* cptr)
+nanoudr::connection* helper::conn_ptr(const char* cptr)
 {
 	int64_t conn = 0;
-	memcpy(&conn, cptr, 8);
+	memcpy(&conn, cptr, POINTER_SIZE);
 	return (nanoudr::connection*)conn;
 }
 
-nanoudr::transaction* tnx_ptr(const char* cptr)
+nanoudr::transaction* helper::tnx_ptr(const char* cptr)
 {
 	int64_t tnx = 0;
-	memcpy(&tnx, cptr, 8);
+	memcpy(&tnx, cptr, POINTER_SIZE);
 	return (nanoudr::transaction*)tnx;
 }
 
-nanoudr::statement* stmt_ptr(const char* cptr)
+nanoudr::statement* helper::stmt_ptr(const char* cptr)
 {
 	int64_t stmt = 0;
-	memcpy(&stmt, cptr, 8);
+	memcpy(&stmt, cptr, POINTER_SIZE);
 	return (nanoudr::statement*)stmt;
 }
 
-nanodbc::result* rslt_ptr(const char* cptr)
+nanoudr::result* helper::rslt_ptr(const char* cptr)
 {
 	int64_t rslt = 0;
-	memcpy(&rslt, cptr, 8);
-	return (nanodbc::result*)rslt;
+	memcpy(&rslt, cptr, POINTER_SIZE);
+	return (nanoudr::result*)rslt;
 }
 
 //-----------------------------------------------------------------------------
 //
 
-FB_BOOLEAN fb_bool(bool value)
+FB_BOOLEAN helper::fb_bool(bool value)
 {
 	return (value ? FB_TRUE : FB_FALSE);
 }
 
-bool native_bool(const FB_BOOLEAN value)
+bool helper::native_bool(const FB_BOOLEAN value)
 {
 	return (value == FB_TRUE ? true : value == FB_FALSE ? false : throw "Invalid FB_BOOLEAN value.");
 }
@@ -95,7 +94,7 @@ bool native_bool(const FB_BOOLEAN value)
 //-----------------------------------------------------------------------------
 //
 
-void utf8_to_loc(char* dest, const char* src)
+void helper::utf8_to_loc(char* dest, const char* src)
 {
 	try
 	{
@@ -116,7 +115,7 @@ void utf8_to_loc(char* dest, const char* src)
 	}
 }
 
-void loc_to_utf8(char* dest, const char* src)
+void helper::loc_to_utf8(char* dest, const char* src)
 {
 	try 
 	{
@@ -141,7 +140,7 @@ void loc_to_utf8(char* dest, const char* src)
 //-----------------------------------------------------------------------------
 //
 
-nanodbc::timestamp set_timestamp(nanoudr::timestamp* tm)
+nanodbc::timestamp helper::set_timestamp(nanoudr::timestamp* tm)
 {
 	nanodbc::timestamp tm_s;
 	tm_s.year = tm->year;
@@ -154,7 +153,7 @@ nanodbc::timestamp set_timestamp(nanoudr::timestamp* tm)
 	return tm_s;
 }
 
-nanodbc::date set_date(nanoudr::date* d)
+nanodbc::date helper::set_date(nanoudr::date* d)
 {
 	nanodbc::date d_s;
 	d_s.year = d->year;
@@ -163,7 +162,7 @@ nanodbc::date set_date(nanoudr::date* d)
 	return d_s;
 }
 
-nanodbc::time set_time(nanoudr::time* t)
+nanodbc::time helper::set_time(nanoudr::time* t)
 {
 	nanodbc::time t_s;
 	t_s.hour = t->hour;
@@ -172,7 +171,7 @@ nanodbc::time set_time(nanoudr::time* t)
 	return t_s;
 }
 
-nanoudr::timestamp get_timestamp(nanodbc::timestamp* tm)
+nanoudr::timestamp helper::get_timestamp(nanodbc::timestamp* tm)
 {
 	nanoudr::timestamp tm_s;
 	tm_s.year = tm->year;
@@ -185,7 +184,7 @@ nanoudr::timestamp get_timestamp(nanodbc::timestamp* tm)
 	return tm_s;
 }
 
-nanoudr::date get_date(nanodbc::date* d)
+nanoudr::date helper::get_date(nanodbc::date* d)
 {
 	nanoudr::date d_s;
 	d_s.year = d->year;
@@ -194,7 +193,7 @@ nanoudr::date get_date(nanodbc::date* d)
 	return d_s;
 }
 
-nanoudr::time get_time(nanodbc::time* t)
+nanoudr::time helper::get_time(nanodbc::time* t)
 {
 	nanoudr::time t_s;
 	t_s.hour = t->hour;

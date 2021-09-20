@@ -30,6 +30,10 @@ namespace nanoudr
 // UDR Transaction class implementation
 //
 
+#ifndef CONN_H
+	class connection;
+#endif
+
 class transaction : public nanodbc::transaction
 {
 public:
