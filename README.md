@@ -15,7 +15,7 @@ AS
   DECLARE stmt ty$pointer;
   DECLARE tnx ty$pointer;
 BEGIN
-  nano$udr.make_ready();
+  nano$udr.initialize();
   
   BEGIN
     conn = nano$conn.connection(ora_conn_str);
