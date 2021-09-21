@@ -96,7 +96,7 @@ FB_UDR_BEGIN_FUNCTION(func_execute_conn)
 				UTF8_IN(query);
 				nanodbc::result rslt = 
 					nanodbc::execute(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
-				udr_helper.fb_ptr(out->rslt.str, (int64_t)(new nanoudr::result(*conn, rslt)));
+				udr_helper.fb_ptr(out->rslt.str, (int64_t)(new nanoudr::result(*conn, std::move(rslt))));
 				out->rsltNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -218,7 +218,7 @@ FB_UDR_BEGIN_FUNCTION(func_execute_stmt)
 			try
 			{
 				nanodbc::result rslt = nanodbc::execute(*stmt, in->batch_operations);
-				udr_helper.fb_ptr(out->rslt.str, (int64_t)(new nanoudr::result(*stmt->connection(), rslt)));
+				udr_helper.fb_ptr(out->rslt.str, (int64_t)(new nanoudr::result(*stmt->connection(), std::move(rslt))));
 				out->rsltNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)

@@ -34,18 +34,15 @@ namespace nanoudr
 	class connection;
 #endif
 
-class result 
+class result : public nanodbc::result
 {
 public:
-	nanodbc::result* native();
-
-	explicit result(class nanoudr::connection& conn, class nanodbc::result& rslt);
+	explicit result(class nanoudr::connection& conn, class nanodbc::result&& rslt);
 	~result() noexcept;
 
 	nanoudr::connection* connection();
 
 private:
-	class nanodbc::result rslt_;
 	nanoudr::connection* conn_;
 };
 

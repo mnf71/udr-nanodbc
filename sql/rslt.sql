@@ -63,7 +63,7 @@ BEGIN
 
   ------------------------------------------------------------------------------
 
-  FUNCTION exist(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
+  FUNCTION data_(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
 
 END^
 
@@ -195,8 +195,8 @@ BEGIN
 
   ------------------------------------------------------------------------------
 
-  FUNCTION exist(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_exist'
+  FUNCTION data_(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
+    EXTERNAL NAME 'nano!rslt_data'
     ENGINE UDR;
 
 END^

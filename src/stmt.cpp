@@ -195,7 +195,7 @@ nanoudr::result* statement::execute_direct(
 	nanodbc::result rslt =
 		nanodbc::statement::execute_direct(conn, query, batch_operations, timeout);
 	conn_ = &conn;
-	return new nanoudr::result(*this->connection(), rslt);
+	return new nanoudr::result(*this->connection(), std::move(rslt));
 }
 
 void statement::just_execute_direct(
@@ -210,7 +210,7 @@ nanoudr::result* statement::execute(long batch_operations, long timeout)
 {
 	nanodbc::result rslt =
 		nanodbc::statement::execute(batch_operations, timeout);
-	return new nanoudr::result(*this->connection(), rslt);
+	return new nanoudr::result(*this->connection(), std::move(rslt));
 }
 
 void statement::just_execute(long batch_operations, long timeout)
@@ -1384,7 +1384,7 @@ unsigned in_count;
 					nanodbc::result rslt =
 						stmt->procedure_columns(NANODBC_TEXT(in->catalog_.str), NANODBC_TEXT(in->schema_.str), 
 							NANODBC_TEXT(in->procedure_.str), NANODBC_TEXT(in->column_.str));
-					udr_helper.fb_ptr(out->rslt.str, (int64_t)(new nanoudr::result(*stmt->connection(), rslt)));
+					udr_helper.fb_ptr(out->rslt.str, (int64_t)(new nanoudr::result(*stmt->connection(), std::move(rslt))));
 					out->rsltNull = FB_FALSE;
 				}
 				else
