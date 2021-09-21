@@ -60,50 +60,80 @@ struct exception
 	class result;
 #endif
 
-class resours
+class resources
 {
 public:
-	resours();
-	~resours();
+	resources();
+	~resources();
 
 	const char* locale(const char* set_locale = NULL);
 	const char* error_message(const char* last_error_message = NULL);
+	
+	void initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
+	
+	bool ready();
 
-	void retain_connection(nanoudr::connection* conn);
-	bool is_valid_connection(nanoudr::connection* conn);
-	void expunge_connection(nanoudr::connection* conn);
-	void release_connection(nanoudr::connection* conn);
+	struct connections_resource
+	{
+		connections_resource(nanoudr::resources* rsrs);
+		std::vector<nanoudr::connection*>& conn();
+		void retain(nanoudr::connection* conn);
+		bool is_valid(nanoudr::connection* conn);
+		void expunge(nanoudr::connection* conn);
+		void release(nanoudr::connection* conn);
+	private:
+		std::vector<nanoudr::connection*> conn_;
+		resources* rsrs_;
+	};
 
-	void retain_transaction(nanoudr::transaction* tnx);
-	bool is_valid_transaction(nanoudr::transaction* tnx);
-	void release_transaction(nanoudr::transaction* tnx);
+	struct transactions_resource
+	{
+		transactions_resource(nanoudr::resources* rsrs);
+		std::vector<nanoudr::transaction*>& tnx();
+		void retain(nanoudr::transaction* tnx);
+		bool is_valid(nanoudr::transaction* tnx);
+		void release(nanoudr::transaction* tnx);
+	private:
+		std::vector<nanoudr::transaction*> tnx_;
+		resources* rsrs_;
+	};
 
-	void retain_statement(nanoudr::statement* stmt);
-	bool is_valid_statement(nanoudr::statement* stmt);
-	void expunge_statement(nanoudr::connection* conn);
-	void release_statement(nanoudr::statement* stmt);
+	struct statements_resource
+	{
+		statements_resource(nanoudr::resources* rsrs);
+		std::vector<nanoudr::statement*>& stmt();
+		void retain(nanoudr::statement* stmt);
+		bool is_valid(nanoudr::statement* stmt);
+		void release(nanoudr::statement* stmt);
+	private:
+		std::vector<nanoudr::statement*> stmt_;
+		resources* rsrs_;
+	};
 
-	void retain_result(nanoudr::result* rslt);
-	bool is_valid_result(nanoudr::result* rslt);
-	void release_result(nanoudr::result* rslt);
+	struct results_resource
+	{
+		results_resource(nanoudr::resources* rsrs);
+		std::vector<nanoudr::result*>& rslt();
+		void retain(nanoudr::result* rslt);
+		bool is_valid(nanoudr::result* rslt);
+		void release(nanoudr::result* rslt);
+	private:
+		std::vector<nanoudr::result*> rslt_;
+		resources* rsrs_;
+	};
 
 	void expunge();
 
 	const ISC_LONG exception_number(const char* name);
 	const char* exception_message(const char* name);
 
-	void initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
-	bool ready();
+	connections_resource connections = connections_resource(this);
+	transactions_resource transactions = transactions_resource(this);
+	statements_resource statements = statements_resource(this);
+	results_resource results = results_resource(this);
 
 private:
-	void assign_exception(exception* udr_exception, short pos);
-
-	std::vector<nanoudr::connection*> connections;
-	std::vector<nanoudr::transaction*> transactions;
-	std::vector<nanoudr::statement*> statements;
-	std::vector<nanoudr::result*> results;
-
-	// if number is zero then sended ANY_THROW, see make_ready()
+	// if number is zero then sended ANY_THROW, see initialize(...)
 	exception udr_exceptions[EXCEPTION_ARRAY_SIZE] = {
 		{NANODBC_ERR_MESSAGE,	0, ""},
 		{INVALID_CONN_POINTER,	0, "Input parameter CONNECTION invalid."},
@@ -112,13 +142,15 @@ private:
 		{INVALID_RSLT_POINTER,	0, "Input parameter RESULT invalid."}, 
 	};
 
+	void assign_exception(exception* udr_exception, short pos);
+
 	std::string udr_error_message;
 	std::string udr_locale;
 
 	bool ready_;
 };
 
-extern resours udr_resours;
+extern resources udr_resources;
 
 } // namespace nanoudr
 

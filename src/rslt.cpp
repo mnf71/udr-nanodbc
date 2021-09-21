@@ -40,7 +40,7 @@ nanodbc::result* result::native()
 
 result::result(class nanoudr::connection& conn, class nanodbc::result& rslt)
 {
-	udr_resours.retain_result(this);
+	udr_resources.results.retain(this);
 	rslt_ = std::move(rslt);
 	conn_ = &conn;
 }
@@ -82,7 +82,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_release)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				udr_resours.release_result(rslt);
+				udr_resources.results.release(rslt);
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -122,7 +122,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_valid)
 		out->valid =
 			in->rsltNull ?
 			udr_helper.fb_bool(false) :
-			udr_resours.is_valid_result(udr_helper.rslt_ptr(in->rslt.str));
+			udr_resources.results.is_valid(udr_helper.rslt_ptr(in->rslt.str));
 		out->validNull = FB_FALSE;
 	}
 
@@ -156,7 +156,7 @@ FB_UDR_MESSAGE(
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					nanoudr::connection* conn = rslt->connection();
 					udr_helper.fb_ptr(out->stmt.str, (int64_t)conn);
@@ -204,7 +204,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_rowset_size)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->size = rslt->native()->rowset_size();
 					out->sizeNull = FB_FALSE;
@@ -251,7 +251,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_affected_rows)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->affected = rslt->native()->affected_rows();
 					out->affectedNull = FB_FALSE;
@@ -298,7 +298,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_has_affected_rows)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->has_affected = 
 						udr_helper.fb_bool(rslt->native()->has_affected_rows());
@@ -346,7 +346,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_rows)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->rows = rslt->native()->rows();
 					out->rowsNull = FB_FALSE;
@@ -393,7 +393,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_columns)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->columns = rslt->native()->columns();
 					out->columnsNull = FB_FALSE;
@@ -440,7 +440,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_first)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->succes = udr_helper.fb_bool(rslt->native()->first());
 					out->succesNull = FB_FALSE;
@@ -487,7 +487,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_last)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->succes = udr_helper.fb_bool(rslt->native()->last());
 					out->succesNull = FB_FALSE;
@@ -534,7 +534,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_next)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->succes = udr_helper.fb_bool(rslt->native()->next());
 					out->succesNull = FB_FALSE;
@@ -581,7 +581,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_prior)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->succes = udr_helper.fb_bool(rslt->native()->prior());
 					out->succesNull = FB_FALSE;
@@ -630,7 +630,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_move)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->succes = udr_helper.fb_bool(rslt->native()->move(in->row));
 					out->succesNull = FB_FALSE;
@@ -679,7 +679,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_skip)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->succes = udr_helper.fb_bool(rslt->native()->skip(in->rows));
 					out->succesNull = FB_FALSE;
@@ -726,7 +726,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_position)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->position = rslt->native()->position();
 					out->positionNull = FB_FALSE;
@@ -773,7 +773,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_at_end)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->at_end = udr_helper.fb_bool(rslt->native()->at_end());
 					out->at_endNull = FB_FALSE;
@@ -846,7 +846,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_unbind)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					UTF8_IN(column_);
 					if (!in->column_Null)
@@ -930,7 +930,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_null)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					UTF8_IN(column_);
 					if (!isdigit(in->column_.str[0]))
@@ -1008,7 +1008,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_bound)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					UTF8_IN(column_);
 					if (!isdigit(in->column_.str[0]))
@@ -1083,7 +1083,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					UTF8_IN(column);
 					out->index = rslt->native()->column(NANODBC_TEXT(in->column.str));
@@ -1153,7 +1153,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_name)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					FB_STRING(out->column, rslt->native()->column_name(NANODBC_TEXT(in->index)));
 					out->columnNull = FB_FALSE;
@@ -1226,7 +1226,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_size)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					UTF8_IN(column);
 					if (!isdigit(in->column.str[0]))
@@ -1304,7 +1304,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_decimal_digits)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					UTF8_IN(column);
 					if (!isdigit(in->column.str[0]))
@@ -1382,7 +1382,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					UTF8_IN(column_);
 					if (!isdigit(in->column_.str[0]))
@@ -1473,7 +1473,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype_name)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					UTF8_IN(column);
 					nanodbc::string datatype_name;
@@ -1554,7 +1554,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_c_datatype)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					UTF8_IN(column);
 					if (!isdigit(in->column.str[0]))
@@ -1607,7 +1607,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_next_result)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					out->succes = udr_helper.fb_bool(rslt->native()->next_result());
 					out->succesNull = FB_FALSE;
@@ -1654,7 +1654,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_exist)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				if (udr_resours.is_valid_result(rslt))
+				if (udr_resources.results.is_valid(rslt))
 				{
 					bool bool_ = rslt;
 					out->exist = udr_helper.fb_bool(bool_);

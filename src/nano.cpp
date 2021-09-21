@@ -32,7 +32,7 @@ namespace nanoudr
 // Initialize global class 
 //
 
-nanoudr::resours udr_resours;
+nanoudr::resources udr_resources;
 nanoudr::helper udr_helper;
 
 //-----------------------------------------------------------------------------
@@ -98,7 +98,7 @@ void helper::utf8_to_loc(char* dest, const char* src)
 {
 	try
 	{
-		iconv_t ic = iconv_open(udr_resours.locale(), "UTF-8");
+		iconv_t ic = iconv_open(udr_resources.locale(), "UTF-8");
 		char* in = (char*) src;
 		size_t in_length = strlen(in), buf_length = in_length;
 		char* buf = new char[buf_length + 1], *out = buf;
@@ -119,7 +119,7 @@ void helper::loc_to_utf8(char* dest, const char* src)
 {
 	try 
 	{
-		iconv_t ic = iconv_open("UTF-8", udr_resours.locale());
+		iconv_t ic = iconv_open("UTF-8", udr_resources.locale());
 		char* in = (char*) src;
 		size_t in_length = strlen(in), buf_length = in_length * 4;
 		char* buf = new char[buf_length + 1], *out = buf;

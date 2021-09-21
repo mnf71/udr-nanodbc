@@ -36,7 +36,7 @@ namespace nanoudr
 transaction::transaction(class nanoudr::connection& conn)
 	: nanodbc::transaction(conn)
 {
-	udr_resours.retain_transaction(this);
+	udr_resources.transactions.retain(this);
 	conn_ = &conn;
 }
 
@@ -76,7 +76,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_transaction)
 		if (!in->connNull)
 		{
 			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-			if (udr_resours.is_valid_connection(conn))
+			if (udr_resources.connections.is_valid(conn))
 			{
 				try
 				{
@@ -126,7 +126,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_release)
 			nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
 			try
 			{
-				udr_resours.release_transaction(tnx);
+				udr_resources.transactions.release(tnx);
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -166,7 +166,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_is_valid)
 		out->valid =
 			in->tnxNull ?
 			udr_helper.fb_bool(false) :
-			udr_resours.is_valid_transaction(udr_helper.tnx_ptr(in->tnx.str));
+			udr_resources.transactions.is_valid(udr_helper.tnx_ptr(in->tnx.str));
 		out->validNull = FB_FALSE;
 	}
 
@@ -200,7 +200,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 			nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
 			try
 			{
-				if (udr_resours.is_valid_transaction(tnx))
+				if (udr_resources.transactions.is_valid(tnx))
 				{
 					nanoudr::connection* conn = tnx->connection();
 					udr_helper.fb_ptr(out->conn.str, (int64_t)conn);
@@ -248,7 +248,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_commit)
 			nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
 			try
 			{
-				if (udr_resours.is_valid_transaction(tnx))
+				if (udr_resources.transactions.is_valid(tnx))
 				{
 					tnx->commit();
 					out->blank = BLANK;
@@ -296,7 +296,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_rollback)
 			nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
 			try
 			{
-				if (udr_resours.is_valid_transaction(tnx))
+				if (udr_resources.transactions.is_valid(tnx))
 				{
 					tnx->rollback();
 					out->blank = BLANK;

@@ -23,7 +23,7 @@
 #include "nano.h"
 
  //-----------------------------------------------------------------------------
- // Used resourses of heap
+ // Used resources of heap
  // 
 
 namespace nanoudr
@@ -32,152 +32,30 @@ namespace nanoudr
 //-----------------------------------------------------------------------------
 //
 
-resours::resours()
+resources::resources()
 {
 	ready_ = false;
 	udr_locale = "cp1251";
 };
 
-resours::~resours() 
+resources::~resources() 
 {
 	expunge();
 }
 
-const char* resours::locale(const char* set_locale)
+const char* resources::locale(const char* set_locale)
 {
 	if (set_locale) udr_locale = set_locale;
 	return udr_locale.c_str();
 }
 
-const char* resours::error_message(const char* last_error_message)
+const char* resources::error_message(const char* last_error_message)
 {
 	if (last_error_message) udr_error_message = last_error_message;
 	return udr_error_message.c_str();
 }
 
-void resours::retain_connection(nanoudr::connection* conn)
-{
-	connections.push_back(conn);
-}
-
-bool resours::is_valid_connection(nanoudr::connection* conn)
-{
-	return find(connections.begin(), connections.end(), conn) != connections.end();
-}
-
-void resours::expunge_connection(nanoudr::connection* conn)
-{
-	std::vector<nanoudr::connection*>::iterator it = std::find(connections.begin(), connections.end(), conn);
-	if (it != connections.end())
-	{
-		for (auto t : transactions)	if (t->connection() == conn) release_transaction(t);
-		for (auto s : statements) if (s->connection() == conn) release_statement(s);
-		for (auto r : results)	if (r->connection() == conn) release_result(r);
-	}
-}
-
-void resours::release_connection(nanoudr::connection* conn)
-{
-	std::vector<nanoudr::connection*>::iterator it = std::find(connections.begin(), connections.end(), conn);
-	if (it != connections.end()) 
-	{
-		for (auto t : transactions)	if (t->connection() == conn) release_transaction(t);
-		for (auto s : statements) if (s->connection() == conn) release_statement(s);
-		for (auto r : results)	if (r->connection() == conn) release_result(r);
-		delete (nanoudr::connection*)(conn);
-		connections.erase(it);
-	}
-}
-
-void resours::retain_transaction(nanoudr::transaction* tnx)
-{
-	transactions.push_back(tnx);
-}
-
-bool resours::is_valid_transaction(nanoudr::transaction* tnx)
-{
-	return find(transactions.begin(), transactions.end(), tnx) != transactions.end();
-}
-
-void resours::release_transaction(nanoudr::transaction* tnx)
-{
-	std::vector<nanoudr::transaction*>::iterator it = std::find(transactions.begin(), transactions.end(), tnx);
-	if (it != transactions.end())
-	{
-		delete (nanoudr::transaction*)(tnx);
-		transactions.erase(it);
-	}
-}
-
-void resours::retain_statement(nanoudr::statement* stmt)
-{
-	statements.push_back(stmt);
-}
-
-bool resours::is_valid_statement(nanoudr::statement* stmt)
-{
-	return find(statements.begin(), statements.end(), stmt) != statements.end();
-}
-
-void resours::release_statement(nanoudr::statement* stmt)
-{
-	std::vector<nanoudr::statement*>::iterator it = std::find(statements.begin(), statements.end(), stmt);
-	if (it != statements.end())
-	{
-		delete (nanoudr::statement*)(stmt);
-		statements.erase(it);
-	}
-}
-
-void resours::retain_result(nanoudr::result* rslt)
-{
-	results.push_back(rslt);
-}
-
-bool resours::is_valid_result(nanoudr::result* rslt)
-{
-	return find(results.begin(), results.end(), rslt) != results.end();
-}
-
-void resours::release_result(nanoudr::result* rslt)
-{
-	std::vector<nanoudr::result*>::iterator it = std::find(results.begin(), results.end(), rslt);
-	if (it != results.end())
-	{
-		delete (nanoudr::result*)(rslt);
-		results.erase(it);
-	}
-}
-
-void resours::expunge()
-{
-	for (auto c : connections) release_connection(c);
-}
-
-const long resours::exception_number(const char* name)
-{
-	for (auto x : udr_exceptions) 
-			if (strcmp(x.name, name) == 0)
-				return x.number;
-	return 0;
-}
-
-const char* resours::exception_message(const char* name) // simple find
-{
-	for (short pos = 0; pos < sizeof(udr_exceptions); ++pos)
-		if (strcmp(udr_exceptions[pos].name, name) == 0)
-			return udr_exceptions[pos].message;
-	return nullptr;
-}
-
-void resours::assign_exception(exception* udr_exception, short pos)
-{
-	memcpy(udr_exceptions[pos].name, udr_exception->name, sizeof(udr_exceptions[pos].name));
-	udr_exceptions[pos].number = udr_exception->number;
-	memcpy(udr_exceptions[pos].message, udr_exception->message, sizeof(udr_exceptions[pos].message));
-}
-
-void resours::initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
+void resources::initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
 {
 	IAttachment* att;
 	ITransaction* tra;
@@ -195,7 +73,7 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 
 	ready_ = false;
 	try
-	{ 
+	{
 		att = context->getAttachment(status);
 		tra = context->getTransaction(status);
 		stmt.reset(att->prepare(status, tra, 0, sql_stmt, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
@@ -203,10 +81,10 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 		curs.reset(stmt->openCursor(status, tra, NULL, NULL, meta, 0));
 		unsigned buf_length = meta->getMessageLength(status);
 		unsigned char* buffer = new unsigned char[buf_length];
-		nanoudr::exception udr_exception = {"", 0, ""};
+		nanoudr::exception udr_exception = { "", 0, "" };
 		for (int i = 0; i < EXCEPTION_ARRAY_SIZE; ++i)
 		{
-			udr_resours.assign_exception(&udr_exception, i);
+			udr_resources.assign_exception(&udr_exception, i);
 		}
 		for (int i = 0; curs->fetchNext(status, buffer) == IStatus::RESULT_OK && i < EXCEPTION_ARRAY_SIZE; ++i)
 		{
@@ -219,7 +97,7 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 				udr_exception.message,
 				(buffer + 2 + meta->getOffset(status, sql_rslt::message)),
 				meta->getLength(status, sql_rslt::message) - 2);
-			udr_resours.assign_exception(&udr_exception, i);
+			udr_resources.assign_exception(&udr_exception, i);
 		}
 		curs->close(status);
 		ready_ = true;
@@ -230,9 +108,190 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 	}
 }
 
-bool resours::ready()
+bool resources::ready()
 {
 	return ready_;
+}
+
+//-----------------------------------------------------------------------------
+//
+
+resources::connections_resource::connections_resource(nanoudr::resources* rsrs)
+{
+	rsrs_ = rsrs;
+}
+
+std::vector<nanoudr::connection*>& resources::connections_resource::conn()
+{
+	return conn_;
+}
+
+void resources::connections_resource::retain(nanoudr::connection* conn)
+{
+	conn_.push_back(conn);
+}
+
+bool resources::connections_resource::is_valid(nanoudr::connection* conn)
+{
+	return find(conn_.begin(), conn_.end(), conn) != conn_.end();
+}
+
+void resources::connections_resource::expunge(nanoudr::connection* conn)
+{
+	std::vector<nanoudr::connection*>::iterator it = std::find(conn_.begin(), conn_.end(), conn);
+	if (it != conn_.end())
+	{
+		for (auto t : rsrs_->transactions.tnx()) 
+			if (t->connection() == conn) rsrs_->transactions.release(t);
+		for (auto s : rsrs_->statements.stmt()) 
+			if (s->connection() == conn) rsrs_->statements.release(s);
+		for (auto r : rsrs_->results.rslt()) 
+			if (r->connection() == conn) rsrs_->results.release(r);
+	}
+}
+
+void resources::connections_resource::release(nanoudr::connection* conn)
+{
+	std::vector<nanoudr::connection*>::iterator it = std::find(conn_.begin(), conn_.end(), conn);
+	if (it != conn_.end())
+	{
+		for (auto t : rsrs_->transactions.tnx())
+			if (t->connection() == conn) rsrs_->transactions.release(t);
+		for (auto s : rsrs_->statements.stmt())
+			if (s->connection() == conn) rsrs_->statements.release(s);
+		for (auto r : rsrs_->results.rslt())
+			if (r->connection() == conn) rsrs_->results.release(r);
+		delete (nanoudr::connection*)(conn);
+		conn_.erase(it);
+	}
+}
+
+//-----------------------------------------------------------------------------
+//
+
+resources::transactions_resource::transactions_resource(nanoudr::resources* rsrs)
+{
+	rsrs_ = rsrs;
+}
+
+std::vector<nanoudr::transaction*>& resources::transactions_resource::tnx()
+{
+	return tnx_;
+}
+
+void resources::transactions_resource::retain(nanoudr::transaction* tnx)
+{
+	tnx_.push_back(tnx);
+}
+
+bool resources::transactions_resource::is_valid(nanoudr::transaction* tnx)
+{
+	return find(tnx_.begin(), tnx_.end(), tnx) != tnx_.end();
+}
+
+void resources::transactions_resource::release(nanoudr::transaction* tnx)
+{
+	std::vector<nanoudr::transaction*>::iterator it = std::find(tnx_.begin(), tnx_.end(), tnx);
+	if (it != tnx_.end())
+	{
+		delete (nanoudr::transaction*)(tnx);
+		tnx_.erase(it);
+	}
+}
+
+//-----------------------------------------------------------------------------
+//
+
+resources::statements_resource::statements_resource(nanoudr::resources* rsrs)
+{
+	rsrs_ = rsrs;
+}
+
+std::vector<nanoudr::statement*>& resources::statements_resource::stmt()
+{
+	return stmt_;
+}
+
+void resources::statements_resource::retain(nanoudr::statement* stmt)
+{
+	stmt_.push_back(stmt);
+}
+
+bool resources::statements_resource::is_valid(nanoudr::statement* stmt)
+{
+	return find(stmt_.begin(), stmt_.end(), stmt) != stmt_.end();
+}
+
+void resources::statements_resource::release(nanoudr::statement* stmt)
+{
+	std::vector<nanoudr::statement*>::iterator it = std::find(stmt_.begin(), stmt_.end(), stmt);
+	if (it != stmt_.end())
+	{
+		delete (nanoudr::statement*)(stmt);
+		stmt_.erase(it);
+	}
+}
+
+//-----------------------------------------------------------------------------
+//
+
+resources::results_resource::results_resource(nanoudr::resources* rsrs)
+{
+	rsrs_ = rsrs;
+}
+
+std::vector<nanoudr::result*>& resources::results_resource::rslt()
+{
+	return rslt_;
+}
+
+void resources::results_resource::retain(nanoudr::result* rslt)
+{
+	rslt_.push_back(rslt);
+}
+
+bool resources::results_resource::is_valid(nanoudr::result* rslt)
+{
+	return find(rslt_.begin(), rslt_.end(), rslt) != rslt_.end();
+}
+
+void resources::results_resource::release(nanoudr::result* rslt)
+{
+	std::vector<nanoudr::result*>::iterator it = std::find(rslt_.begin(), rslt_.end(), rslt);
+	if (it != rslt_.end())
+	{
+		delete (nanoudr::result*)(rslt);
+		rslt_.erase(it);
+	}
+}
+
+//-----------------------------------------------------------------------------
+//
+
+void resources::expunge()
+{
+	for (auto c : connections.conn()) connections.release(c);
+}
+
+const long resources::exception_number(const char* name) // simple find num
+{
+	for (auto x : udr_exceptions) 
+			if (strcmp(x.name, name) == 0) return x.number;
+	return 0;
+}
+
+const char* resources::exception_message(const char* name) // simple find msg
+{
+	for (auto &x : udr_exceptions)
+		if (strcmp(x.name, name) == 0) return x.message;
+	return nullptr;
+}
+
+void resources::assign_exception(exception* udr_exception, short pos)
+{
+	memcpy(udr_exceptions[pos].name, udr_exception->name, sizeof(udr_exceptions[pos].name));
+	udr_exceptions[pos].number = udr_exception->number;
+	memcpy(udr_exceptions[pos].message, udr_exception->message, sizeof(udr_exceptions[pos].message));
 }
 
 //-----------------------------------------------------------------------------
@@ -263,8 +322,8 @@ FB_UDR_BEGIN_FUNCTION(initialize)
 		out->blankNull = FB_TRUE;
 		try
 		{
-			udr_resours.initialize(status, context);
-			if (!in->udr_localeNull) udr_resours.locale(in->udr_locale.str);
+			udr_resources.initialize(status, context);
+			if (!in->udr_localeNull) udr_resources.locale(in->udr_locale.str);
 			out->blank = BLANK;
 			out->blankNull = FB_FALSE;
 		}
@@ -303,7 +362,7 @@ FB_UDR_EXECUTE_FUNCTION
 		out->blankNull = FB_TRUE;
 		try
 		{
-			udr_resours.locale(in->udr_locale.str);
+			udr_resources.locale(in->udr_locale.str);
 			out->blank = BLANK;
 			out->blankNull = FB_FALSE;
 		}
@@ -352,7 +411,7 @@ unsigned out_count;
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		FB_STRING(out->e_msg, (std::string)(udr_resours.error_message()));
+		FB_STRING(out->e_msg, (std::string)(udr_resources.error_message()));
 		out->e_msgNull = FB_FALSE;
 		UTF8_OUT(e_msg);
 	}
@@ -376,7 +435,7 @@ FB_UDR_MESSAGE(
 		out->blankNull = FB_TRUE;
 		try
 		{
-			udr_resours.expunge();
+			udr_resources.expunge();
 			out->blank = BLANK;
 			out->blankNull = FB_FALSE;
 		}

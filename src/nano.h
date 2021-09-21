@@ -1,4 +1,4 @@
-﻿/*
+﻿/* 
  *  The contents of this file are subject to the Initial
  *  Developer's Public License Version 1.0 (the "License");
  *  you may not use this file except in compliance with the
@@ -222,7 +222,7 @@ namespace nanoudr
 
 #define	ANY_THROW(exception_message)	\
 {	\
-	udr_resours.error_message((exception_message));	\
+	udr_resources.error_message((exception_message));	\
 	ISC_STATUS_ARRAY vector = {	\
 		isc_arg_gds,	\
 		isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
@@ -233,20 +233,20 @@ namespace nanoudr
 
 #define	NANODBC_THROW(exception_message)	\
 {	\
-	ISC_LONG exception_number = udr_resours.exception_number(NANODBC_ERR_MESSAGE);	\
+	ISC_LONG exception_number = udr_resources.exception_number(NANODBC_ERR_MESSAGE);	\
 	if (exception_number == 0)	\
 	{	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
 			isc_exception_name, isc_arg_string, (ISC_STATUS)(NANODBC_ERR_MESSAGE),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)(udr_resours.error_message()),	\
+			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.error_message()),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
 	else	\
 	{	\
-		udr_resours.error_message((exception_message));	\
+		udr_resources.error_message((exception_message));	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
 			isc_except, isc_arg_number, exception_number,	\
@@ -260,15 +260,15 @@ namespace nanoudr
 
 #define	NANOUDR_THROW(exception_name)	\
 {	\
-	ISC_LONG exception_number = udr_resours.exception_number((exception_name));		\
-	udr_resours.error_message(udr_resours.exception_message((exception_name)));	\
+	ISC_LONG exception_number = udr_resources.exception_number((exception_name));		\
+	udr_resources.error_message(udr_resources.exception_message((exception_name)));	\
 	if (exception_number == 0)	\
 	{	\
 		ISC_STATUS vector[] = {	\
 			isc_arg_gds,	\
 			isc_exception_name, isc_arg_string, (ISC_STATUS)(exception_name),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)(udr_resours.error_message()),	\
+			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.error_message()),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
@@ -278,7 +278,7 @@ namespace nanoudr
 			isc_arg_gds,	\
 			isc_except, isc_arg_number, exception_number,	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)(udr_resours.error_message()),	\
+			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.error_message()),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
