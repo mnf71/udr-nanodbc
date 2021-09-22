@@ -94,47 +94,41 @@ bool helper::native_bool(const FB_BOOLEAN value)
 //-----------------------------------------------------------------------------
 //
 
-void helper::utf8_to_loc(char* dest, const char* src)
+void helper::utf8_in(
+	char* dest, const size_t dest_length, const char* utf8, const size_t utf8_length)
 {
-	try
-	{
-		iconv_t ic = iconv_open(udr_resources.locale(), "UTF-8");
-		char* in = (char*) src;
-		size_t in_length = strlen(in), buf_length = in_length;
-		char* buf = new char[buf_length + 1], *out = buf;
-		memset(buf, '\0', buf_length + 1);
-		size_t out_length = in_length;
-		iconv(ic, &in, &in_length, &out, &out_length);
-		strcpy(dest, buf);
-		iconv_close(ic);
-		delete[] buf; 
-	}
-	catch (...)
-	{
-		throw "iconv: cannot convert to ODBC locale.";
-	}
+	utf8_converter(dest, dest_length, udr_resources.locale(), utf8, utf8_length, "UTF-8");
 }
 
-void helper::loc_to_utf8(char* dest, const char* src)
+void helper::utf8_out(
+	char* dest, const size_t dest_length, const char* locale, const size_t locale_length)
 {
-	try 
+	utf8_converter(dest, dest_length, "UTF-8", locale, locale_length, udr_resources.locale());
+}
+
+void helper::utf8_converter(
+	char* dest, const size_t dest_length, const char* to,  const char* src, 
+	const size_t src_length, const char* from)
+{
+	char* in = (char*)(src);
+	size_t in_length = src_length;
+	char* converted = new char[dest_length + 1];
+	memset(converted, '\0', dest_length + 1);
+	char* out = converted;
+	size_t out_length = dest_length;
+	try
 	{
-		iconv_t ic = iconv_open("UTF-8", udr_resources.locale());
-		char* in = (char*) src;
-		size_t in_length = strlen(in), buf_length = in_length * 4;
-		char* buf = new char[buf_length + 1], *out = buf;
-		memset(buf, '\0', buf_length + 1);
-		size_t out_length = in_length * 4;
-		// todo: иногда строка возвращается не полностью
+		iconv_t ic = iconv_open(to, from);
 		iconv(ic, &in, &in_length, &out, &out_length);
-		strcpy(dest, buf);
 		iconv_close(ic);
-		delete[] buf;
 	}
 	catch (...)
 	{
-		throw "iconv: cannot convert to UTF-8.";
+		throw "iconv: UTF8 character conversion error.";
 	}
+	memset(dest, '\0', dest_length);
+	memcpy_s(dest, dest_length, converted, dest_length - out_length);
+	delete[] converted;
 }
 
 //-----------------------------------------------------------------------------

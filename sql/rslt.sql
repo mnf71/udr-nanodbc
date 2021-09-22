@@ -22,7 +22,7 @@ BEGIN
   FUNCTION last_(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
   FUNCTION next_(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
   FUNCTION prior_(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
-  FUNCTION move_(rslt TY$POINTER NOT NULL, row_ INTEGER NOT NULL) RETURNS BOOLEAN;
+  FUNCTION move(rslt TY$POINTER NOT NULL, row_ INTEGER NOT NULL) RETURNS BOOLEAN;
   FUNCTION skip_(rslt TY$POINTER NOT NULL, row_ INTEGER NOT NULL) RETURNS BOOLEAN;
   FUNCTION position_(rslt TY$POINTER NOT NULL) RETURNS INTEGER;
   FUNCTION at_end(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
@@ -63,7 +63,7 @@ BEGIN
 
   ------------------------------------------------------------------------------
 
-  FUNCTION data_(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
+  FUNCTION no_data(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
 
 END^
 
@@ -121,7 +121,7 @@ BEGIN
     EXTERNAL NAME 'nano!rslt_prior'
     ENGINE UDR;
 
-  FUNCTION move_(rslt TY$POINTER NOT NULL, row_ INTEGER NOT NULL) RETURNS BOOLEAN
+  FUNCTION move(rslt TY$POINTER NOT NULL, row_ INTEGER NOT NULL) RETURNS BOOLEAN
      EXTERNAL NAME 'nano!rslt_move'
      ENGINE UDR;
 
@@ -195,8 +195,8 @@ BEGIN
 
   ------------------------------------------------------------------------------
 
-  FUNCTION data_(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_data'
+  FUNCTION no_data(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
+    EXTERNAL NAME 'nano!rslt_no_data'
     ENGINE UDR;
 
 END^

@@ -81,7 +81,7 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 		curs.reset(stmt->openCursor(status, tra, NULL, NULL, meta, 0));
 		unsigned buf_length = meta->getMessageLength(status);
 		unsigned char* buffer = new unsigned char[buf_length];
-		nanoudr::exception udr_exception = { "", 0, "" };
+		nanoudr::exception udr_exception = { "\0", 0, "\0" };
 		for (int i = 0; i < EXCEPTION_ARRAY_SIZE; ++i)
 		{
 			udr_resources.assign_exception(&udr_exception, i);
@@ -271,6 +271,7 @@ void resources::results_resource::release(nanoudr::result* rslt)
 void resources::expunge()
 {
 	for (auto c : connections.conn()) connections.release(c);
+	for (auto s : statements.stmt()) statements.release(s); // was not used stmt
 }
 
 const long resources::exception_number(const char* name) // simple find num
@@ -411,9 +412,10 @@ unsigned out_count;
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		FB_STRING(out->e_msg, (std::string)(udr_resources.error_message()));
+		std::string e_msg = udr_resources.error_message();
+		FB_VARIYNG(out->e_msg, e_msg); 
+		U8_VARIYNG(out, e_msg);
 		out->e_msgNull = FB_FALSE;
-		UTF8_OUT(e_msg);
 	}
 
 FB_UDR_END_FUNCTION

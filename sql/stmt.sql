@@ -25,7 +25,7 @@ BEGIN
 
   FUNCTION close_(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK;
 
-  FUNCTION cancel_(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK;
+  FUNCTION cancel(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK;
 
   FUNCTION prepare_direct(
       stmt TY$POINTER NOT NULL,
@@ -67,7 +67,7 @@ BEGIN
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$POINTER;
 
-  FUNCTION just_execute_(
+  FUNCTION just_execute(
       stmt TY$POINTER NOT NULL,
       batch_operations INTEGER NOT NULL DEFAULT 1,
       timeout INTEGER NOT NULL DEFAULT 0
@@ -123,16 +123,32 @@ BEGIN
       value_ DOUBLE PRECISION
     ) RETURNS TY$NANO_BLANK;
 
-  FUNCTION bind_string(
+  FUNCTION bind_varchar(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ VARCHAR(32765) CHARACTER SET NONE
+      value_ VARCHAR(32765) CHARACTER SET NONE,
+      param_size SMALLINT NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
-  FUNCTION bind_utf8(
+  FUNCTION bind_char(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ VARCHAR(8191) CHARACTER SET UTF8
+      value_ CHAR(32767) CHARACTER SET NONE,
+      param_size SMALLINT NOT NULL DEFAULT 0
+    ) RETURNS TY$NANO_BLANK;
+
+  FUNCTION bind_u8_varchar(
+      stmt TY$POINTER NOT NULL,
+      param_index SMALLINT NOT NULL,
+      value_ VARCHAR(8191) CHARACTER SET UTF8,
+      param_size SMALLINT NOT NULL DEFAULT 0
+    ) RETURNS TY$NANO_BLANK;
+
+  FUNCTION bind_u8_char(
+      stmt TY$POINTER NOT NULL,
+      param_index SMALLINT NOT NULL,
+      value_ CHAR(8191) CHARACTER SET UTF8,
+      param_size SMALLINT NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_blob(
@@ -230,7 +246,7 @@ BEGIN
     EXTERNAL NAME 'nano!stmt_close'
     ENGINE UDR;
 
-  FUNCTION cancel_(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
+  FUNCTION cancel(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_cancel'
     ENGINE UDR;
 
@@ -286,7 +302,7 @@ BEGIN
     EXTERNAL NAME 'nano!stmt_execute'
     ENGINE UDR;
 
-  FUNCTION just_execute_(
+  FUNCTION just_execute(
       stmt TY$POINTER NOT NULL,
       batch_operations INTEGER NOT NULL,
       timeout INTEGER NOT NULL
@@ -370,18 +386,38 @@ BEGIN
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
 
-  FUNCTION bind_string(
+  FUNCTION bind_varchar(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ VARCHAR(32765) CHARACTER SET NONE
+      value_ VARCHAR(32765) CHARACTER SET NONE,
+      param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;
 
-  FUNCTION bind_utf8(
+  FUNCTION bind_char(
       stmt TY$POINTER NOT NULL,
       param_index SMALLINT NOT NULL,
-      value_ VARCHAR(8191) CHARACTER SET UTF8
+      value_ CHAR(32767) CHARACTER SET NONE,
+      param_size SMALLINT NOT NULL
+    ) RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!stmt_bind'
+    ENGINE UDR;
+
+  FUNCTION bind_u8_varchar(
+      stmt TY$POINTER NOT NULL,
+      param_index SMALLINT NOT NULL,
+      value_ VARCHAR(8191) CHARACTER SET UTF8,
+      param_size SMALLINT NOT NULL
+    ) RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!stmt_bind'
+    ENGINE UDR;
+
+  FUNCTION bind_u8_char(
+      stmt TY$POINTER NOT NULL,
+      param_index SMALLINT NOT NULL,
+      value_ CHAR(8191) CHARACTER SET UTF8,
+      param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
     ENGINE UDR;

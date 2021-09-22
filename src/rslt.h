@@ -20,7 +20,7 @@
  *  Contributor(s): ______________________________________.
  */
 
-#ifndef RSLT_H
+#ifndef RSLT_H  
 #define RSLT_H
 
 namespace nanoudr

@@ -288,12 +288,25 @@ namespace nanoudr
 //-----------------------------------------------------------------------------
 //
 
-#define FB_STRING(fb, s)	\
-	(fb).length = (ISC_USHORT)sizeof((fb).str);	\
-	ISC_USHORT s_length = (ISC_USHORT)(s).length();	\
-	(fb).length = (fb).length <= s_length ? (fb).length : s_length;	\
-	memcpy((fb).str, (s).c_str(), (fb).length);	\
-	(fb).str[(fb).length] = '\0';	/* FB_STRING */
+#define FB_VARIYNG(fb_varchar, string)	\
+{	\
+	(fb_varchar).length = (ISC_USHORT)sizeof((fb_varchar).str);	\
+	ISC_USHORT string_length = (ISC_USHORT)(string).length();	\
+	memcpy_s((fb_varchar).str, (fb_varchar).length, (string).c_str(), string_length);	\
+	if ((fb_varchar).length > string_length) (fb_varchar).length = string_length;	\
+}	/* FB_VARIYNG */
+
+#define FB_STRING(fb_char, string)	\
+{	\
+	ISC_USHORT fb_char_length = (ISC_USHORT)sizeof((fb_char).str);	\
+	ISC_USHORT string_length = (ISC_USHORT)(string).length();	\
+	memcpy_s((fb_char).str, fb_char_length, (string).c_str(), string_length);	\
+	if (fb_char_length > string_length)	\
+		memset((fb_char).str + string_length, ' ', fb_char_length - string_length);	\
+}	/* FB_STRING */
+
+//-----------------------------------------------------------------------------
+//
 
 enum fb_char_set
 {
@@ -366,23 +379,27 @@ enum fb_char_set
 	CS_WIN1258 = 65,	// Windows cp 1258
 
 	CS_TIS620 = 66,		// TIS620
-	CS_GBK = 67,		// GBK	- 2b	
+	CS_GBK = 67,		// GBK	- 2b	 
 	CS_CP943C = 68,		// CP943C	- 2b
 
 	CS_GB18030 = 69		// GB18030	- 4b
 };
 
-#define UTF8_IN(param)	\
-	if (in_char_sets[in::##param] == fb_char_set::CS_UTF8)	\
+#define U8_VARIYNG(message, param)	\
+	if (##message##_char_sets[##message::##param] == fb_char_set::CS_UTF8)	\
 	{	\
-		udr_helper.utf8_to_loc(in->##param.str, in->##param.str);	\
-	}	/* UTF8_IN */  
+		udr_helper.utf8_##message(	\
+			##message->##param.str, sizeof(##message->##param.str), ##message->##param.str,	\
+			##message->##param.length);	\
+	}	/* U8_VARIYNG */  
 
-#define UTF8_OUT(param)	\
-	if (out_char_sets[out::##param] == fb_char_set::CS_UTF8)	\
+#define U8_STRING(message, param)	\
+	if (##message##_char_sets[##message::##param] == fb_char_set::CS_UTF8)	\
 	{	\
-		udr_helper.loc_to_utf8(out->##param.str, out->##param.str);	\
-	}	/* UTF8_OUT */
+		size_t param_length = sizeof(##message->##param.str);	\
+		udr_helper.utf8_##message(	\
+			##message->##param.str, param_length, ##message->##param.str, param_length);	\
+	}	/* U8_STRING */  
 
 //-----------------------------------------------------------------------------
 //
@@ -427,8 +444,8 @@ public:
 	FB_BOOLEAN fb_bool(bool value);
 	bool native_bool(const ISC_UCHAR value);
 
-	void utf8_to_loc(char* dest, const char* src);
-	void loc_to_utf8(char* dest, const char* src);
+	void utf8_in(char* in, const size_t in_length, const char* utf8, const size_t utf8_length);
+	void utf8_out(char* out, const size_t out_length, const char* locale, const size_t locale_length);
 
 	nanodbc::timestamp set_timestamp(nanoudr::timestamp* tm);
 	nanodbc::date set_date(nanoudr::date* d);
@@ -437,6 +454,11 @@ public:
 	nanoudr::timestamp get_timestamp(nanodbc::timestamp* tm);
 	nanoudr::date get_date(nanodbc::date* d);
 	nanoudr::time get_time(nanodbc::time* t);
+
+private:
+	void utf8_converter(
+		char* dest, const size_t dest_length, const char* to, const char* src, 
+		const size_t src_length, const char* from);
 };
 
 extern helper udr_helper;

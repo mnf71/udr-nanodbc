@@ -805,7 +805,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_unbind)
 	unsigned in_count;
 
 	enum in : short {
-		rslt = 0, column_
+		rslt = 0, column
 	};
 
 	AutoArrayDelete<unsigned> in_char_sets;
@@ -825,7 +825,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_unbind)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column_)
+		(FB_VARCHAR(63 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -844,13 +844,13 @@ FB_UDR_BEGIN_FUNCTION(rslt_unbind)
 			{
 				if (udr_resources.results.is_valid(rslt))
 				{
-					UTF8_IN(column_);
-					if (!in->column_Null)
+					U8_VARIYNG(in, column);
+					if (!in->columnNull)
 					{
-						if (!isdigit(in->column_.str[0]))
-							rslt->unbind(NANODBC_TEXT(in->column_.str));
+						if (!isdigit(in->column.str[0]))
+							rslt->unbind(NANODBC_TEXT(in->column.str));
 						else
-							rslt->unbind((short)atoi(in->column_.str));
+							rslt->unbind((short)atoi(in->column.str));
 					}
 					else
 						rslt->unbind();
@@ -890,7 +890,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_null)
 	unsigned in_count;
 
 	enum in : short {
-		rslt = 0, column_
+		rslt = 0, column
 	};
 
 	AutoArrayDelete<unsigned> in_char_sets;
@@ -910,7 +910,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_null)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column_)
+		(FB_VARCHAR(63 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -928,13 +928,13 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_null)
 			{
 				if (udr_resources.results.is_valid(rslt))
 				{
-					UTF8_IN(column_);
-					if (!isdigit(in->column_.str[0]))
+					U8_VARIYNG(in, column);
+					if (!isdigit(in->column.str[0]))
 						out->is_null = 
-							udr_helper.fb_bool(rslt->is_null(NANODBC_TEXT(in->column_.str)));
+							udr_helper.fb_bool(rslt->is_null(NANODBC_TEXT(in->column.str)));
 					else
 						out->is_null = 
-							udr_helper.fb_bool(rslt->is_null((short)atoi(in->column_.str)));
+							udr_helper.fb_bool(rslt->is_null((short)atoi(in->column.str)));
 					out->is_nullNull = FB_FALSE;
 				}
 				else
@@ -968,7 +968,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_bound)
 	unsigned in_count;
 
 	enum in : short {
-		rslt = 0, column_
+		rslt = 0, column
 	};
 
 	AutoArrayDelete<unsigned> in_char_sets;
@@ -988,7 +988,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_bound)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column_)
+		(FB_VARCHAR(63 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1006,13 +1006,13 @@ FB_UDR_BEGIN_FUNCTION(rslt_is_bound)
 			{
 				if (udr_resources.results.is_valid(rslt))
 				{
-					UTF8_IN(column_);
-					if (!isdigit(in->column_.str[0]))
+					U8_VARIYNG(in, column);
+					if (!isdigit(in->column.str[0]))
 						out->is_null = 
-							udr_helper.fb_bool(rslt->is_bound(NANODBC_TEXT(in->column_.str)));
+							udr_helper.fb_bool(rslt->is_bound(NANODBC_TEXT(in->column.str)));
 					else
 						out->is_null = 
-							udr_helper.fb_bool(rslt->is_bound((short)atoi(in->column_.str)));
+							udr_helper.fb_bool(rslt->is_bound((short)atoi(in->column.str)));
 					out->is_nullNull = FB_FALSE;
 				}
 				else
@@ -1081,7 +1081,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column)
 			{
 				if (udr_resources.results.is_valid(rslt))
 				{
-					UTF8_IN(column);
+					U8_VARIYNG(in, column);
 					out->index = rslt->column(NANODBC_TEXT(in->column.str));
 					out->indexNull = FB_FALSE;
 				}
@@ -1151,9 +1151,10 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_name)
 			{
 				if (udr_resources.results.is_valid(rslt))
 				{
-					FB_STRING(out->column, rslt->column_name(NANODBC_TEXT(in->index)));
+					nanodbc::string column_name = rslt->column_name(NANODBC_TEXT(in->index));
+					FB_VARIYNG(out->column, column_name);
+					U8_VARIYNG(out, column);
 					out->columnNull = FB_FALSE;
-					UTF8_OUT(column);
 				}
 				else
 					NANOUDR_THROW(INVALID_RSLT_POINTER)
@@ -1224,7 +1225,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_size)
 			{
 				if (udr_resources.results.is_valid(rslt))
 				{
-					UTF8_IN(column);
+					U8_VARIYNG(in, column);
 					if (!isdigit(in->column.str[0]))
 						out->size = 
 							rslt->column_size(NANODBC_TEXT(in->column.str));
@@ -1302,7 +1303,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_decimal_digits)
 			{
 				if (udr_resources.results.is_valid(rslt))
 				{
-					UTF8_IN(column);
+					U8_VARIYNG(in, column);
 					if (!isdigit(in->column.str[0]))
 						out->digits = 
 							rslt->column_decimal_digits(NANODBC_TEXT(in->column.str));
@@ -1342,7 +1343,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype)
 	unsigned in_count;
 
 	enum in : short {
-		rslt = 0, column_
+		rslt = 0, column
 	};
 
 	AutoArrayDelete<unsigned> in_char_sets;
@@ -1362,7 +1363,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column_)
+		(FB_VARCHAR(63 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1380,13 +1381,13 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype)
 			{
 				if (udr_resources.results.is_valid(rslt))
 				{
-					UTF8_IN(column_);
-					if (!isdigit(in->column_.str[0]))
+					U8_VARIYNG(in, column);
+					if (!isdigit(in->column.str[0]))
 						out->datatype = 
-							rslt->column_datatype(NANODBC_TEXT(in->column_.str));
+							rslt->column_datatype(NANODBC_TEXT(in->column.str));
 					else
 						out->datatype = 
-							rslt->column_datatype((short)atoi(in->column_.str));
+							rslt->column_datatype((short)atoi(in->column.str));
 					out->datatypeNull = FB_FALSE;
 				}
 				else
@@ -1471,7 +1472,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype_name)
 			{
 				if (udr_resources.results.is_valid(rslt))
 				{
-					UTF8_IN(column);
+					U8_VARIYNG(in, column);
 					nanodbc::string datatype_name;
 					if (!isdigit(in->column.str[0]))
 						datatype_name = 
@@ -1479,9 +1480,9 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_datatype_name)
 					else
 						datatype_name = 
 							rslt->column_datatype_name((short)atoi(in->column.str));
-					FB_STRING(out->datatype_name, datatype_name);
+					FB_VARIYNG(out->datatype_name, datatype_name);
+					U8_VARIYNG(out, datatype_name);
 					out->datatype_nameNull = FB_FALSE;
-					UTF8_OUT(datatype_name);
 				}
 				else
 					NANOUDR_THROW(INVALID_RSLT_POINTER)
@@ -1552,7 +1553,7 @@ FB_UDR_BEGIN_FUNCTION(rslt_column_c_datatype)
 			{
 				if (udr_resources.results.is_valid(rslt))
 				{
-					UTF8_IN(column);
+					U8_VARIYNG(in, column);
 					if (!isdigit(in->column.str[0]))
 						out->c_datatype = 
 							rslt->column_c_datatype(NANODBC_TEXT(in->column.str));
@@ -1623,14 +1624,14 @@ FB_UDR_BEGIN_FUNCTION(rslt_next_result)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function data_ (
+// create function no_data (
 //	 rslt ty$pointer not null 
 //	) returns boolean
-//	external name 'nano!rslt_data'
+//	external name 'nano!rslt_no_data'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_data)
+FB_UDR_BEGIN_FUNCTION(rslt_no_data)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1639,12 +1640,12 @@ FB_UDR_BEGIN_FUNCTION(rslt_data)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_BOOLEAN, data)
+		(FB_BOOLEAN, no_data)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		out->dataNull = FB_TRUE;
+		out->no_dataNull = FB_TRUE;
 		if (!in->rsltNull)
 		{
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
@@ -1652,9 +1653,9 @@ FB_UDR_BEGIN_FUNCTION(rslt_data)
 			{
 				if (udr_resources.results.is_valid(rslt))
 				{
-					bool data = static_cast<nanodbc::result*>(rslt);
-					out->data = udr_helper.fb_bool(data);
-					out->dataNull = FB_FALSE;
+					bool no_data = static_cast<nanodbc::result*>(rslt);
+					out->no_data = udr_helper.fb_bool(!no_data);
+					out->no_dataNull = FB_FALSE;
 				}
 				else
 					NANOUDR_THROW(INVALID_RSLT_POINTER)

@@ -39,7 +39,7 @@ namespace nanoudr
 
 struct exception
 {
-	char name[32];
+	char name[64];
 	ISC_LONG number;
 	char message[ERROR_MESSAGE_LENGTH];
 };

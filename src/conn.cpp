@@ -122,10 +122,9 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 		
 		try
 		{
-			UTF8_IN(attr);
-			UTF8_IN(user);
-			UTF8_IN(pass);
-
+			U8_VARIYNG(in, attr);
+			U8_VARIYNG(in, user);
+			U8_VARIYNG(in, pass);
 			nanoudr::connection* conn;
 			if (in->userNull && in->passNull)
 			{
@@ -425,10 +424,9 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 		out->blankNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			UTF8_IN(attr);
-			UTF8_IN(user);
-			UTF8_IN(pass);
-
+			U8_VARIYNG(in, attr);
+			U8_VARIYNG(in, user);
+			U8_VARIYNG(in, pass);
 			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
@@ -650,9 +648,10 @@ unsigned out_count;
 			{
 				if (udr_resources.connections.is_valid(conn))
 				{
-					FB_STRING(out->info, conn->get_info<nanodbc::string>(in->info_type));
+					nanodbc::string info = conn->get_info<nanodbc::string>(in->info_type);
+					FB_VARIYNG(out->info, info);
+					U8_VARIYNG(out, info);
 					out->infoNull = FB_FALSE;
-					UTF8_OUT(info);
 				}
 				else
 					NANOUDR_THROW(INVALID_CONN_POINTER)
@@ -718,9 +717,10 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 			{
 				if (udr_resources.connections.is_valid(conn))
 				{
-					FB_STRING(out->dbms_name, conn->dbms_name());
+					nanodbc::string dbms_name = conn->dbms_name();
+					FB_VARIYNG(out->dbms_name, dbms_name);
+					U8_VARIYNG(out, dbms_name);
 					out->dbms_nameNull = FB_FALSE;
-					UTF8_OUT(dbms_name);
 				}
 				else
 					NANOUDR_THROW(INVALID_CONN_POINTER)
@@ -786,9 +786,10 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 			{
 				if (udr_resources.connections.is_valid(conn))
 				{
-					FB_STRING(out->version, conn->dbms_version());
+					nanodbc::string dbms_version = conn->dbms_version();
+					FB_VARIYNG(out->version, dbms_version);
+					U8_VARIYNG(out, version);
 					out->versionNull = FB_FALSE;
-					UTF8_OUT(version);
 				}
 				else
 					NANOUDR_THROW(INVALID_CONN_POINTER)
@@ -854,9 +855,10 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 			{
 				if (udr_resources.connections.is_valid(conn))
 				{
-					FB_STRING(out->drv_name, conn->driver_name());
+					nanodbc::string driver_name = conn->driver_name();
+					FB_VARIYNG(out->drv_name, driver_name);
+					U8_VARIYNG(out, drv_name);
 					out->drv_nameNull = FB_FALSE;
-					UTF8_OUT(drv_name);
 				}
 				else
 					NANOUDR_THROW(INVALID_CONN_POINTER)
@@ -922,9 +924,10 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 			{
 				if (udr_resources.connections.is_valid(conn))
 				{
-					FB_STRING(out->db_name, conn->database_name());
+					nanodbc::string db_name = conn->database_name();
+					FB_VARIYNG(out->db_name, db_name);
+					U8_VARIYNG(out, db_name);
 					out->db_nameNull = FB_FALSE;
-					UTF8_OUT(db_name);
 				}
 				else
 					NANOUDR_THROW(INVALID_CONN_POINTER)
@@ -990,9 +993,10 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 			{
 				if (udr_resources.connections.is_valid(conn))
 				{
-					FB_STRING(out->ctlg_name, conn->catalog_name());
+					nanodbc::string ctlg_name = conn->catalog_name();
+					FB_VARIYNG(out->ctlg_name, ctlg_name);
+					U8_VARIYNG(out, ctlg_name);
 					out->ctlg_nameNull = FB_FALSE;
-					UTF8_OUT(ctlg_name);
 				}
 				else
 					NANOUDR_THROW(INVALID_CONN_POINTER)
