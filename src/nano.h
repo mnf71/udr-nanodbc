@@ -216,7 +216,6 @@ namespace nanoudr
 #define	NANO_BLANK				FB_INTEGER	// domain types
 #define	BLANK					-1	// void function emulation
 
-
 //-----------------------------------------------------------------------------
 //
 
@@ -284,6 +283,33 @@ namespace nanoudr
 	}	\
 	return; \
 }	/* NANOUDR_THROW */
+
+#define	BINDING_THROW(exception_message)	\
+{	\
+	ISC_LONG exception_number = udr_resources.exception_number(BINDING_ERR_MESSAGE);	\
+	if (exception_number == 0)	\
+	{	\
+		ISC_STATUS_ARRAY vector = {	\
+			isc_arg_gds,	\
+			isc_exception_name, isc_arg_string, (ISC_STATUS)(BINDING_ERR_MESSAGE),	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.error_message()),	\
+			isc_arg_end};	\
+		status->setErrors(vector);	\
+	}	\
+	else	\
+	{	\
+		udr_resources.error_message((exception_message));	\
+		ISC_STATUS_ARRAY vector = {	\
+			isc_arg_gds,	\
+			isc_except, isc_arg_number, exception_number,	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+			isc_arg_end};	\
+		status->setErrors(vector);	\
+	}	\
+	return; \
+}	/* BINDING_THROW */
 
 //-----------------------------------------------------------------------------
 //
@@ -444,8 +470,8 @@ public:
 	FB_BOOLEAN fb_bool(bool value);
 	bool native_bool(const ISC_UCHAR value);
 
-	void utf8_in(char* in, const size_t in_length, const char* utf8, const size_t utf8_length);
-	void utf8_out(char* out, const size_t out_length, const char* locale, const size_t locale_length);
+	const size_t utf8_in(char* in, const size_t in_length, const char* utf8, const size_t utf8_length);
+	const size_t utf8_out(char* out, const size_t out_length, const char* locale, const size_t locale_length);
 
 	nanodbc::timestamp set_timestamp(nanoudr::timestamp* tm);
 	nanodbc::date set_date(nanoudr::date* d);
@@ -456,7 +482,7 @@ public:
 	nanoudr::time get_time(nanodbc::time* t);
 
 private:
-	void utf8_converter(
+	const size_t utf8_converter(
 		char* dest, const size_t dest_length, const char* to, const char* src, 
 		const size_t src_length, const char* from);
 };

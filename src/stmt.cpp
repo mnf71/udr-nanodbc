@@ -1714,38 +1714,41 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 						bool null_flag = *(ISC_SHORT*)(in + in_null_offsets[in::value]) ? true : false;
 						switch (in_types[in::value])
 						{
-							case SQL_TEXT: 
-							case SQL_VARYING: // char, varchar
+							case SQL_TEXT: // char
+							case SQL_VARYING: // varchar
 							{
 								if (null_flag)
 									params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), null_flag);
 								else
 								{
+									bool u8_string = (in_char_sets[in::value] == fb_char_set::CS_UTF8);
 									std::size_t length =
-										(in_types[in::value] == SQL_TEXT ? in_lengths[in::value] : *(ISC_USHORT*)(in + in_offsets[in::value]));
-									std::size_t param_size = 0;
-									if (--in_count = in::param_size && !*(ISC_SHORT*)(in + in_null_offsets[in::param_size]))
+										(in_types[in::value] == SQL_TEXT ?
+											in_lengths[in::value] :	// полный размер переданного CHAR(N) с учетом пробелов 
+											*(ISC_USHORT*)(in + in_offsets[in::value])); 
+									std::size_t param_size = 0; 
+									if (in_count > in::param_size && !*(ISC_SHORT*)(in + in_null_offsets[in::param_size]))
 									{
 										param_size = *(ISC_SHORT*)(in + in_offsets[in::param_size]);
-										if (in_char_sets[in::value] == fb_char_set::CS_UTF8) 
-											param_size = param_size * 4; // может быть не кратно 4-ем байтам на символ
-										if (length > param_size && param_size > 0)
-											length = param_size; // ограничить длину переданной строки размером параметра
-										else
-											param_size = 0; 
+										if (param_size < 0)
+											BINDING_THROW("PARAM_SIZE, expected zero or positive value.")
 									}
-									char* param = new char[length + 1];
-									memcpy(
-										param,
-										(char*)(in + (in_types[in::value] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
-										length
-									);
-									param[length] = '\0';
-									if (in_char_sets[in::value] == fb_char_set::CS_UTF8) 
-									{
-										udr_helper.utf8_in(param, length, param, length);
-										if (param_size) param[param_size / 4] = '\0'; // усечь строку после ковертирования
-									}
+									param_size = 
+										param_size == 0 || param_size > length ? length : param_size;
+									char* param = new char[param_size + 1]; // null-term string
+									if (u8_string)
+										param_size =
+											udr_helper.utf8_in(
+												param, param_size, 
+												(const char*)(in + (in_types[in::value] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
+												length);
+									else
+										memcpy(
+											param, 
+											(char*)(in + (in_types[in::value] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
+											param_size
+										);
+									param[param_size] = '\0';
 									params->push(param_index, (nanodbc::string)(NANODBC_TEXT(param)), null_flag);
 									delete[] param;
 								}
@@ -1790,22 +1793,20 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 								if (null_flag)
 									params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), null_flag);
 								else
-								{
-									throw("Binding BLOB datatype will be develop.");
-								}
+									BINDING_THROW("Binding BLOB datatype will be develop.")
 								break;
 							}
 							case SQL_ARRAY: // array
-								throw("Binding SQL_ARRAY datatype not will support.");
+							{
+								BINDING_THROW("Binding SQL_ARRAY datatype not will support.")
 								break;
+							}
 							case SQL_QUAD: // blob_id 
 							{
 								if (null_flag)
 									params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), null_flag);
 								else
-								{
-									throw("Binding BLOB_ID datatype will be develop.");
-								}
+									BINDING_THROW("Binding BLOB datatype will be develop.")
 								break;
 							}
 							case SQL_TYPE_TIME: // time
@@ -1865,7 +1866,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 							}
 							default:
 							{
-								throw("Binding unknow Firebird SQL datatype.");
+								BINDING_THROW("Binding unknow Firebird SQL datatype.")
 								break;
 							}
 						}

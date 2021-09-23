@@ -23,39 +23,47 @@
 #include "nano.h"
 
  //-----------------------------------------------------------------------------
- // Used resources of heap
- // 
+ //  Resources managment
+ //
 
 namespace nanoudr
 {
 
 //-----------------------------------------------------------------------------
+//  Attachment resources
 //
 
-resources::resources()
+attachment_resources::attachment_resources()
 {
+	att_locale = "cp1251";
 	ready_ = false;
-	udr_locale = "cp1251";
 };
 
-resources::~resources() 
+attachment_resources::attachment_resources(IAttachment* attachment)
+{
+	attachment_ = attachment;
+	att_locale = "cp1251";
+	ready_ = false;
+};
+
+attachment_resources::~attachment_resources()
 {
 	expunge();
 }
 
-const char* resources::locale(const char* set_locale)
+const char* attachment_resources::locale(const char* set_locale)
 {
-	if (set_locale) udr_locale = set_locale;
-	return udr_locale.c_str();
+	if (set_locale) att_locale = set_locale;
+	return att_locale.c_str();
 }
 
-const char* resources::error_message(const char* last_error_message)
+const char* attachment_resources::error_message(const char* last_error_message)
 {
-	if (last_error_message) udr_error_message = last_error_message;
-	return udr_error_message.c_str();
+	if (last_error_message) att_error_message = last_error_message;
+	return att_error_message.c_str();
 }
 
-void resources::initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
+void attachment_resources::initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
 {
 	IAttachment* att;
 	ITransaction* tra;
@@ -108,35 +116,35 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 	}
 }
 
-bool resources::ready()
+bool attachment_resources::ready()
 {
 	return ready_;
 }
 
 //-----------------------------------------------------------------------------
-//
+//	
 
-resources::connections_resource::connections_resource(nanoudr::resources* rsrs)
+attachment_resources::attachment_connections::attachment_connections(nanoudr::attachment_resources* rsrs)
 {
 	rsrs_ = rsrs;
 }
 
-std::vector<nanoudr::connection*>& resources::connections_resource::conn()
+std::vector<nanoudr::connection*>& attachment_resources::attachment_connections::conn()
 {
 	return conn_;
 }
 
-void resources::connections_resource::retain(nanoudr::connection* conn)
+void attachment_resources::attachment_connections::retain(nanoudr::connection* conn)
 {
 	conn_.push_back(conn);
 }
 
-bool resources::connections_resource::is_valid(nanoudr::connection* conn)
+bool attachment_resources::attachment_connections::is_valid(nanoudr::connection* conn)
 {
 	return find(conn_.begin(), conn_.end(), conn) != conn_.end();
 }
 
-void resources::connections_resource::expunge(nanoudr::connection* conn)
+void attachment_resources::attachment_connections::expunge(nanoudr::connection* conn)
 {
 	std::vector<nanoudr::connection*>::iterator it = std::find(conn_.begin(), conn_.end(), conn);
 	if (it != conn_.end())
@@ -150,7 +158,7 @@ void resources::connections_resource::expunge(nanoudr::connection* conn)
 	}
 }
 
-void resources::connections_resource::release(nanoudr::connection* conn)
+void attachment_resources::attachment_connections::release(nanoudr::connection* conn)
 {
 	std::vector<nanoudr::connection*>::iterator it = std::find(conn_.begin(), conn_.end(), conn);
 	if (it != conn_.end())
@@ -169,27 +177,27 @@ void resources::connections_resource::release(nanoudr::connection* conn)
 //-----------------------------------------------------------------------------
 //
 
-resources::transactions_resource::transactions_resource(nanoudr::resources* rsrs)
+attachment_resources::connection_transactions::connection_transactions(nanoudr::attachment_resources* rsrs)
 {
 	rsrs_ = rsrs;
 }
 
-std::vector<nanoudr::transaction*>& resources::transactions_resource::tnx()
+std::vector<nanoudr::transaction*>& attachment_resources::connection_transactions::tnx()
 {
 	return tnx_;
 }
 
-void resources::transactions_resource::retain(nanoudr::transaction* tnx)
+void attachment_resources::connection_transactions::retain(nanoudr::transaction* tnx)
 {
 	tnx_.push_back(tnx);
 }
 
-bool resources::transactions_resource::is_valid(nanoudr::transaction* tnx)
+bool attachment_resources::connection_transactions::is_valid(nanoudr::transaction* tnx)
 {
 	return find(tnx_.begin(), tnx_.end(), tnx) != tnx_.end();
 }
 
-void resources::transactions_resource::release(nanoudr::transaction* tnx)
+void attachment_resources::connection_transactions::release(nanoudr::transaction* tnx)
 {
 	std::vector<nanoudr::transaction*>::iterator it = std::find(tnx_.begin(), tnx_.end(), tnx);
 	if (it != tnx_.end())
@@ -202,27 +210,27 @@ void resources::transactions_resource::release(nanoudr::transaction* tnx)
 //-----------------------------------------------------------------------------
 //
 
-resources::statements_resource::statements_resource(nanoudr::resources* rsrs)
+attachment_resources::connection_statements::connection_statements(nanoudr::attachment_resources* rsrs)
 {
 	rsrs_ = rsrs;
 }
 
-std::vector<nanoudr::statement*>& resources::statements_resource::stmt()
+std::vector<nanoudr::statement*>& attachment_resources::connection_statements::stmt()
 {
 	return stmt_;
 }
 
-void resources::statements_resource::retain(nanoudr::statement* stmt)
+void attachment_resources::connection_statements::retain(nanoudr::statement* stmt)
 {
 	stmt_.push_back(stmt);
 }
 
-bool resources::statements_resource::is_valid(nanoudr::statement* stmt)
+bool attachment_resources::connection_statements::is_valid(nanoudr::statement* stmt)
 {
 	return find(stmt_.begin(), stmt_.end(), stmt) != stmt_.end();
 }
 
-void resources::statements_resource::release(nanoudr::statement* stmt)
+void attachment_resources::connection_statements::release(nanoudr::statement* stmt)
 {
 	std::vector<nanoudr::statement*>::iterator it = std::find(stmt_.begin(), stmt_.end(), stmt);
 	if (it != stmt_.end())
@@ -235,27 +243,27 @@ void resources::statements_resource::release(nanoudr::statement* stmt)
 //-----------------------------------------------------------------------------
 //
 
-resources::results_resource::results_resource(nanoudr::resources* rsrs)
+attachment_resources::connection_results::connection_results(nanoudr::attachment_resources* rsrs)
 {
 	rsrs_ = rsrs;
 }
 
-std::vector<nanoudr::result*>& resources::results_resource::rslt()
+std::vector<nanoudr::result*>& attachment_resources::connection_results::rslt()
 {
 	return rslt_;
 }
 
-void resources::results_resource::retain(nanoudr::result* rslt)
+void attachment_resources::connection_results::retain(nanoudr::result* rslt)
 {
 	rslt_.push_back(rslt);
 }
 
-bool resources::results_resource::is_valid(nanoudr::result* rslt)
+bool attachment_resources::connection_results::is_valid(nanoudr::result* rslt)
 {
 	return find(rslt_.begin(), rslt_.end(), rslt) != rslt_.end();
 }
 
-void resources::results_resource::release(nanoudr::result* rslt)
+void attachment_resources::connection_results::release(nanoudr::result* rslt)
 {
 	std::vector<nanoudr::result*>::iterator it = std::find(rslt_.begin(), rslt_.end(), rslt);
 	if (it != rslt_.end())
@@ -268,31 +276,45 @@ void resources::results_resource::release(nanoudr::result* rslt)
 //-----------------------------------------------------------------------------
 //
 
-void resources::expunge()
+void attachment_resources::expunge()
 {
 	for (auto c : connections.conn()) connections.release(c);
 	for (auto s : statements.stmt()) statements.release(s); // was not used stmt
 }
 
-const long resources::exception_number(const char* name) // simple find num
+const long attachment_resources::exception_number(const char* name) // simple find num
 {
 	for (auto x : udr_exceptions) 
 			if (strcmp(x.name, name) == 0) return x.number;
 	return 0;
 }
 
-const char* resources::exception_message(const char* name) // simple find msg
+const char* attachment_resources::exception_message(const char* name) // simple find msg
 {
 	for (auto &x : udr_exceptions)
 		if (strcmp(x.name, name) == 0) return x.message;
 	return nullptr;
 }
 
-void resources::assign_exception(exception* udr_exception, short pos)
+void attachment_resources::assign_exception(exception* udr_exception, short pos)
 {
 	memcpy(udr_exceptions[pos].name, udr_exception->name, sizeof(udr_exceptions[pos].name));
 	udr_exceptions[pos].number = udr_exception->number;
 	memcpy(udr_exceptions[pos].message, udr_exception->message, sizeof(udr_exceptions[pos].message));
+}
+
+//-----------------------------------------------------------------------------
+//  Shared UDR resources
+//
+
+resources::resources()
+{
+
+}
+
+resources::~resources()
+{
+
 }
 
 //-----------------------------------------------------------------------------

@@ -32,7 +32,9 @@ namespace nanoudr
 // Initialize global class 
 //
 
-nanoudr::resources udr_resources;
+nanoudr::resources udr_resources_;
+
+nanoudr::attachment_resources udr_resources; // redo
 nanoudr::helper udr_helper;
 
 //-----------------------------------------------------------------------------
@@ -94,41 +96,43 @@ bool helper::native_bool(const FB_BOOLEAN value)
 //-----------------------------------------------------------------------------
 //
 
-void helper::utf8_in(
-	char* dest, const size_t dest_length, const char* utf8, const size_t utf8_length)
+const size_t helper::utf8_in(
+	char* dest, const size_t dest_size, const char* utf8, const size_t utf8_length)
 {
-	utf8_converter(dest, dest_length, udr_resources.locale(), utf8, utf8_length, "UTF-8");
+	return utf8_converter(dest, dest_size, udr_resources.locale(), utf8, utf8_length, "UTF-8");
 }
 
-void helper::utf8_out(
-	char* dest, const size_t dest_length, const char* locale, const size_t locale_length)
+const size_t helper::utf8_out(
+	char* dest, const size_t dest_size, const char* locale, const size_t locale_length)
 {
-	utf8_converter(dest, dest_length, "UTF-8", locale, locale_length, udr_resources.locale());
+	return utf8_converter(dest, dest_size, "UTF-8", locale, locale_length, udr_resources.locale());
 }
 
-void helper::utf8_converter(
-	char* dest, const size_t dest_length, const char* to,  const char* src, 
+const size_t helper::utf8_converter(
+	char* dest, const size_t dest_size, const char* to,  const char* src,
 	const size_t src_length, const char* from)
 {
 	char* in = (char*)(src);
-	size_t in_length = src_length;
-	char* converted = new char[dest_length + 1];
-	memset(converted, '\0', dest_length + 1);
+	size_t in_length = src_length; // strlen() src
+	char* converted = new char[dest_size + 1];
+	memset(converted, '\0', dest_size + 1);
 	char* out = converted;
-	size_t out_length = dest_length;
+	size_t out_indicator = dest_size; // sizeof() dest
 	try
 	{
 		iconv_t ic = iconv_open(to, from);
-		iconv(ic, &in, &in_length, &out, &out_length);
+		iconv(ic, &in, &in_length, &out, &out_indicator);
 		iconv_close(ic);
 	}
 	catch (...)
 	{
 		throw "iconv: UTF8 character conversion error.";
 	}
-	memset(dest, '\0', dest_length);
-	memcpy_s(dest, dest_length, converted, dest_length - out_length);
+	memset(dest, '\0', dest_size); // not null-term string, just buffer
+	memcpy_s(dest, dest_size, converted, dest_size - out_indicator);
 	delete[] converted;
+
+	return (dest_size - out_indicator);
 }
 
 //-----------------------------------------------------------------------------
