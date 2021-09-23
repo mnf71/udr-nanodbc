@@ -373,7 +373,7 @@ void statement::bind_params(long batch_operations)
 				case bind_type::NANODBC_UNKNOWN:
 				default:
 				{
-					throw("Binding unknow NANODBC datatype .");
+					throw("Binding unknow NANODBC datatype.");
 					break;
 				}
 			}

@@ -69,7 +69,7 @@ class attachment_resources
 {
 public:
 	attachment_resources();
-	attachment_resources(IAttachment* attachment);
+	attachment_resources(ISC_UINT64 attachment);
 	~attachment_resources();
 
 	const char* locale(const char* set_locale = NULL);
@@ -139,7 +139,7 @@ public:
 	connection_results results = connection_results(this);
 
 private:
-	IAttachment* attachment_;
+	ISC_UINT64 attachment_;
 
 	// if number is zero then sended ANY_THROW, see initialize(...)
 	exception udr_exceptions[EXCEPTION_ARRAY_SIZE] = {
@@ -169,12 +169,14 @@ public:
 	resources();
 	~resources();
 
-	void registred(IAttachment* att);
-	void unregistred(IAttachment* att);
-	attachment_resources* instance(IAttachment* att);
+	void registred(IAttachment* attachment);
+	void unregistred(IAttachment* attachment);
+	attachment_resources* instance(IAttachment* attachment);
+
+	bool ready(IAttachment* attachment);
 
 private:
-	std::vector<nanoudr::attachment_resources*> att_;
+	std::vector<nanoudr::attachment_resources*> attachments;
 };
 
 extern attachment_resources udr_resources; // redo

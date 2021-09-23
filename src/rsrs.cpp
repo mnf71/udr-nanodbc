@@ -39,7 +39,7 @@ attachment_resources::attachment_resources()
 	ready_ = false;
 };
 
-attachment_resources::attachment_resources(IAttachment* attachment)
+attachment_resources::attachment_resources(ISC_UINT64 attachment)
 {
 	attachment_ = attachment;
 	att_locale = "cp1251";
