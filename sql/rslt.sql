@@ -63,7 +63,7 @@ BEGIN
 
   ------------------------------------------------------------------------------
 
-  FUNCTION no_data(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
+  FUNCTION has_data(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN;
 
 END^
 
@@ -195,8 +195,8 @@ BEGIN
 
   ------------------------------------------------------------------------------
 
-  FUNCTION no_data(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_no_data'
+  FUNCTION has_data(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
+    EXTERNAL NAME 'nano!rslt_has_data'
     ENGINE UDR;
 
 END^
