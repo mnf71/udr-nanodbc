@@ -32,9 +32,7 @@ namespace nanoudr
 // Initialize global class 
 //
 
-nanoudr::resources udr_resources_;
-
-nanoudr::attachment_resources udr_resources; // redo
+nanoudr::resources udr_resources;
 nanoudr::helper udr_helper;
 
 //-----------------------------------------------------------------------------
@@ -96,21 +94,20 @@ bool helper::native_bool(const FB_BOOLEAN value)
 //-----------------------------------------------------------------------------
 //
 
-const size_t helper::utf8_in(
-	char* dest, const size_t dest_size, const char* utf8, const size_t utf8_length)
+const size_t helper::utf8_in(nanoudr::attachment_resources* att_resources, char* dest, const size_t dest_size,
+	const char* utf8, const size_t utf8_length)
 {
-	return utf8_converter(dest, dest_size, udr_resources.locale(), utf8, utf8_length, "UTF-8");
+	return utf8_converter(dest, dest_size, att_resources->locale(), utf8, utf8_length, "UTF-8");
 }
 
-const size_t helper::utf8_out(
-	char* dest, const size_t dest_size, const char* locale, const size_t locale_length)
+const size_t helper::utf8_out(nanoudr::attachment_resources* att_resources, char* dest, const size_t dest_size,
+	const char* locale, const size_t locale_length)
 {
-	return utf8_converter(dest, dest_size, "UTF-8", locale, locale_length, udr_resources.locale());
+	return utf8_converter(dest, dest_size, "UTF-8", locale, locale_length, att_resources->locale());
 }
 
-const size_t helper::utf8_converter(
-	char* dest, const size_t dest_size, const char* to,  const char* src,
-	const size_t src_length, const char* from)
+const size_t helper::utf8_converter(char* dest, const size_t dest_size, const char* to,  
+	const char* src, const size_t src_length, const char* from)
 {
 	char* in = (char*)(src);
 	size_t in_length = src_length; // strlen() src

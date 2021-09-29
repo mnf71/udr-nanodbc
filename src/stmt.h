@@ -88,6 +88,10 @@ private:
 // UDR Statement class implementation
 //
 
+#ifndef RSRS_H
+	class attachment_resources;
+#endif
+
 #ifndef CONN_H
 	class connection;
 #endif
@@ -110,8 +114,10 @@ public:
 	void prepare(class nanoudr::connection& conn, const nanodbc::string& query, long timeout = 0);
 	void prepare(const nanodbc::string& query, long timeout = 0);
 
-	nanoudr::result* execute_direct(class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
-	void just_execute_direct(class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
+	nanoudr::result* execute_direct(
+		class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
+	void just_execute_direct(
+		class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
 
 	nanoudr::result* execute(long batch_operations = 1, long timeout = 0);
 	void just_execute(long batch_operations = 1, long timeout = 0);
@@ -124,6 +130,7 @@ public:
 	void release_params();
 
 private:
+	attachment_resources* att_resources_;
 	nanoudr::connection* conn_;
 	params_batch* params_;
 };

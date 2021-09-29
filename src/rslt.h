@@ -30,6 +30,10 @@ namespace nanoudr
 // UDR Result class implementation
 //
 
+#ifndef RSRS_H
+	class attachment_resources;
+#endif
+
 #ifndef CONN_H
 	class connection;
 #endif

@@ -221,7 +221,7 @@ namespace nanoudr
 
 #define	ANY_THROW(exception_message)	\
 {	\
-	udr_resources.error_message((exception_message));	\
+	att_resources->error_message((exception_message));	\
 	ISC_STATUS_ARRAY vector = {	\
 		isc_arg_gds,	\
 		isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
@@ -232,20 +232,20 @@ namespace nanoudr
 
 #define	NANODBC_THROW(exception_message)	\
 {	\
-	ISC_LONG exception_number = udr_resources.exception_number(NANODBC_ERR_MESSAGE);	\
+	ISC_LONG exception_number = att_resources->exception_number(NANODBC_ERR_MESSAGE);	\
 	if (exception_number == 0)	\
 	{	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
 			isc_exception_name, isc_arg_string, (ISC_STATUS)(NANODBC_ERR_MESSAGE),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.error_message()),	\
+			isc_random, isc_arg_string, (ISC_STATUS)(att_resources->error_message()),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
 	else	\
 	{	\
-		udr_resources.error_message((exception_message));	\
+		att_resources->error_message((exception_message));	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
 			isc_except, isc_arg_number, exception_number,	\
@@ -259,15 +259,15 @@ namespace nanoudr
 
 #define	NANOUDR_THROW(exception_name)	\
 {	\
-	ISC_LONG exception_number = udr_resources.exception_number((exception_name));		\
-	udr_resources.error_message(udr_resources.exception_message((exception_name)));	\
+	ISC_LONG exception_number = att_resources->exception_number((exception_name));		\
+	att_resources->error_message(att_resources->exception_message((exception_name)));	\
 	if (exception_number == 0)	\
 	{	\
 		ISC_STATUS vector[] = {	\
 			isc_arg_gds,	\
 			isc_exception_name, isc_arg_string, (ISC_STATUS)(exception_name),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.error_message()),	\
+			isc_random, isc_arg_string, (ISC_STATUS)(att_resources->error_message()),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
@@ -277,7 +277,7 @@ namespace nanoudr
 			isc_arg_gds,	\
 			isc_except, isc_arg_number, exception_number,	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.error_message()),	\
+			isc_random, isc_arg_string, (ISC_STATUS)(att_resources->error_message()),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
@@ -286,20 +286,20 @@ namespace nanoudr
 
 #define	BINDING_THROW(exception_message)	\
 {	\
-	ISC_LONG exception_number = udr_resources.exception_number(BINDING_ERR_MESSAGE);	\
+	ISC_LONG exception_number = att_resources->exception_number(BINDING_ERR_MESSAGE);	\
 	if (exception_number == 0)	\
 	{	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
 			isc_exception_name, isc_arg_string, (ISC_STATUS)(BINDING_ERR_MESSAGE),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.error_message()),	\
+			isc_random, isc_arg_string, (ISC_STATUS)(att_resources->error_message()),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
 	else	\
 	{	\
-		udr_resources.error_message((exception_message));	\
+		att_resources->error_message((exception_message));	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
 			isc_except, isc_arg_number, exception_number,	\
@@ -415,8 +415,8 @@ enum fb_char_set
 	if (##message##_char_sets[##message::##param] == fb_char_set::CS_UTF8)	\
 	{	\
 		udr_helper.utf8_##message(	\
-			##message->##param.str, sizeof(##message->##param.str), ##message->##param.str,	\
-			##message->##param.length);	\
+			att_resources, ##message->##param.str, sizeof(##message->##param.str),	\
+			##message->##param.str,	##message->##param.length);	\
 	}	/* U8_VARIYNG */  
 
 #define U8_STRING(message, param)	\
@@ -424,7 +424,7 @@ enum fb_char_set
 	{	\
 		size_t param_length = sizeof(##message->##param.str);	\
 		udr_helper.utf8_##message(	\
-			##message->##param.str, param_length, ##message->##param.str, param_length);	\
+			att_resources, ##message->##param.str, param_length, ##message->##param.str, param_length);	\
 	}	/* U8_STRING */  
 
 //-----------------------------------------------------------------------------
@@ -470,8 +470,10 @@ public:
 	FB_BOOLEAN fb_bool(bool value);
 	bool native_bool(const ISC_UCHAR value);
 
-	const size_t utf8_in(char* in, const size_t in_length, const char* utf8, const size_t utf8_length);
-	const size_t utf8_out(char* out, const size_t out_length, const char* locale, const size_t locale_length);
+	const size_t utf8_in(nanoudr::attachment_resources* att_resources, char* in, const size_t in_length,
+		const char* utf8, const size_t utf8_length);
+	const size_t utf8_out(nanoudr::attachment_resources* att_resources, char* out, const size_t out_length,
+		const char* locale, const size_t locale_length);
 
 	nanodbc::timestamp set_timestamp(nanoudr::timestamp* tm);
 	nanodbc::date set_date(nanoudr::date* d);
@@ -482,9 +484,8 @@ public:
 	nanoudr::time get_time(nanodbc::time* t);
 
 private:
-	const size_t utf8_converter(
-		char* dest, const size_t dest_length, const char* to, const char* src, 
-		const size_t src_length, const char* from);
+	const size_t utf8_converter(char* dest, const size_t dest_length, const char* to, 
+		const char* src, const size_t src_length, const char* from);
 };
 
 extern helper udr_helper;
