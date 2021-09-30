@@ -19,10 +19,10 @@ BEGIN
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$POINTER;
 
-  FUNCTION expunge(conn ty$pointer NOT NULL) RETURNS TY$NANO_BLANK;
-  FUNCTION release_(conn TY$POINTER NOT NULL) RETURNS TY$POINTER;
+  FUNCTION valid(conn TY$POINTER NOT NULL) RETURNS BOOLEAN;
 
-  FUNCTION is_valid(conn TY$POINTER NOT NULL) RETURNS BOOLEAN;
+  FUNCTION release_(conn TY$POINTER NOT NULL) RETURNS TY$POINTER;
+  FUNCTION expunge(conn ty$pointer NOT NULL) RETURNS TY$NANO_BLANK;
 
   FUNCTION allocate(conn ty$pointer NOT NULL) RETURNS TY$NANO_BLANK;
   FUNCTION deallocate(conn ty$pointer NOT NULL) RETURNS TY$NANO_BLANK;
@@ -65,16 +65,16 @@ BEGIN
     EXTERNAL NAME 'nano!conn_connection'
     ENGINE UDR;
 
-  FUNCTION expunge(conn ty$pointer NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!conn_expunge'
+  FUNCTION valid(conn TY$POINTER NOT NULL) RETURNS BOOLEAN
+    EXTERNAL NAME 'nano!conn_valid'
     ENGINE UDR;
 
   FUNCTION release_(conn TY$POINTER NOT NULL) RETURNS TY$POINTER
     EXTERNAL NAME 'nano!conn_release'
     ENGINE UDR;
 
-  FUNCTION is_valid(conn TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!conn_is_valid'
+  FUNCTION expunge(conn ty$pointer NOT NULL) RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!conn_expunge'
     ENGINE UDR;
 
   FUNCTION allocate(conn TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK

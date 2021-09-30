@@ -6,9 +6,9 @@ BEGIN
  
   FUNCTION transaction_(conn TY$POINTER NOT NULL) RETURNS TY$POINTER;
 
-  FUNCTION release_(tnx ty$pointer NOT NULL) RETURNS TY$POINTER;
+  FUNCTION valid(tnx TY$POINTER NOT NULL) RETURNS BOOLEAN;
 
-  FUNCTION is_valid(tnx TY$POINTER NOT NULL) RETURNS BOOLEAN;
+  FUNCTION release_(tnx ty$pointer NOT NULL) RETURNS TY$POINTER;
 
   FUNCTION connection(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER;
 
@@ -25,12 +25,12 @@ BEGIN
     EXTERNAL NAME 'nano!tnx_transaction'
     ENGINE UDR;
 
-  FUNCTION release_(tnx ty$pointer NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!tnx_release'
+  FUNCTION valid(tnx TY$POINTER NOT NULL) RETURNS BOOLEAN
+    EXTERNAL NAME 'nano!tnx_valid'
     ENGINE UDR;
 
-  FUNCTION is_valid(tnx TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!tnx_is_valid'
+  FUNCTION release_(tnx ty$pointer NOT NULL) RETURNS TY$POINTER
+    EXTERNAL NAME 'nano!tnx_release'
     ENGINE UDR;
 
   FUNCTION connection(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER

@@ -88,10 +88,6 @@ private:
 // UDR Statement class implementation
 //
 
-#ifndef RSRS_H
-	class attachment_resources;
-#endif
-
 #ifndef CONN_H
 	class connection;
 #endif
@@ -130,7 +126,6 @@ public:
 	void release_params();
 
 private:
-	attachment_resources* att_resources_;
 	nanoudr::connection* conn_;
 	params_batch* params_;
 };

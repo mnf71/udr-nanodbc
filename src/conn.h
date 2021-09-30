@@ -26,10 +26,6 @@
 namespace nanoudr
 {
 
-#ifndef RSRS_H
-	class attachment_resources;
-#endif
-
 //-----------------------------------------------------------------------------
 // UDR Connection class implementation
 //

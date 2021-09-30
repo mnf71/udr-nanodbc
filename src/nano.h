@@ -219,33 +219,92 @@ namespace nanoudr
 //-----------------------------------------------------------------------------
 //
 
+#define	NANOUDR_RESOURCES	\
+attachment_resources*	\
+	att_resources = udr_resources.attachment(status, context);	\
+if (att_resources == nullptr)	\
+{	\
+	ISC_LONG exception_number = udr_resources.resource_exception.number;	\
+	if (exception_number == 0)	\
+	{	\
+		ISC_STATUS_ARRAY vector = {	\
+			isc_arg_gds,	\
+			isc_exception_name, isc_arg_string, (ISC_STATUS)(udr_resources.resource_exception.name),	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.resource_exception.message),	\
+			isc_arg_end};	\
+		status->setErrors(vector);	\
+	}	\
+	else	\
+	{	\
+		ISC_STATUS_ARRAY vector = {	\
+			isc_arg_gds,	\
+			isc_except, isc_arg_number, exception_number,	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.resource_exception.message),	\
+			isc_arg_end};	\
+		status->setErrors(vector);	\
+	}	\
+	return; \
+}	/* NANOUDR_RESOURCES */
+
+//-----------------------------------------------------------------------------
+//
+
 #define	ANY_THROW(exception_message)	\
 {	\
-	att_resources->error_message((exception_message));	\
-	ISC_STATUS_ARRAY vector = {	\
-		isc_arg_gds,	\
-		isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
-		isc_arg_end};	\
-	status->setErrors(vector);	\
+	if (att_resources == nullptr)	\
+	{	\
+		ISC_STATUS_ARRAY vector = {	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+			isc_arg_end};	\
+		status->setErrors(vector);	\
+	}	\
+	else	\
+	{	\
+		ISC_LONG exception_number = att_resources->exception_number(NANOUDR_ERR_MESSAGE);	\
+		att_resources->error_message((exception_message));	\
+		if (exception_number == 0)	\
+		{	\
+			ISC_STATUS_ARRAY vector = { \
+				isc_arg_gds,	\
+				isc_exception_name, isc_arg_string, (ISC_STATUS)(NANOUDR_ERR_MESSAGE),	\
+				isc_arg_gds,	\
+				isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+				isc_arg_end };	\
+			status->setErrors(vector);	\
+		}	\
+		else	\
+		{	\
+			ISC_STATUS_ARRAY vector = { \
+				isc_arg_gds,	\
+				isc_except, isc_arg_number, exception_number,	\
+				isc_arg_gds,	\
+				isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+				isc_arg_end };	\
+			status->setErrors(vector);	\
+		}	\
+	}	\
 	return; \
 }	/* ANY_THROW */
 
 #define	NANODBC_THROW(exception_message)	\
 {	\
 	ISC_LONG exception_number = att_resources->exception_number(NANODBC_ERR_MESSAGE);	\
+	att_resources->error_message((exception_message));	\
 	if (exception_number == 0)	\
 	{	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
 			isc_exception_name, isc_arg_string, (ISC_STATUS)(NANODBC_ERR_MESSAGE),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)(att_resources->error_message()),	\
+			isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
 	else	\
 	{	\
-		att_resources->error_message((exception_message));	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
 			isc_except, isc_arg_number, exception_number,	\
@@ -287,19 +346,19 @@ namespace nanoudr
 #define	BINDING_THROW(exception_message)	\
 {	\
 	ISC_LONG exception_number = att_resources->exception_number(BINDING_ERR_MESSAGE);	\
+	att_resources->error_message((exception_message));	\
 	if (exception_number == 0)	\
 	{	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
 			isc_exception_name, isc_arg_string, (ISC_STATUS)(BINDING_ERR_MESSAGE),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)(att_resources->error_message()),	\
+			isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
 	else	\
 	{	\
-		att_resources->error_message((exception_message));	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
 			isc_except, isc_arg_number, exception_number,	\

@@ -33,11 +33,13 @@ namespace nanoudr
 #define EXCEPTION_ARRAY_SIZE	100
 #define ERROR_MESSAGE_LENGTH	1024
 
-#define	RESOURCES_INDEFINED		"NANO$RESOURCES_INDEFINED"
-#define INVALID_CONN_POINTER	"NANO$INVALID_CONN_POINTER"
-#define INVALID_TNX_POINTER		"NANO$INVALID_TNX_POINTER"
-#define INVALID_STMT_POINTER	"NANO$INVALID_STMT_POINTER"
-#define INVALID_RSLT_POINTER	"NANO$INVALID_RSLT_POINTER"
+#define	RESOURCES_INDEFINED		"NANO$RESOURCES_INDEFINED" 
+
+#define NANOUDR_ERR_MESSAGE		"NANO$NANOUDR_ERR_MESSAGE"
+#define POINTER_CONN_INVALID	"NANO$POINTER_CONNECTION_INVALID"
+#define POINTER_TNX_INVALID		"NANO$POINTER_TRANSACTION_INVALID"
+#define POINTER_STMT_INVALID	"NANO$POINTER_STATEMENT_INVALID"
+#define POINTER_RSLT_INVALID	"NANO$POINTER_RESULT_INVALID"
 #define NANODBC_ERR_MESSAGE		"NANO$NANODBC_ERR_MESSAGE"
 #define	BINDING_ERR_MESSAGE		"NANO$BINDING_ERR_MESSAGE"
 
@@ -71,86 +73,95 @@ struct exception
 class attachment_resources
 {
 public:
-	attachment_resources(ISC_UINT64 attachment_id);
-	void initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
+	attachment_resources(ISC_UINT64 attachment_id) : attachment_id(attachment_id), att_locale("cp1251") {};
 	~attachment_resources() noexcept;
 
 	const char* locale(const char* set_locale = NULL);
 	const char* error_message(const char* last_error_message = NULL);
 
+	void make_resources(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
+
+	void expunge();
+
 	struct attachment_connections
 	{
-		attachment_connections(nanoudr::attachment_resources* owner_);
-		std::vector<nanoudr::connection*>& conn();
+		attachment_connections(nanoudr::attachment_resources* owner) : owner(owner) {};
 		void retain(nanoudr::connection* conn);
-		bool is_valid(nanoudr::connection* conn);
 		void expunge(nanoudr::connection* conn);
 		void release(nanoudr::connection* conn);
+		bool valid(nanoudr::connection* conn);
+		std::vector<nanoudr::connection*>& conn();
 	private:
-		std::vector<nanoudr::connection*> conn_;
-		attachment_resources* owner_;
+		std::vector<nanoudr::connection*> conn_v;
+		std::vector<nanoudr::connection*>::iterator conn_it;
+		attachment_resources* owner;
 	};
 
 	struct connection_transactions
 	{
-		connection_transactions();
-		std::vector<nanoudr::transaction*>& tnx();
+		connection_transactions(nanoudr::attachment_resources* owner) : owner(owner) {};
 		void retain(nanoudr::transaction* tnx);
-		bool is_valid(nanoudr::transaction* tnx);
 		void release(nanoudr::transaction* tnx);
+		bool valid(nanoudr::transaction* tnx);
+		std::vector<nanoudr::transaction*>& tnx();
 	private:
-		std::vector<nanoudr::transaction*> tnx_;
+		std::vector<nanoudr::transaction*> tnx_v;
+		std::vector<nanoudr::transaction*>::iterator tnx_it;
+		attachment_resources* owner;
 	};
 
 	struct connection_statements
 	{
-		connection_statements();
-		std::vector<nanoudr::statement*>& stmt();
+		connection_statements(nanoudr::attachment_resources* owner) : owner(owner) {};
 		void retain(nanoudr::statement* stmt);
-		bool is_valid(nanoudr::statement* stmt);
 		void release(nanoudr::statement* stmt);
+		bool valid(nanoudr::statement* stmt);
+		std::vector<nanoudr::statement*>& stmt();
 	private:
-		std::vector<nanoudr::statement*> stmt_;
+		std::vector<nanoudr::statement*> stmt_v;
+		std::vector<nanoudr::statement*>::iterator stmt_it;
+		attachment_resources* owner;
 	};
 
 	struct connection_results
 	{
-		connection_results();
-		std::vector<nanoudr::result*>& rslt();
+		connection_results(nanoudr::attachment_resources* owner) : owner(owner) {};
 		void retain(nanoudr::result* rslt);
-		bool is_valid(nanoudr::result* rslt);
 		void release(nanoudr::result* rslt);
+		bool valid(nanoudr::result* rslt);
+		std::vector<nanoudr::result*>& rslt();
 	private:
-		std::vector<nanoudr::result*> rslt_;
+		std::vector<nanoudr::result*> rslt_v;
+		std::vector<nanoudr::result*>::iterator rslt_it;
+		attachment_resources* owner;
 	};
-
-	void expunge();
 
 	const ISC_LONG exception_number(const char* name);
 	const char* exception_message(const char* name);
 
 	attachment_connections connections = attachment_connections(this);
-	connection_transactions transactions = connection_transactions();
-	connection_statements statements = connection_statements();
-	connection_results results = connection_results();
+	connection_transactions transactions = connection_transactions(this);
+	connection_statements statements = connection_statements(this);
+	connection_results results = connection_results(this);
 
 private:
-	ISC_UINT64 attachment_id_;
+	ISC_UINT64 attachment_id;
 
-	// if number is zero then sended ANY_THROW, see initialize(...)
-	exception udr_exceptions[EXCEPTION_ARRAY_SIZE] = {
-		{RESOURCES_INDEFINED,	0, "Attachment resources indefined."},
-		{INVALID_CONN_POINTER,	0, "Input parameter CONNECTION invalid."},
-		{INVALID_TNX_POINTER,	0, "Input parameter TRANSACTION invalid."},
-		{INVALID_STMT_POINTER,	0, "Input parameter STATEMENT invalid."},
-		{INVALID_RSLT_POINTER,	0, "Input parameter RESULT invalid."} ,
+	// if number is zero then sended ANY_THROW 
+	exception att_exceptions[EXCEPTION_ARRAY_SIZE] = {
+		{RESOURCES_INDEFINED,	0, ""}, // used for class resources
+		{NANOUDR_ERR_MESSAGE,	0, ""},
+		{POINTER_CONN_INVALID,	0, "Pointer CONNECTION invalid."},
+		{POINTER_TNX_INVALID,	0, "Pointer TRANSACTION invalid."},
+		{POINTER_STMT_INVALID,	0, "Pointer STATEMENT invalid."},
+		{POINTER_RSLT_INVALID,	0, "Pointer RESULT invalid."} ,
 		{NANODBC_ERR_MESSAGE,	0, ""},
 		{BINDING_ERR_MESSAGE,	0, ""}
 	};
 
 	void make_exceptions(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
 
-	void assign_exception(exception* udr_exception, short pos);
+	void assign_exception(exception* att_exception, const short pos);
 
 	std::string att_error_message;
 	std::string att_locale;
@@ -168,16 +179,19 @@ public:
 	resources();
 	~resources() noexcept;
 
-	attachment_resources* attachment(
-		FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context, const bool read_only = true);
-	void expunge(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
+	void initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
+	void finalize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
+
+	attachment_resources* attachment(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
+
+	exception resource_exception = { RESOURCES_INDEFINED, 0, "Attachment resources indefined." };
 
 private:
-	attachment_mapping attachments;
+	attachment_mapping att_m;
 
 	ISC_UINT64 attachment_id(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context);
 
-	attachment_mapping::iterator it_att_;
+	attachment_mapping::iterator att_it;
 };
 
 extern resources udr_resources;

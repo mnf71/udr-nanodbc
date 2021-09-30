@@ -68,8 +68,6 @@ connection::~connection()
 
 FB_UDR_BEGIN_FUNCTION(conn_connection)
 
-	nanoudr::attachment_resources* att_resources;
-
 	unsigned in_count;
 
 	enum in : short {
@@ -105,10 +103,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context, false);
-		if (!att_resources) 
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->connNull = FB_TRUE;
 		try
 		{
@@ -140,16 +135,14 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function expunge (
+// create function valid (
 //	 conn ty$pointer not null, 
-//	) returns ty$nano_blank
-//	external name 'nano!conn_expunge'
+//	) returns boolean
+//	external name 'nano!conn_valid'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_expunge)
-
-	nanoudr::attachment_resources* att_resources;
+FB_UDR_BEGIN_FUNCTION(conn_valid)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -158,32 +151,17 @@ FB_UDR_BEGIN_FUNCTION(conn_expunge)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(NANO_BLANK, blank)
+		(FB_BOOLEAN, valid)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)	
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
-		out->blankNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
-		{
-			try
-			{
-				att_resources->connections.expunge(conn);
-				out->blank = BLANK;
-				out->blankNull = FB_FALSE;
-			}
-			catch (std::runtime_error const& e)
-			{
-				NANODBC_THROW(e.what())
-			}
-		}
-		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+		NANOUDR_RESOURCES
+		out->valid =
+			in->connNull ?
+			udr_helper.fb_bool(false) :
+			att_resources->connections.valid(udr_helper.conn_ptr(in->conn.str));
+		out->validNull = FB_FALSE;
 	}
 
 FB_UDR_END_FUNCTION
@@ -198,8 +176,6 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_release)
 
-	nanoudr::attachment_resources* att_resources;
-
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -212,10 +188,7 @@ FB_UDR_BEGIN_FUNCTION(conn_release)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->connNull = FB_TRUE;
 		if (!in->connNull)
 		{
@@ -232,22 +205,20 @@ FB_UDR_BEGIN_FUNCTION(conn_release)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 }
 
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function is_valid (
+// create function expunge (
 //	 conn ty$pointer not null, 
-//	) returns boolean
-//	external name 'nano!conn_is_valid'
+//	) returns ty$nano_blank
+//	external name 'nano!conn_expunge'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_is_valid)
-
-	nanoudr::attachment_resources* att_resources;
+FB_UDR_BEGIN_FUNCTION(conn_expunge)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -256,20 +227,29 @@ FB_UDR_BEGIN_FUNCTION(conn_is_valid)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_BOOLEAN, valid)
+		(NANO_BLANK, blank)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
-		out->valid =
-			in->connNull ?
-			udr_helper.fb_bool(false) :
-			att_resources->connections.is_valid(udr_helper.conn_ptr(in->conn.str));
-		out->validNull = FB_FALSE;
+		NANOUDR_RESOURCES
+		out->blankNull = FB_TRUE;
+		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
+		if (!in->connNull && att_resources->connections.valid(conn))
+		{
+			try
+			{
+				att_resources->connections.expunge(conn);
+				out->blank = BLANK;
+				out->blankNull = FB_FALSE;
+			}
+			catch (std::runtime_error const& e)
+			{
+				NANODBC_THROW(e.what())
+			}
+		}
+		else
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -284,8 +264,6 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_allocate)
 
-	nanoudr::attachment_resources* att_resources;
-
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -298,13 +276,10 @@ FB_UDR_BEGIN_FUNCTION(conn_allocate)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
@@ -314,12 +289,11 @@ FB_UDR_BEGIN_FUNCTION(conn_allocate)
 			}
 			catch (std::runtime_error const& e)
 			{
-				out->blankNull = FB_TRUE;
 				NANODBC_THROW(e.what())
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -334,8 +308,6 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_deallocate)
 
-	nanoudr::attachment_resources* att_resources;
-
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -348,13 +320,10 @@ FB_UDR_BEGIN_FUNCTION(conn_deallocate)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
@@ -368,7 +337,7 @@ FB_UDR_BEGIN_FUNCTION(conn_deallocate)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -390,8 +359,6 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_connect)
 
-	nanoudr::attachment_resources* att_resources;
-	
 	unsigned in_count;
 
 	enum in : short {
@@ -428,13 +395,10 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			U8_VARIYNG(in, attr);
 			U8_VARIYNG(in, user);
@@ -456,7 +420,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connect)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -471,8 +435,6 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_connected)
 
-	nanoudr::attachment_resources* att_resources;
-
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -485,13 +447,10 @@ FB_UDR_BEGIN_FUNCTION(conn_connected)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->connectedNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
@@ -504,7 +463,7 @@ FB_UDR_BEGIN_FUNCTION(conn_connected)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -519,8 +478,6 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_disconnect)
 
-	nanoudr::attachment_resources* att_resources;
-
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -533,13 +490,10 @@ FB_UDR_BEGIN_FUNCTION(conn_disconnect)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
@@ -553,7 +507,7 @@ FB_UDR_BEGIN_FUNCTION(conn_disconnect)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -568,8 +522,6 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn_transactions)
 
-	nanoudr::attachment_resources* att_resources;
-
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -582,17 +534,14 @@ FB_UDR_BEGIN_FUNCTION(conn_transactions)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->transactionsNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
-				out->transactions = (ISC_LONG)conn->transactions();
+				out->transactions = (ISC_LONG)(conn->transactions());
 				out->transactionsNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -601,7 +550,7 @@ FB_UDR_BEGIN_FUNCTION(conn_transactions)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -616,8 +565,6 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_get_info)
-
-	nanoudr::attachment_resources* att_resources;
 
 	unsigned out_count;
 
@@ -652,13 +599,10 @@ FB_UDR_BEGIN_FUNCTION(conn_get_info)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->infoNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
@@ -673,7 +617,7 @@ FB_UDR_BEGIN_FUNCTION(conn_get_info)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -687,8 +631,6 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
-
-	nanoudr::attachment_resources* att_resources;
 
 	unsigned out_count;
 
@@ -722,13 +664,10 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->dbms_nameNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
@@ -743,7 +682,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -757,8 +696,6 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
-	
-	nanoudr::attachment_resources* att_resources;
 	
 	unsigned out_count;
 
@@ -792,13 +729,10 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->versionNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
@@ -813,7 +747,7 @@ FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -827,8 +761,6 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_driver_name)
-
-	nanoudr::attachment_resources* att_resources;
 
 	unsigned out_count;
 
@@ -862,13 +794,10 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->drv_nameNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
@@ -883,7 +812,7 @@ FB_UDR_BEGIN_FUNCTION(conn_driver_name)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -897,8 +826,6 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_database_name)
-
-	nanoudr::attachment_resources* att_resources;
 
 	unsigned out_count;
 
@@ -932,13 +859,10 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->db_nameNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
@@ -953,7 +877,7 @@ FB_UDR_BEGIN_FUNCTION(conn_database_name)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
@@ -967,8 +891,6 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
-
-	nanoudr::attachment_resources* att_resources;
 
 	unsigned out_count;
 
@@ -1002,13 +924,10 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		att_resources = udr_resources.attachment(status, context);
-		if (!att_resources)
-			NANOUDR_THROW(RESOURCES_INDEFINED)
-
+		NANOUDR_RESOURCES
 		out->ctlg_nameNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
-		if (!in->connNull && att_resources->connections.is_valid(conn))
+		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
@@ -1023,7 +942,7 @@ FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
 			}
 		}
 		else
-			NANOUDR_THROW(INVALID_CONN_POINTER)
+			NANOUDR_THROW(POINTER_CONN_INVALID)
 	}
 
 FB_UDR_END_FUNCTION
