@@ -73,7 +73,10 @@ struct exception
 class attachment_resources
 {
 public:
-	attachment_resources(ISC_UINT64 attachment_id) : attachment_id(attachment_id), att_locale("cp1251") {};
+	attachment_resources(ISC_UINT64 attachment_id) : attachment_id(attachment_id), att_locale("cp1251") 
+	{
+		connections.retain(nullptr); // service record for statement::statement();
+	};
 	~attachment_resources() noexcept;
 
 	const char* locale(const char* set_locale = NULL);

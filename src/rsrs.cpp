@@ -59,7 +59,6 @@ void attachment_resources::make_resources(FB_UDR_STATUS_TYPE* status, ::Firebird
 void attachment_resources::expunge()
 {
 	for (auto c : connections.conn()) connections.release(c);
-	for (auto s : statements.stmt()) statements.release(s); // nullptr conn_
 }
 
 void attachment_resources::make_exceptions(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
@@ -270,9 +269,6 @@ void attachment_resources::assign_exception(exception* att_exception, const shor
 
 resources::resources()
 {
-	att_m.insert( 
-		std::pair<ISC_UINT64, nanoudr::attachment_resources*>(0, new attachment_resources(0))
-	);
 }
 
 resources::~resources() noexcept
