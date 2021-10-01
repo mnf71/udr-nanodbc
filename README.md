@@ -49,8 +49,8 @@ BEGIN
     */
     conn = nano$conn.release_(conn);
 
-    WHEN EXCEPTION NANO$INVALID_CONN_POINTER, EXCEPTION NANO$INVALID_STMT_POINTER,
-         EXCEPTION NANO$NANODBC_ERR_MESSAGE
+    WHEN EXCEPTION nano$pointer_conn_invalid, EXCEPTION nano$pointer_stmt_invalid,
+         EXCEPTION nano$nanodbc_err_message
     DO
     BEGIN
       e = 'Execute block failed: ' || nano$udr.error_message();
