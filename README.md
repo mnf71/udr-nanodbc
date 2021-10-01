@@ -15,7 +15,7 @@ AS
   DECLARE stmt ty$pointer;
   DECLARE tnx ty$pointer;
 BEGIN
-  nano$udr.initialize();
+  nano$udr.initialize(); -- maybe trigger on connect
   
   BEGIN
     conn = nano$conn.connection(ora_conn_str);
@@ -48,9 +48,11 @@ BEGIN
       tnx = nano$tnx.release_(tnx);
     */
     conn = nano$conn.release_(conn);
+    
+    nano$udr.finalize(); -- best, trigger on disconnect
 
-    WHEN EXCEPTION NANO$INVALID_CONN_POINTER, EXCEPTION NANO$INVALID_STMT_POINTER,
-         EXCEPTION NANO$NANODBC_ERR_MESSAGE
+    WHEN EXCEPTION nano$pointer_conn_invalid, EXCEPTION nano$pointer_stmt_invalid,
+         EXCEPTION nano$nanodbc_err_message
     DO
     BEGIN
       e = 'Execute block failed: ' || nano$udr.error_message();
@@ -59,6 +61,7 @@ BEGIN
         tnx = nano$tnx.release_(tnx);
       */
       conn = nano$conn.release_(conn);
+      nano$udr.finalize();
       SUSPEND;
       EXIT;
     END
