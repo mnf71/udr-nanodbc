@@ -52,7 +52,7 @@ BEGIN
       batch_operations INTEGER NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!func_execute_conn'
+    EXTERNAL NAME 'nano!func$execute_conn'
     ENGINE UDR;
 
   FUNCTION just_execute_conn(
@@ -61,35 +61,35 @@ BEGIN
       batch_operations INTEGER NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!func_just_execute_conn'
+    EXTERNAL NAME 'nano!func$just_execute_conn'
     ENGINE UDR;
 
   FUNCTION execute_stmt(
       stmt TY$POINTER NOT NULL,
       batch_operations INTEGER NOT NULL
     ) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!func_execute_stmt'
+    EXTERNAL NAME 'nano!func$execute_stmt'
     ENGINE UDR;
 
   FUNCTION just_execute_stmt(
       stmt TY$POINTER NOT NULL,
       batch_operations INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!func_just_execute_stmt'
+    EXTERNAL NAME 'nano!func$just_execute_stmt'
     ENGINE UDR;
 
   FUNCTION transact_stmt(
       stmt TY$POINTER NOT NULL,
       batch_operations INTEGER NOT NULL
     ) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!func_transact_stmt'
+    EXTERNAL NAME 'nano!func$transact_stmt'
     ENGINE UDR;
 
   FUNCTION just_transact_stmt(
       stmt TY$POINTER NOT NULL,
       batch_operations INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!func_just_transact_stmt'
+    EXTERNAL NAME 'nano!func$just_transact_stmt'
     ENGINE UDR;
 
   FUNCTION prepare_stmt(
@@ -97,7 +97,7 @@ BEGIN
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!func_prepare_stmt'
+    EXTERNAL NAME 'nano!func$prepare_stmt'
     ENGINE UDR;
 
 END^

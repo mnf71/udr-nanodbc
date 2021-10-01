@@ -37,6 +37,7 @@ enum bind_type : short {
 	NANODBC_LONG, NANODBC_ULONG, NANODBC_INT64, NANODBC_UINT64, 
 	NANODBC_FLOAT, NANODBC_DOUBLE,
 	NANODBC_DATE, NANODBC_TIME, NANODBC_TIMESTAMP,
+	NANODBC_S_VALUE_TYPE, NANODBC_W_VALUE_TYPE,
 	NANODBC_STRING, NANODBC_WIDE_STRING,
 	NANODBC_UNKNOWN
 };
@@ -46,8 +47,9 @@ using bind_types = std::variant <
 	std::vector<long int>, std::vector<unsigned long int>, std::vector<long long>, std::vector<unsigned long long>, 
 	std::vector<float>, std::vector<double>,
 	std::vector<nanodbc::date>, std::vector<nanodbc::time>, std::vector<nanodbc::timestamp>,
+	std::vector<nanodbc::string::value_type>, std::vector<nanodbc::wide_string::value_type>,
 	std::vector<nanodbc::string>, std::vector<nanodbc::wide_string>
-> ;
+>;
 
 class params_batch
 {
@@ -88,6 +90,10 @@ private:
 // UDR Statement class implementation
 //
 
+#ifndef RSRS_H
+	class attachment_resources;
+#endif
+
 #ifndef CONN_H
 	class connection;
 #endif
@@ -99,9 +105,10 @@ private:
 class statement : public nanodbc::statement
 {
 public:
-	statement();
-	explicit statement(class nanoudr::connection& conn);
-	statement(class nanoudr::connection& conn, const nanodbc::string& query, long timeout = 0);
+	statement(class attachment_resources& att_resources);
+	explicit statement(class attachment_resources& att_resources, class nanoudr::connection& conn);
+	statement(class attachment_resources& att_resources, class nanoudr::connection& conn, 
+		const nanodbc::string& query, long timeout = 0);
 	~statement() noexcept;
 
 	void open(class nanoudr::connection& conn);
@@ -125,7 +132,10 @@ public:
 	void prepare_params();
 	void release_params();
 
+	attachment_resources* attachment() { return att_resources_; };
+
 private:
+	attachment_resources* att_resources_;
 	nanoudr::connection* conn_;
 	params_batch* params_;
 };

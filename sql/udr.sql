@@ -21,25 +21,25 @@ AS
 BEGIN
 
   FUNCTION initialize RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!initialize'
+    EXTERNAL NAME 'nano!udr$initialize'
     ENGINE UDR;
 
   FUNCTION finalize RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!finalize'
+    EXTERNAL NAME 'nano!udr$finalize'
     ENGINE UDR;
 
   FUNCTION expunge RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!expunge'
+    EXTERNAL NAME 'nano!udr$expunge'
     ENGINE UDR;
 
   FUNCTION locale(
       set_locale VARCHAR(20) CHARACTER SET NONE
     ) RETURNS VARCHAR(20)
-    EXTERNAL NAME 'nano!locale'
+    EXTERNAL NAME 'nano!udr$locale'
     ENGINE UDR;
 
   FUNCTION error_message RETURNS VARCHAR(512) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!error_message'
+    EXTERNAL NAME 'nano!udr$error_message'
     ENGINE UDR;
 
 END^

@@ -33,8 +33,11 @@ namespace nanoudr
 // UDR Transaction class implementation
 //
 
-transaction::transaction(class nanoudr::connection& conn) : nanodbc::transaction(conn)
+transaction::transaction(class attachment_resources& att_resources, class nanoudr::connection& conn)
+	: nanodbc::transaction(conn)
 {
+	att_resources_ = &att_resources;
+	att_resources_->transactions.retain(this);
 	conn_ = &conn;
 }
 
@@ -52,11 +55,11 @@ nanoudr::connection* transaction::connection()
 // create function transaction_ (
 //	 conn ty$pointer not null 
 //	) returns ty$pointer
-//	external name 'nano!tnx_transaction'
+//	external name 'nano!tnx$transaction'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(tnx_transaction)
+FB_UDR_BEGIN_FUNCTION(tnx$transaction)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -77,9 +80,8 @@ FB_UDR_BEGIN_FUNCTION(tnx_transaction)
 		{
 			try
 			{
-				nanoudr::transaction* tnx = new nanoudr::transaction(*conn);
+				nanoudr::transaction* tnx = new nanoudr::transaction(*att_resources, *conn);
 				udr_helper.fb_ptr(out->tnx.str, (int64_t)tnx);
-				att_resources->transactions.retain(tnx);
 				out->tnxNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -97,11 +99,11 @@ FB_UDR_END_FUNCTION
 // create function valid (
 //	 tnx ty$pointer not null, 
 //	) returns boolean
-//	external name 'nano!tnx_valid'
+//	external name 'nano!tnx$valid'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(tnx_valid)
+FB_UDR_BEGIN_FUNCTION(tnx$valid)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -129,11 +131,11 @@ FB_UDR_END_FUNCTION
 // create function release_ (
 //	 tnx ty$pointer not null, 
 // ) returns ty$pointer
-// external name 'nano!tnx_release'
+// external name 'nano!tnx$release'
 // engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(tnx_release)
+FB_UDR_BEGIN_FUNCTION(tnx$release)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -173,11 +175,11 @@ FB_UDR_END_FUNCTION
 // create function connection (
 //	 tnx ty$pointer not null 
 //	) returns ty$pointer
-//	external name 'nano!tnx_connection'
+//	external name 'nano!tnx$connection'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(tnx_connection)
+FB_UDR_BEGIN_FUNCTION(tnx$connection)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -198,7 +200,7 @@ FB_UDR_BEGIN_FUNCTION(tnx_connection)
 		{
 			try
 			{
-				nanoudr::connection* conn = tnx->connection();
+				const nanoudr::connection* conn = tnx->connection();
 				udr_helper.fb_ptr(out->conn.str, (int64_t)conn);
 				out->connNull = FB_FALSE;
 			}
@@ -217,11 +219,11 @@ FB_UDR_END_FUNCTION
 // create function commit_ (
 //	 tnx ty$pointer not null 
 //	) returns ty$nano_blank
-//	external name 'nano!tnx_commit'
+//	external name 'nano!tnx$commit'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(tnx_commit)
+FB_UDR_BEGIN_FUNCTION(tnx$commit)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -261,11 +263,11 @@ FB_UDR_END_FUNCTION
 // create function rollback (
 //	 tnx ty$pointer not null 
 //	) returns ty$nano_blank
-//	external name 'nano!tnx_rollback'
+//	external name 'nano!tnx$rollback'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(tnx_rollback)
+FB_UDR_BEGIN_FUNCTION(tnx$rollback)
 
 	FB_UDR_MESSAGE(
 		InMessage,

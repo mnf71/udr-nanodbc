@@ -30,6 +30,10 @@ namespace nanoudr
 // UDR Result class implementation
 //
 
+#ifndef RSRS_H
+	class attachment_resources;
+#endif
+
 #ifndef CONN_H
 	class connection;
 #endif
@@ -37,12 +41,17 @@ namespace nanoudr
 class result : public nanodbc::result
 {
 public:
-	explicit result(class nanoudr::connection& conn, class nanodbc::result&& rslt);
+	explicit result(
+		class attachment_resources& att_resources, class nanoudr::connection& conn, 
+		class nanodbc::result&& rslt);
 	~result() noexcept;
 
 	nanoudr::connection* connection();
 
+	attachment_resources* attachment() { return att_resources_; };
+
 private:
+	attachment_resources* att_resources_;
 	nanoudr::connection* conn_;
 };
 

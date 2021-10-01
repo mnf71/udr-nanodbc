@@ -72,131 +72,131 @@ AS
 BEGIN
 
   FUNCTION valid(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_is_valid'
+    EXTERNAL NAME 'nano!rslt$valid'
     ENGINE UDR;
 
   FUNCTION release_(rslt TY$POINTER NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!rslt_release'
+    EXTERNAL NAME 'nano!rslt$release'
     ENGINE UDR;
 
   FUNCTION connection(rslt TY$POINTER NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!rslt_connection'
+    EXTERNAL NAME 'nano!rslt$connection'
     ENGINE UDR;
 
   FUNCTION rowset_size(rslt TY$POINTER NOT NULL) RETURNS INTEGER
-    EXTERNAL NAME 'nano!rslt_rowset_size'
+    EXTERNAL NAME 'nano!rslt$rowset_size'
     ENGINE UDR;
 
   FUNCTION affected_rows(rslt TY$POINTER NOT NULL) RETURNS INTEGER
-    EXTERNAL NAME 'nano!rslt_affected_rows'
+    EXTERNAL NAME 'nano!rslt$affected_rows'
     ENGINE UDR;
 
   FUNCTION has_affected_rows(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_has_affected_rows'
+    EXTERNAL NAME 'nano!rslt$has_affected_rows'
     ENGINE UDR;
 
   FUNCTION rows_(rslt TY$POINTER NOT NULL) RETURNS INTEGER
-    EXTERNAL NAME 'nano!rslt_rows'
+    EXTERNAL NAME 'nano!rslt$rows'
     ENGINE UDR;
 
   FUNCTION columns(rslt TY$POINTER NOT NULL) RETURNS SMALLINT
-    EXTERNAL NAME 'nano!rslt_columns'
+    EXTERNAL NAME 'nano!rslt$columns'
     ENGINE UDR;
 
   ------------------------------------------------------------------------------
 
   FUNCTION first_(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_first'
+    EXTERNAL NAME 'nano!rslt$first'
     ENGINE UDR;
 
   FUNCTION last_(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_last'
+    EXTERNAL NAME 'nano!rslt$last'
     ENGINE UDR;
 
   FUNCTION next_(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_next'
+    EXTERNAL NAME 'nano!rslt$next'
     ENGINE UDR;
 
   FUNCTION prior_(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_prior'
+    EXTERNAL NAME 'nano!rslt$prior'
     ENGINE UDR;
 
   FUNCTION move(rslt TY$POINTER NOT NULL, row_ INTEGER NOT NULL) RETURNS BOOLEAN
-     EXTERNAL NAME 'nano!rslt_move'
+     EXTERNAL NAME 'nano!rslt$move'
      ENGINE UDR;
 
   FUNCTION skip_(rslt TY$POINTER NOT NULL, row_ INTEGER NOT NULL) RETURNS BOOLEAN
-     EXTERNAL NAME 'nano!rslt_skip'
+     EXTERNAL NAME 'nano!rslt$skip'
      ENGINE UDR;
 
   FUNCTION position_(rslt TY$POINTER NOT NULL) RETURNS INTEGER
-    EXTERNAL NAME 'nano!rslt_position'
+    EXTERNAL NAME 'nano!rslt$position'
     ENGINE UDR;
 
   FUNCTION at_end(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_at_end'
+    EXTERNAL NAME 'nano!rslt$at_end'
     ENGINE UDR;
 
   ------------------------------------------------------------------------------
 
   FUNCTION unbind(rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL)
     RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!rslt_unbind'
+    EXTERNAL NAME 'nano!rslt$unbind'
     ENGINE UDR;
 
   FUNCTION is_null(rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL)
     RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_is_null'
+    EXTERNAL NAME 'nano!rslt$is_null'
     ENGINE UDR;
 
   FUNCTION is_bound(rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL)
     RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_is_bound'
+    EXTERNAL NAME 'nano!rslt$is_bound'
     ENGINE UDR;
 
   FUNCTION column_(rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL)
     RETURNS SMALLINT
-    EXTERNAL NAME 'nano!rslt_column'
+    EXTERNAL NAME 'nano!rslt$column'
     ENGINE UDR;
 
   FUNCTION column_name(rslt TY$POINTER NOT NULL, index_ SMALLINT NOT NULL)
     RETURNS VARCHAR(63) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!rslt_column_name'
+    EXTERNAL NAME 'nano!rslt$column_name'
     ENGINE UDR;
 
   FUNCTION column_size(rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL)
     RETURNS INTEGER
-    EXTERNAL NAME 'nano!rslt_column_size'
+    EXTERNAL NAME 'nano!rslt$column_size'
     ENGINE UDR;
 
   FUNCTION column_decimal_digits(rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL)
     RETURNS INTEGER
-    EXTERNAL NAME 'nano!rslt_column_decimal_digits'
+    EXTERNAL NAME 'nano!rslt$column_decimal_digits'
     ENGINE UDR;
 
   FUNCTION column_datatype(rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL)
     RETURNS INTEGER
-    EXTERNAL NAME 'nano!rslt_column_datatype'
+    EXTERNAL NAME 'nano!rslt$column_datatype'
     ENGINE UDR;
 
   FUNCTION column_datatype_name(rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL)
     RETURNS VARCHAR(63) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!rslt_column_datatype_name'
+    EXTERNAL NAME 'nano!rslt$column_datatype_name'
     ENGINE UDR;
 
   FUNCTION column_c_datatype(rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL)
     RETURNS INTEGER
-    EXTERNAL NAME 'nano!rslt_column_c_datatype'
+    EXTERNAL NAME 'nano!rslt$column_c_datatype'
     ENGINE UDR;
 
   FUNCTION next_result(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_next_result'
+    EXTERNAL NAME 'nano!rslt$next_result'
     ENGINE UDR;
 
   ------------------------------------------------------------------------------
 
   FUNCTION has_data(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!rslt_has_data'
+    EXTERNAL NAME 'nano!rslt$has_data'
     ENGINE UDR;
 
 END^

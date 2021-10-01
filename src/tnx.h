@@ -30,6 +30,10 @@ namespace nanoudr
 // UDR Transaction class implementation
 //
 
+#ifndef RSRS_H
+	class attachment_resources;
+#endif
+
 #ifndef CONN_H
 	class connection;
 #endif
@@ -37,12 +41,15 @@ namespace nanoudr
 class transaction : public nanodbc::transaction
 {
 public:
-	explicit transaction(class nanoudr::connection& conn);
+	explicit transaction(class attachment_resources& att_resources, class nanoudr::connection& conn);
 	~transaction() noexcept;
 
 	nanoudr::connection* connection();
 
+	attachment_resources* attachment() { return att_resources_; };
+
 private:
+	attachment_resources* att_resources_;
 	nanoudr::connection* conn_;
 };
 

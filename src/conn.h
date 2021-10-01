@@ -30,13 +30,23 @@ namespace nanoudr
 // UDR Connection class implementation
 //
 
+#ifndef RSRS_H
+	class attachment_resources;
+#endif
+
 class connection : public nanodbc::connection
 {
-public:
-	connection();
-	connection(const nanodbc::string& dsn, const nanodbc::string& user, const nanodbc::string& pass, long timeout = 0);
-	connection(const nanodbc::string& connection_string, long timeout = 0);
+public: 
+	connection(class attachment_resources& att_resources);
+	connection(class attachment_resources& att_resources, const nanodbc::string& dsn, const nanodbc::string& user, 
+		const nanodbc::string& pass, long timeout = 0);
+	connection(class attachment_resources& att_resources, const nanodbc::string& connection_string, long timeout = 0);
 	~connection() noexcept;
+
+	attachment_resources* attachment() { return att_resources_; };
+
+private:
+	attachment_resources* att_resources_;
 };
 
 } // namespace nanoudr

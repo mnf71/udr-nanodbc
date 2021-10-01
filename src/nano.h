@@ -26,6 +26,7 @@
 #define NANO_H
 
 #define FB_UDR_STATUS_TYPE ::Firebird::ThrowStatusWrapper
+#define FB_UDR_CONTEXT_TYPE ::Firebird::IExternalContext
 
 #include <ibase.h>
 #include <UdrCppEngine.h>
@@ -220,8 +221,7 @@ namespace nanoudr
 //
 
 #define	NANOUDR_RESOURCES	\
-attachment_resources*	\
-	att_resources = udr_resources.attachment(status, context);	\
+attachment_resources* att_resources = udr_resources.attachment(status, context);	\
 if (att_resources == nullptr)	\
 {	\
 	ISC_LONG exception_number = udr_resources.resource_exception.number;	\

@@ -213,41 +213,41 @@ BEGIN
       query VARCHAR(8191) CHARACTER SET UTF8,
       timeout INTEGER NOT NULL
     ) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!stmt_statement'
+    EXTERNAL NAME 'nano!stmt$statement'
     ENGINE UDR;
 
   FUNCTION valid(stmt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!stmt_valid'
+    EXTERNAL NAME 'nano!stmt$valid'
     ENGINE UDR;
 
   FUNCTION release_(stmt TY$POINTER NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!stmt_release'
+    EXTERNAL NAME 'nano!stmt$release'
     ENGINE UDR;
 
   FUNCTION connected(stmt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!stmt_connected'
+    EXTERNAL NAME 'nano!stmt$connected'
     ENGINE UDR;
 
   FUNCTION connection(stmt TY$POINTER NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!stmt_connection'
+    EXTERNAL NAME 'nano!stmt$connection'
     ENGINE UDR;
 
   FUNCTION open_(
       stmt TY$POINTER NOT NULL, conn TY$POINTER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_open'
+    EXTERNAL NAME 'nano!stmt$open'
     ENGINE UDR;
 
   FUNCTION is_open(stmt TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!stmt_is_open'
+    EXTERNAL NAME 'nano!stmt$is_open'
     ENGINE UDR;
 
   FUNCTION close_(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_close'
+    EXTERNAL NAME 'nano!stmt$close'
     ENGINE UDR;
 
   FUNCTION cancel(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_cancel'
+    EXTERNAL NAME 'nano!stmt$cancel'
     ENGINE UDR;
 
   FUNCTION prepare_direct(
@@ -256,7 +256,7 @@ BEGIN
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_prepare_direct'
+    EXTERNAL NAME 'nano!stmt$prepare_direct'
     ENGINE UDR;
 
   FUNCTION prepare_(
@@ -264,14 +264,14 @@ BEGIN
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_prepare'
+    EXTERNAL NAME 'nano!stmt$prepare'
     ENGINE UDR;
 
   FUNCTION timeout(
       stmt TY$POINTER NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_timeout'
+    EXTERNAL NAME 'nano!stmt$timeout'
     ENGINE UDR;
 
   FUNCTION execute_direct(
@@ -281,7 +281,7 @@ BEGIN
       batch_operations INTEGER NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!stmt_execute_direct'
+    EXTERNAL NAME 'nano!stmt$execute_direct'
     ENGINE UDR;
 
   FUNCTION just_execute_direct(
@@ -291,7 +291,7 @@ BEGIN
       batch_operations INTEGER NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_just_execute_direct'
+    EXTERNAL NAME 'nano!stmt$just_execute_direct'
     ENGINE UDR;
 
   FUNCTION execute_(
@@ -299,7 +299,7 @@ BEGIN
       batch_operations INTEGER NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!stmt_execute'
+    EXTERNAL NAME 'nano!stmt$execute'
     ENGINE UDR;
 
   FUNCTION just_execute(
@@ -307,7 +307,7 @@ BEGIN
       batch_operations INTEGER NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_just_execute'
+    EXTERNAL NAME 'nano!stmt$just_execute'
     ENGINE UDR;
 
   FUNCTION procedure_columns(
@@ -317,29 +317,29 @@ BEGIN
       procedure_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL,
       column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
     ) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!stmt_procedure_columns'
+    EXTERNAL NAME 'nano!stmt$procedure_columns'
     ENGINE UDR;
 
   FUNCTION affected_rows(stmt TY$POINTER NOT NULL) RETURNS INTEGER
-    EXTERNAL NAME 'nano!stmt_affected_rows'
+    EXTERNAL NAME 'nano!stmt$affected_rows'
     ENGINE UDR;
 
   FUNCTION columns(stmt TY$POINTER NOT NULL) RETURNS SMALLINT
-    EXTERNAL NAME 'nano!stmt_columns'
+    EXTERNAL NAME 'nano!stmt$columns'
     ENGINE UDR;
 
   FUNCTION reset_parameters(stmt TY$POINTER NOT NULL, timeout INTEGER NOT NULL)
     RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_reset_parameters'
+    EXTERNAL NAME 'nano!stmt$reset_parameters'
     ENGINE UDR;
 
   FUNCTION parameters(stmt TY$POINTER NOT NULL) RETURNS SMALLINT
-    EXTERNAL NAME 'nano!stmt_parameters'
+    EXTERNAL NAME 'nano!stmt$parameters'
     ENGINE UDR;
 
   FUNCTION parameter_size(stmt TY$POINTER NOT NULL, param_index SMALLINT NOT NULL)
     RETURNS INTEGER
-    EXTERNAL NAME 'nano!stmt_parameter_size'
+    EXTERNAL NAME 'nano!stmt$parameter_size'
     ENGINE UDR;
 
   ------------------------------------------------------------------------------
@@ -349,7 +349,7 @@ BEGIN
       param_index SMALLINT NOT NULL,
       value_ SMALLINT
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
   FUNCTION bind_integer(
@@ -357,7 +357,7 @@ BEGIN
       param_index SMALLINT NOT NULL,
       value_ INTEGER
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
 /*
@@ -366,7 +366,7 @@ BEGIN
       param_index SMALLINT NOT NULL,
       value_ BIGINT
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 */
 
@@ -375,7 +375,7 @@ BEGIN
       param_index SMALLINT NOT NULL,
       value_ FLOAT
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
   FUNCTION bind_double(
@@ -383,7 +383,7 @@ BEGIN
       param_index SMALLINT NOT NULL,
       value_ DOUBLE PRECISION
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
   FUNCTION bind_varchar(
@@ -392,7 +392,7 @@ BEGIN
       value_ VARCHAR(32765) CHARACTER SET NONE,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
   FUNCTION bind_char(
@@ -401,7 +401,7 @@ BEGIN
       value_ CHAR(32767) CHARACTER SET NONE,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
   FUNCTION bind_u8_varchar(
@@ -410,7 +410,7 @@ BEGIN
       value_ VARCHAR(8191) CHARACTER SET UTF8,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
   FUNCTION bind_u8_char(
@@ -419,7 +419,7 @@ BEGIN
       value_ CHAR(8191) CHARACTER SET UTF8,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
   FUNCTION bind_blob(
@@ -427,7 +427,7 @@ BEGIN
       param_index SMALLINT NOT NULL,
       value_ BLOB CHARACTER SET NONE
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
   FUNCTION bind_boolean(
@@ -435,7 +435,7 @@ BEGIN
       param_index SMALLINT NOT NULL,
       value_ BOOLEAN
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
   FUNCTION bind_date(
@@ -443,7 +443,7 @@ BEGIN
       param_index SMALLINT NOT NULL,
       value_ DATE
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
 /*
@@ -452,7 +452,7 @@ BEGIN
       param_index SMALLINT NOT NULL,
       value_ TIME
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 */
 
@@ -461,7 +461,7 @@ BEGIN
       param_index SMALLINT NOT NULL,
       value_ TIMESTAMP
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind'
+    EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
   FUNCTION bind_null(
@@ -469,7 +469,7 @@ BEGIN
       param_index SMALLINT NOT NULL,
       batch_size INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_bind_null'
+    EXTERNAL NAME 'nano!stmt$bind_null'
     ENGINE UDR;
 
   ------------------------------------------------------------------------------
@@ -481,7 +481,7 @@ BEGIN
       size_ INTEGER NOT NULL,
       scale_ SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt_describe_parameters'
+    EXTERNAL NAME 'nano!stmt$describe_parameters'
     ENGINE UDR;
 
 END^

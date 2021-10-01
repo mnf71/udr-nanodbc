@@ -22,27 +22,27 @@ AS
 BEGIN
 
   FUNCTION transaction_(conn TY$POINTER NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!tnx_transaction'
+    EXTERNAL NAME 'nano!tnx$transaction'
     ENGINE UDR;
 
   FUNCTION valid(tnx TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!tnx_valid'
+    EXTERNAL NAME 'nano!tnx$valid'
     ENGINE UDR;
 
   FUNCTION release_(tnx ty$pointer NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!tnx_release'
+    EXTERNAL NAME 'nano!tnx$release'
     ENGINE UDR;
 
   FUNCTION connection(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!tnx_connection'
+    EXTERNAL NAME 'nano!tnx$connection'
     ENGINE UDR;
 
   FUNCTION commit_(tnx TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!tnx_commit'
+    EXTERNAL NAME 'nano!tnx$commit'
     ENGINE UDR;
 
   FUNCTION rollback_(tnx TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!tnx_rollback'
+    EXTERNAL NAME 'nano!tnx$rollback'
     ENGINE UDR;
 
 END^

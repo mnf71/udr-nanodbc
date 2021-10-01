@@ -87,6 +87,8 @@ bind_type params_batch::touch(short param_index)
 		: std::holds_alternative<std::vector<nanodbc::date>>(vec) ? bind_type::NANODBC_DATE
 		: std::holds_alternative<std::vector<nanodbc::time>>(vec) ? bind_type::NANODBC_TIME
 		: std::holds_alternative<std::vector<nanodbc::timestamp>>(vec) ? bind_type::NANODBC_TIMESTAMP
+		: std::holds_alternative<std::vector<nanodbc::string::value_type>>(vec) ? bind_type::NANODBC_S_VALUE_TYPE
+		: std::holds_alternative<std::vector<nanodbc::wide_string::value_type>>(vec) ? bind_type::NANODBC_W_VALUE_TYPE
 		: std::holds_alternative<std::vector<nanodbc::string>>(vec) ? bind_type::NANODBC_STRING
 		: std::holds_alternative<std::vector<nanodbc::wide_string>>(vec) ? bind_type::NANODBC_WIDE_STRING
 		: bind_type::NANODBC_UNKNOWN;
@@ -133,21 +135,29 @@ short params_batch::count()
 // UDR Statement class implementation
 //
 
-statement::statement() : nanodbc::statement()
+statement::statement(class attachment_resources& att_resources) : nanodbc::statement()
 {
+	att_resources_ = &att_resources;
+	att_resources_->statements.retain(this);
 	params_ = nullptr;
 	conn_ = nullptr;
 }
 
-statement::statement(class nanoudr::connection& conn) : nanodbc::statement(conn)
+statement::statement(class attachment_resources& att_resources, class nanoudr::connection& conn) 
+	: nanodbc::statement(conn)
 {
+	att_resources_ = &att_resources;
+	att_resources_->statements.retain(this);
 	params_ = nullptr;
 	conn_ = &conn;
 }
 
-statement::statement(class nanoudr::connection& conn, const nanodbc::string& query, long timeout) 
+statement::statement(class attachment_resources& att_resources, class nanoudr::connection& conn, 
+	const nanodbc::string& query, long timeout)	
 	: nanodbc::statement(conn, query, timeout)
 {
+	att_resources_ = &att_resources;
+	att_resources_->statements.retain(this);
 	prepare_params();
 	conn_ = &conn;
 }
@@ -191,7 +201,7 @@ nanoudr::result* statement::execute_direct(
 	nanodbc::result rslt =
 		nanodbc::statement::execute_direct(conn, query, batch_operations, timeout);
 	conn_ = &conn;
-	return new nanoudr::result(*this->connection(), std::move(rslt));
+	return new nanoudr::result(*this->attachment(), *this->connection(), std::move(rslt));
 }
 
 void statement::just_execute_direct(
@@ -206,7 +216,7 @@ nanoudr::result* statement::execute(long batch_operations, long timeout)
 {
 	nanodbc::result rslt =
 		nanodbc::statement::execute(batch_operations, timeout);
-	return new nanoudr::result(*this->connection(), std::move(rslt));
+	return new nanoudr::result(*this->attachment(), *this->connection(), std::move(rslt));
 }
 
 void statement::just_execute(long batch_operations, long timeout)
@@ -232,6 +242,9 @@ void statement::bind_params(long batch_operations)
 {
 	if (params_)
 	{
+		attachment_resources* att_resources = att_resources_;
+		FB_UDR_STATUS_TYPE* status = att_resources_->context()->status;
+		FB_UDR_CONTEXT_TYPE* context = att_resources_->context()->context;
 		bool batch_operation = !(batch_operations == 1);
 		for (short param_index = 0; param_index < params_->count(); ++param_index)
 		{
@@ -350,6 +363,22 @@ void statement::bind_params(long batch_operations)
 						bind(param_index, params_->value<nanodbc::timestamp>(param_index, 0));
 					break;
 				}
+				case bind_type::NANODBC_S_VALUE_TYPE:
+				{
+					if (batch_operation)
+						bind(param_index, params_->data<nanodbc::string::value_type>(param_index), batch_operations, nulls_flag);
+					else
+						bind(param_index, params_->value<nanodbc::string::value_type>(param_index, 0));
+					break;
+				}
+				case bind_type::NANODBC_W_VALUE_TYPE:
+				{
+					if (batch_operation)
+						bind(param_index, params_->data<nanodbc::wide_string::value_type>(param_index), batch_operations, nulls_flag);
+					else
+						bind(param_index, params_->value<nanodbc::wide_string::value_type>(param_index, 0));
+					break;
+				}
 				case bind_type::NANODBC_STRING:
 				{
 					if (batch_operation)
@@ -366,10 +395,9 @@ void statement::bind_params(long batch_operations)
 						bind(param_index, (nanodbc::wide_char_t*)(params_->value<nanodbc::string>(param_index, 0)->c_str()));
 					break;
 				}
-				case bind_type::NANODBC_UNKNOWN:
-				default:
+				case bind_type::NANODBC_UNKNOWN: default:
 				{
-					throw("Binding unknow NANODBC datatype.");
+					BINDING_THROW("Not supported NANODBC data type.")
 					break;
 				}
 			}
@@ -388,7 +416,7 @@ params_batch* statement::params()
 //   query varchar(8191) character set utf8 default null,
 // 	 timeout integer not null default 0 
 //	) returns ty$pointer
-//	external name 'nano!stmt_statement'
+//	external name 'nano!stmt$statement'
 //	engine udr; 
 //
 // statement (null, null, ...) returns new un-prepared statement
@@ -396,7 +424,7 @@ params_batch* statement::params()
 // statement (?, ?, ...) returns prepared a statement using the given connection and query
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_statement)
+FB_UDR_BEGIN_FUNCTION(stmt$statement)
 
 	unsigned in_count;
 
@@ -445,18 +473,18 @@ FB_UDR_BEGIN_FUNCTION(stmt_statement)
 					if (!in->queryNull)
 					{
 						U8_VARIYNG(in, query);
-						stmt = new nanoudr::statement(*conn, NANODBC_TEXT(in->query.str), in->timeout);
+						stmt = new nanoudr::statement(
+							*att_resources, *conn, NANODBC_TEXT(in->query.str), in->timeout);
 					}
 					else
-						stmt = new nanoudr::statement(*conn);
+						stmt = new nanoudr::statement(*att_resources, *conn);
 				}
 				else
 					NANOUDR_THROW(POINTER_CONN_INVALID)
 			}
 			else
-				stmt = new nanoudr::statement();
+				stmt = new nanoudr::statement(*att_resources);
 			udr_helper.fb_ptr(out->stmt.str, (int64_t)stmt);
-			att_resources->statements.retain(stmt);
 			out->stmtNull = FB_FALSE;
 		}	
 		catch (std::runtime_error const& e)
@@ -471,11 +499,11 @@ FB_UDR_END_FUNCTION
 // create function valid (
 //	 stmt ty$pointer not null, 
 //	) returns boolean
-//	external name 'nano!stmt_valid'
+//	external name 'nano!stmt$valid'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_valid)
+FB_UDR_BEGIN_FUNCTION(stmt$valid)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -503,11 +531,11 @@ FB_UDR_END_FUNCTION
 // create function release_ (
 //	 stmt ty$pointer not null 
 // ) returns ty$pointer
-// external name 'nano!stmt_release'
+// external name 'nano!stmt$release'
 // engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_release)
+FB_UDR_BEGIN_FUNCTION(stmt$release)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -547,11 +575,11 @@ FB_UDR_END_FUNCTION
 // create function connected (
 //	 stmt ty$pointer not null 
 //	) returns boolean
-//	external name 'nano!stmt_connected'
+//	external name 'nano!stmt$connected'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_connected)
+FB_UDR_BEGIN_FUNCTION(stmt$connected)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -590,11 +618,11 @@ FB_UDR_END_FUNCTION
 // create function connection (
 //	 stmt ty$pointer not null 
 //	) returns ty$pointer
-//	external name 'nano!stmt_connection'
+//	external name 'nano!stmt$connection'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_connection)
+FB_UDR_BEGIN_FUNCTION(stmt$connection)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -635,11 +663,11 @@ FB_UDR_END_FUNCTION
 //	 stmt ty$pointer not null, 
 //	 conn ty$pointer not null
 // ) returns ty$nano_blank
-// external name 'nano!stmt_open'
+// external name 'nano!stmt$open'
 // engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_open)
+FB_UDR_BEGIN_FUNCTION(stmt$open)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -687,11 +715,11 @@ FB_UDR_END_FUNCTION
 // create function is_open (
 //	 stmt ty$pointer not null 
 //	) returns boolean
-//	external name 'nano!stmt_is_open'
+//	external name 'nano!stmt$is_open'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_is_open)
+FB_UDR_BEGIN_FUNCTION(stmt$is_open)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -730,11 +758,11 @@ FB_UDR_END_FUNCTION
 // create function close_ (
 //	 stmt ty$pointer not null 
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_close'
+//	external name 'nano!stmt$close'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_close)
+FB_UDR_BEGIN_FUNCTION(stmt$close)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -775,11 +803,11 @@ FB_UDR_END_FUNCTION
 // create function cancel_ (
 //	 stmt ty$pointer not null 
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_cancel'
+//	external name 'nano!stmt$cancel'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_cancel)
+FB_UDR_BEGIN_FUNCTION(stmt$cancel)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -823,11 +851,11 @@ FB_UDR_END_FUNCTION
 //   query varchar(8191) character set utf8 not null,
 // 	 timeout integer not null default 0 
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_prepare_direct'
+//	external name 'nano!stmt$prepare_direct'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_prepare_direct)
+FB_UDR_BEGIN_FUNCTION(stmt$prepare_direct)
 
 	unsigned in_count;
 
@@ -900,11 +928,11 @@ FB_UDR_END_FUNCTION
 //   query varchar(8191) character set utf8 not null,
 // 	 timeout integer not null default 0 
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_prepare'
+//	external name 'nano!stmt$prepare'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_prepare)
+FB_UDR_BEGIN_FUNCTION(stmt$prepare)
 
 	unsigned in_count;
 
@@ -969,11 +997,11 @@ FB_UDR_END_FUNCTION
 //	 stmt ty$pointer not null, 
 // 	 timeout integer not null default 0 
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_timeout'
+//	external name 'nano!stmt$timeout'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_timeout)
+FB_UDR_BEGIN_FUNCTION(stmt$timeout)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1019,11 +1047,11 @@ FB_UDR_END_FUNCTION
 // 	 batch_operations integer not null default 1,
 // 	 timeout integer not null default 0 
 //	) returns ty$pointer
-//	external name 'nano!stmt_execute_direct'
+//	external name 'nano!stmt$execute_direct'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_execute_direct)
+FB_UDR_BEGIN_FUNCTION(stmt$execute_direct)
 
 	unsigned in_count;
 
@@ -1076,7 +1104,6 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute_direct)
 					nanoudr::result* rslt =
 						stmt->execute_direct(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
 					udr_helper.fb_ptr(out->rslt.str, (int64_t)rslt);
-					att_resources->results.retain(rslt);
 					out->rsltNull = FB_FALSE;
 				}
 				else
@@ -1101,11 +1128,11 @@ FB_UDR_END_FUNCTION
 // 	 batch_operations integer not null default 1 
 // 	 timeout integer not null default 0 
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_just_execute_direct'
+//	external name 'nano!stmt$just_execute_direct'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_just_execute_direct)
+FB_UDR_BEGIN_FUNCTION(stmt$just_execute_direct)
 
 	unsigned in_count;
 
@@ -1179,11 +1206,11 @@ FB_UDR_END_FUNCTION
 // 	 batch_operations integer not null default 1, 
 // 	 timeout integer not null default 0 
 //	) returns ty$pointer
-//	external name 'nano!stmt_execute'
+//	external name 'nano!stmt$execute'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_execute)
+FB_UDR_BEGIN_FUNCTION(stmt$execute)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1209,7 +1236,6 @@ FB_UDR_BEGIN_FUNCTION(stmt_execute)
 				stmt->bind_params(in->batch_operations);
 				nanoudr::result* rslt = stmt->execute(in->batch_operations, in->timeout);
 				udr_helper.fb_ptr(out->rslt.str, (int64_t)rslt);
-				att_resources->results.retain(rslt);
 				out->rsltNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1229,11 +1255,11 @@ FB_UDR_END_FUNCTION
 // 	 batch_operations integer not null default 1,
 // 	 timeout integer not null default 0 
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_just_execute'
+//	external name 'nano!stmt$just_execute'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_just_execute)
+FB_UDR_BEGIN_FUNCTION(stmt$just_execute)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1280,11 +1306,11 @@ FB_UDR_END_FUNCTION
 //	 procedure_ varchar(63) character set utf8 not null, 
 //	 column_ varchar(63) character set utf8 not null 
 //	) returns ty$pointer
-//	external name 'nano!stmt_procedure_columns'
+//	external name 'nano!stmt$procedure_columns'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_procedure_columns)
+FB_UDR_BEGIN_FUNCTION(stmt$procedure_columns)
 
 	unsigned in_count;
 
@@ -1337,7 +1363,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_procedure_columns)
 					stmt->procedure_columns(NANODBC_TEXT(in->catalog.str), NANODBC_TEXT(in->schema.str), 
 						NANODBC_TEXT(in->procedure.str), NANODBC_TEXT(in->column.str));
 				udr_helper.fb_ptr(
-					out->rslt.str, (int64_t)(new nanoudr::result(*stmt->connection(), std::move(rslt))));
+					out->rslt.str, (int64_t)(new nanoudr::result(*att_resources, *stmt->connection(), std::move(rslt))));
 				out->rsltNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1355,11 +1381,11 @@ FB_UDR_END_FUNCTION
 // create function affected_rows (
 //	 stmt ty$pointer not null 
 //	) returns integer
-//	external name 'nano!stmt_affected_rows'
+//	external name 'nano!stmt$affected_rows'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_affected_rows)
+FB_UDR_BEGIN_FUNCTION(stmt$affected_rows)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1398,11 +1424,11 @@ FB_UDR_END_FUNCTION
 // create function columns (
 //	 stmt ty$pointer not null 
 //	) returns smallint
-//	external name 'nano!stmt_columns'
+//	external name 'nano!stmt$columns'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_columns)
+FB_UDR_BEGIN_FUNCTION(stmt$columns)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1442,11 +1468,11 @@ FB_UDR_END_FUNCTION
 //	 stmt ty$pointer not null, 
 // 	 timeout integer not null default 0 
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_reset_parameters'
+//	external name 'nano!stmt$reset_parameters'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_reset_parameters)
+FB_UDR_BEGIN_FUNCTION(stmt$reset_parameters)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1487,11 +1513,11 @@ FB_UDR_END_FUNCTION
 // create function parameters  ( 
 //	 stmt ty$pointer not null 
 //	) returns smallint
-//	external name 'nano!stmt_parameters'
+//	external name 'nano!stmt$parameters'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_parameters)
+FB_UDR_BEGIN_FUNCTION(stmt$parameters)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1531,11 +1557,11 @@ FB_UDR_END_FUNCTION
 //	 stmt ty$pointer not null, 
 //	 param_index smallint not null
 //	) returns integer
-//	external name 'nano!stmt_parameter_size'
+//	external name 'nano!stmt$parameter_size'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_parameter_size)
+FB_UDR_BEGIN_FUNCTION(stmt$parameter_size)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1581,10 +1607,10 @@ FB_UDR_END_FUNCTION
 //   value_	[fb_type],
 //   param_size smallint default null
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_bind'
+//	external name 'nano!stmt$bind'
 //	engine udr; 
 
-FB_UDR_BEGIN_FUNCTION(stmt_bind)
+FB_UDR_BEGIN_FUNCTION(stmt$bind)
 
 	unsigned in_count;
 
@@ -1722,12 +1748,12 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 							if (null_flag)
 								params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), null_flag);
 							else
-								BINDING_THROW("Binding BLOB datatype will be develop.")
+								BINDING_THROW("Binding BLOB to be developed.")
 							break;
 						}
 						case SQL_ARRAY: // array
 						{
-							BINDING_THROW("Binding SQL_ARRAY datatype not will support.")
+							BINDING_THROW("Binding SQL_ARRAY not supported.")
 							break;
 						}
 						case SQL_QUAD: // blob_id 
@@ -1735,7 +1761,7 @@ FB_UDR_BEGIN_FUNCTION(stmt_bind)
 							if (null_flag)
 								params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), null_flag);
 							else
-								BINDING_THROW("Binding BLOB datatype will be develop.")
+								BINDING_THROW("Binding BLOB_ID to be developed.")
 							break;
 						}
 						case SQL_TYPE_TIME: // time
@@ -1820,11 +1846,11 @@ FB_UDR_END_FUNCTION
 // 	 param_index smallint not null,
 // 	 batch_size integer not null default 1 
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_bind_null'
+//	external name 'nano!stmt$bind_null'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_bind_null)
+FB_UDR_BEGIN_FUNCTION(stmt$bind_null)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1870,11 +1896,11 @@ FB_UDR_END_FUNCTION
 // 	 size_ integer not null,
 // 	 scale_ smallint not null default 0
 //	) returns ty$nano_blank
-//	external name 'nano!stmt_describe_parameters
+//	external name 'nano!stmt$describe_parameters
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt_describe_parameters)
+FB_UDR_BEGIN_FUNCTION(stmt$describe_parameters)
 
 	FB_UDR_MESSAGE(
 		InMessage,

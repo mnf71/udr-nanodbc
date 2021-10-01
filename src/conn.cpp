@@ -33,17 +33,25 @@ namespace nanoudr
 // UDR Connection class implementation
 //
 
-connection::connection() : nanodbc::connection()
+connection::connection(class attachment_resources& att_resources) : nanodbc::connection()
 {
+	att_resources_ = &att_resources;
+	att_resources_->connections.retain(this);
 }
 
-connection::connection(const nanodbc::string& dsn, const nanodbc::string& user, const nanodbc::string& pass, long timeout) 
+connection::connection(
+	class attachment_resources& att_resources, const nanodbc::string& dsn, const nanodbc::string& user, const nanodbc::string& pass, long timeout)
 	: nanodbc::connection(dsn, user, pass, timeout)
 {
+	att_resources_ = &att_resources;
+	att_resources_->connections.retain(this);
 }
 
-connection::connection(const nanodbc::string& connection_string, long timeout) : nanodbc::connection(connection_string, timeout)
+connection::connection(class attachment_resources& att_resources, const nanodbc::string& connection_string, long timeout) 
+	: nanodbc::connection(connection_string, timeout)
 {
+	att_resources_ = &att_resources;
+	att_resources_->connections.retain(this);
 }
 
 connection::~connection()
@@ -58,7 +66,7 @@ connection::~connection()
 //	 pass varchar(63) character set utf8 default null, 
 //	 timeout integer not null default 0 
 //	) returns ty$pointer
-//	external name 'nano!conn_connection'
+//	external name 'nano!conn$connection'
 //	engine udr; 
 //
 // connection (null, null, null, ...) returns new connection object, initially not connected	
@@ -66,7 +74,7 @@ connection::~connection()
 // connection (?, ?, ?, ...) returns new connection object and immediately connect by SQLConnect
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_connection)
+FB_UDR_BEGIN_FUNCTION(conn$connection)
 
 	unsigned in_count;
 
@@ -114,16 +122,15 @@ FB_UDR_BEGIN_FUNCTION(conn_connection)
 			if (in->userNull && in->passNull)
 			{
 				if (!in->attrNull) 
-					conn = new nanoudr::connection(NANODBC_TEXT(in->attr.str), in->timeout);
+					conn = new nanoudr::connection(*att_resources, NANODBC_TEXT(in->attr.str), in->timeout);
 				else
-					conn = new nanoudr::connection();
+					conn = new nanoudr::connection(*att_resources);
 			}
 			else
 				conn =
-					new nanoudr::connection(NANODBC_TEXT(in->attr.str), NANODBC_TEXT(in->user.str), 
+					new nanoudr::connection(*att_resources, NANODBC_TEXT(in->attr.str), NANODBC_TEXT(in->user.str),
 						NANODBC_TEXT(in->pass.str), in->timeout);
 			udr_helper.fb_ptr(out->conn.str, (int64_t)conn);
-			att_resources->connections.retain(conn);
 			out->connNull = FB_FALSE;
 		}
 		catch (std::runtime_error const& e)
@@ -138,11 +145,11 @@ FB_UDR_END_FUNCTION
 // create function valid (
 //	 conn ty$pointer not null, 
 //	) returns boolean
-//	external name 'nano!conn_valid'
+//	external name 'nano!conn$valid'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_valid)
+FB_UDR_BEGIN_FUNCTION(conn$valid)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -170,11 +177,11 @@ FB_UDR_END_FUNCTION
 // create function release_ (
 //	 conn ty$pointer not null, 
 //	) returns ty$pointer
-//	external name 'nano!conn_release'
+//	external name 'nano!conn$release'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_release)
+FB_UDR_BEGIN_FUNCTION(conn$release)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -214,11 +221,11 @@ FB_UDR_END_FUNCTION
 // create function expunge (
 //	 conn ty$pointer not null, 
 //	) returns ty$nano_blank
-//	external name 'nano!conn_expunge'
+//	external name 'nano!conn$expunge'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_expunge)
+FB_UDR_BEGIN_FUNCTION(conn$expunge)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -258,11 +265,11 @@ FB_UDR_END_FUNCTION
 // create function allocate (
 //	 conn ty$pointer not null 
 //	) returns ty$nano_blank
-//	external name 'nano!conn_allocate'
+//	external name 'nano!conn$allocate'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_allocate)
+FB_UDR_BEGIN_FUNCTION(conn$allocate)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -302,11 +309,11 @@ FB_UDR_END_FUNCTION
 // create function deallocate (
 //	 conn ty$pointer not null 
 //	) returns ty$nano_blank
-//	external name 'nano!conn_deallocate'
+//	external name 'nano!conn$deallocate'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_deallocate)
+FB_UDR_BEGIN_FUNCTION(conn$deallocate)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -350,14 +357,14 @@ FB_UDR_END_FUNCTION
 // 	 pass varchar(64) character set utf8 default null, 
 //	 timeout integer not null default = 0
 //	) returns ty$nano_blank
-//	external name 'nano!conn_connect'
+//	external name 'nano!conn$connect'
 //	engine udr; 
 //
 // connect (?, ?, null, null, ...) returns blank and connect to the given data source by SQLDriverConnect
 // connect (?, ?, ?, ?, ...) returns blank and connect to the given data source by by SQLConnect
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_connect)
+FB_UDR_BEGIN_FUNCTION(conn$connect)
 
 	unsigned in_count;
 
@@ -429,11 +436,11 @@ FB_UDR_END_FUNCTION
 // create function connected (
 //	 conn ty$pointer not null 
 //	) returns boolean
-//	external name 'nano!conn_connected'
+//	external name 'nano!conn$connected'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_connected)
+FB_UDR_BEGIN_FUNCTION(conn$connected)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -472,11 +479,11 @@ FB_UDR_END_FUNCTION
 // create function disconnect_ (
 //	 conn ty$pointer not null 
 //	) returns ty$nano_blank
-//	external name 'nano!conn_disconnect'
+//	external name 'nano!conn$disconnect'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_disconnect)
+FB_UDR_BEGIN_FUNCTION(conn$disconnect)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -516,11 +523,11 @@ FB_UDR_END_FUNCTION
 // create function transactions (
 //	 conn ty$pointer not null 
 //	) returns integer
-//	external name 'nano!conn_transactions'
+//	external name 'nano!conn$transactions'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_transactions)
+FB_UDR_BEGIN_FUNCTION(conn$transactions)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -560,11 +567,11 @@ FB_UDR_END_FUNCTION
 //	 conn ty$pointer not null, 
 //	 info_type smallint not null
 //	) returns varchar(256) character set utf8
-//	external name 'nano!conn_get_info'
+//	external name 'nano!conn$get_info'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_get_info)
+FB_UDR_BEGIN_FUNCTION(conn$get_info)
 
 	unsigned out_count;
 
@@ -626,11 +633,11 @@ FB_UDR_END_FUNCTION
 // create function dbms_name (
 //	 conn ty$pointer not null 
 //	) returns varchar(128) character set utf8
-//	external name 'nano!conn_dbms_name'
+//	external name 'nano!conn$dbms_name'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_dbms_name)
+FB_UDR_BEGIN_FUNCTION(conn$dbms_name)
 
 	unsigned out_count;
 
@@ -691,11 +698,11 @@ FB_UDR_END_FUNCTION
 // create function dbms_version (
 //	 conn ty$pointer not null 
 //	) returns varchar(128) character set utf8
-//	external name 'nano!conn_dbms_version'
+//	external name 'nano!conn$dbms_version'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_dbms_version)
+FB_UDR_BEGIN_FUNCTION(conn$dbms_version)
 	
 	unsigned out_count;
 
@@ -756,11 +763,11 @@ FB_UDR_END_FUNCTION
 // create function driver_name (
 //	 conn ty$pointer not null 
 //	) returns varchar(128) character set utf8
-//	external name 'nano!conn_driver_name'
+//	external name 'nano!conn$driver_name'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_driver_name)
+FB_UDR_BEGIN_FUNCTION(conn$driver_name)
 
 	unsigned out_count;
 
@@ -821,11 +828,11 @@ FB_UDR_END_FUNCTION
 // create function database_name (
 //	 conn ty$pointer not null 
 //	) returns varchar(128) character set utf8
-//	external name 'nano!conn_database_name'
+//	external name 'nano!conn$database_name'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_database_name)
+FB_UDR_BEGIN_FUNCTION(conn$database_name)
 
 	unsigned out_count;
 
@@ -886,11 +893,11 @@ FB_UDR_END_FUNCTION
 // create function catalog_name (
 //	 conn ty$pointer not null 
 //	) returns varchar(128) character set utf8
-//	external name 'nano!conn_catalog_name'
+//	external name 'nano!conn$catalog_name'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(conn_catalog_name)
+FB_UDR_BEGIN_FUNCTION(conn$catalog_name)
 
 	unsigned out_count;
 

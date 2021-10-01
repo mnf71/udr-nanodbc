@@ -38,6 +38,12 @@ attachment_resources::~attachment_resources() noexcept
 	attachment_resources::expunge();
 }
 
+void attachment_resources::expunge()
+{
+	for (auto c : connections.conn()) connections.release(c);
+}
+
+
 const char* attachment_resources::locale(const char* set_locale)
 {
 	if (set_locale) att_locale = set_locale;
@@ -50,18 +56,16 @@ const char* attachment_resources::error_message(const char* last_error_message)
 	return att_error_message.c_str();
 }
 
-void attachment_resources::make_resources(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
+void attachment_resources::make_resources()
 {
+	FB_UDR_STATUS_TYPE* status = attachment_context.status;
+	FB_UDR_CONTEXT_TYPE* context = attachment_context.context;
+	
 	make_exceptions(status, context);
 	// ... other
 }
 
-void attachment_resources::expunge()
-{
-	for (auto c : connections.conn()) connections.release(c);
-}
-
-void attachment_resources::make_exceptions(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
+void attachment_resources::make_exceptions(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
 	IAttachment* att;
 	ITransaction* tra;
@@ -116,36 +120,36 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 //-----------------------------------------------------------------------------
 //	
 
-void attachment_resources::attachment_connections::retain(nanoudr::connection* conn)
+void attachment_resources::attachment_connections::retain(const nanoudr::connection* conn)
 {
-	conn_v.push_back(conn);
+	conn_v.push_back((nanoudr::connection*)(conn));
 }
 
-void attachment_resources::attachment_connections::expunge(nanoudr::connection* conn)
+void attachment_resources::attachment_connections::expunge(const nanoudr::connection* conn)
 {
 	conn_it = std::find(conn_v.begin(), conn_v.end(), conn);
 	if (conn_it != conn_v.end())
 	{
-		for (auto t : owner->transactions.tnx()) if (t->connection() == conn) owner->transactions.release(t);
-		for (auto s : owner->statements.stmt())	if (s->connection() == conn) owner->statements.release(s);
-		for (auto r : owner->results.rslt()) if (r->connection() == conn) owner->results.release(r);
+		for (auto t : outer->transactions.tnx()) if (t->connection() == conn) outer->transactions.release(t);
+		for (auto s : outer->statements.stmt())	if (s->connection() == conn) outer->statements.release(s);
+		for (auto r : outer->results.rslt()) if (r->connection() == conn) outer->results.release(r);
 	}
 }
 
-void attachment_resources::attachment_connections::release(nanoudr::connection* conn)
+void attachment_resources::attachment_connections::release(const nanoudr::connection* conn)
 {
 	conn_it = std::find(conn_v.begin(), conn_v.end(), conn);
 	if (conn_it != conn_v.end())
 	{
-		for (auto t : owner->transactions.tnx()) if (t->connection() == conn) owner->transactions.release(t);
-		for (auto s : owner->statements.stmt()) if (s->connection() == conn) owner->statements.release(s);
-		for (auto r : owner->results.rslt()) if (r->connection() == conn) owner->results.release(r);
+		for (auto t : outer->transactions.tnx()) if (t->connection() == conn) outer->transactions.release(t);
+		for (auto s : outer->statements.stmt()) if (s->connection() == conn) outer->statements.release(s);
+		for (auto r : outer->results.rslt()) if (r->connection() == conn) outer->results.release(r);
 		delete (nanoudr::connection*)(conn);
 		conn_v.erase(conn_it);
 	}
 }
 
-bool attachment_resources::attachment_connections::valid(nanoudr::connection* conn)
+bool attachment_resources::attachment_connections::valid(const nanoudr::connection* conn)
 {
 	return std::find(conn_v.begin(), conn_v.end(), conn) != conn_v.end();
 }
@@ -158,12 +162,12 @@ std::vector<nanoudr::connection*>& attachment_resources::attachment_connections:
 //-----------------------------------------------------------------------------
 //
 
-void attachment_resources::connection_transactions::retain(nanoudr::transaction* tnx)
+void attachment_resources::connection_transactions::retain(const nanoudr::transaction* tnx)
 {
-	tnx_v.push_back(tnx);
+	tnx_v.push_back((nanoudr::transaction*)(tnx));
 }
 
-void attachment_resources::connection_transactions::release(nanoudr::transaction* tnx)
+void attachment_resources::connection_transactions::release(const nanoudr::transaction* tnx)
 {
 	tnx_it = std::find(tnx_v.begin(), tnx_v.end(), tnx);
 	if (tnx_it != tnx_v.end())
@@ -173,7 +177,7 @@ void attachment_resources::connection_transactions::release(nanoudr::transaction
 	}
 }
 
-bool attachment_resources::connection_transactions::valid(nanoudr::transaction* tnx)
+bool attachment_resources::connection_transactions::valid(const nanoudr::transaction* tnx)
 {
 	return std::find(tnx_v.begin(), tnx_v.end(), tnx) != tnx_v.end();
 }
@@ -186,12 +190,12 @@ std::vector<nanoudr::transaction*>& attachment_resources::connection_transaction
 //-----------------------------------------------------------------------------
 //
 
-void attachment_resources::connection_statements::retain(nanoudr::statement* stmt)
+void attachment_resources::connection_statements::retain(const nanoudr::statement* stmt)
 {
-	stmt_v.push_back(stmt);
+	stmt_v.push_back((nanoudr::statement*)(stmt));
 }
 
-void attachment_resources::connection_statements::release(nanoudr::statement* stmt)
+void attachment_resources::connection_statements::release(const nanoudr::statement* stmt)
 {
 	stmt_it = std::find(stmt_v.begin(), stmt_v.end(), stmt);
 	if (stmt_it != stmt_v.end())
@@ -201,7 +205,7 @@ void attachment_resources::connection_statements::release(nanoudr::statement* st
 	}
 }
 
-bool attachment_resources::connection_statements::valid(nanoudr::statement* stmt)
+bool attachment_resources::connection_statements::valid(const nanoudr::statement* stmt)
 {
 	return std::find(stmt_v.begin(), stmt_v.end(), stmt) != stmt_v.end();
 }
@@ -214,12 +218,12 @@ std::vector<nanoudr::statement*>& attachment_resources::connection_statements::s
 //-----------------------------------------------------------------------------
 //
 
-void attachment_resources::connection_results::retain(nanoudr::result* rslt)
+void attachment_resources::connection_results::retain(const nanoudr::result* rslt)
 {
-	rslt_v.push_back(rslt);
+	rslt_v.push_back((nanoudr::result*)(rslt));
 }
 
-void attachment_resources::connection_results::release(nanoudr::result* rslt)
+void attachment_resources::connection_results::release(const nanoudr::result* rslt)
 {
 	rslt_it = std::find(rslt_v.begin(), rslt_v.end(), rslt);
 	if (rslt_it != rslt_v.end())
@@ -229,7 +233,7 @@ void attachment_resources::connection_results::release(nanoudr::result* rslt)
 	}
 }
 
-bool attachment_resources::connection_results::valid(nanoudr::result* rslt)
+bool attachment_resources::connection_results::valid(const nanoudr::result* rslt)
 {
 	return std::find(rslt_v.begin(), rslt_v.end(), rslt) != rslt_v.end();
 }
@@ -258,9 +262,9 @@ const char* attachment_resources::exception_message(const char* name) // simple 
 
 void attachment_resources::assign_exception(exception* att_exception, const short pos)
 {
-	memcpy(att_exceptions[pos].name, att_exception->name, sizeof(att_exceptions[pos].name));
-	att_exceptions[pos].number = att_exception->number;
-	memcpy(att_exceptions[pos].message, att_exception->message, sizeof(att_exceptions[pos].message));
+	memcpy_s(
+		&att_exceptions[pos], sizeof(att_exceptions[pos]), att_exception, sizeof(exception)
+	);
 }
 
 //-----------------------------------------------------------------------------
@@ -280,7 +284,7 @@ resources::~resources() noexcept
 	}
 }
 
-void resources::initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
+void resources::initialize(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
 	ISC_UINT64 àttachment_id = attachment_id(status, context);
 	att_it = att_m.find(àttachment_id);
@@ -289,11 +293,12 @@ void resources::initialize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalCont
 		attachment_resources* att_resources = new attachment_resources(àttachment_id);
 		att_m.insert(
 			std::pair<ISC_UINT64, nanoudr::attachment_resources*>(àttachment_id, att_resources));
-		att_resources->make_resources(status, context);
+		att_resources->context(status, context);
+		att_resources->make_resources();
 	}
 }
 
-void resources::finalize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
+void resources::finalize(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
 	ISC_UINT64 àttachment_id = attachment_id(status, context);
 	att_it = att_m.find(àttachment_id);
@@ -304,13 +309,18 @@ void resources::finalize(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContex
 	}
 }
 
-attachment_resources* resources::attachment(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
+attachment_resources* resources::attachment(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
+	attachment_resources* att_resources;
 	att_it = att_m.find(attachment_id(status, context));
-	return (att_it == att_m.end() ? nullptr : att_it->second);
+	att_resources = (att_it == att_m.end() ? nullptr : att_it->second);
+	att_resources == nullptr ? 
+		att_resources->context(status, context) : // assign current pointer
+		att_resources->context(nullptr, nullptr);
+	return att_resources;
 }
 
-ISC_UINT64 resources::attachment_id(FB_UDR_STATUS_TYPE* status, ::Firebird::IExternalContext* context)
+ISC_UINT64 resources::attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
 	ISC_UINT64 àttachment_id = 0;
 
@@ -347,11 +357,11 @@ ISC_UINT64 resources::attachment_id(FB_UDR_STATUS_TYPE* status, ::Firebird::IExt
 
 //-----------------------------------------------------------------------------
 // create function initialize returns ty$nano_blank
-//	external name 'nano!initialize'
+//	external name 'nano!udr$initialize'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(initialize)
+FB_UDR_BEGIN_FUNCTION(udr$initialize)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
@@ -393,11 +403,11 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function finalize returns ty$nano_blank
-//	external name 'nano!finalize'
+//	external name 'nano!udr$finalize'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(finalize)
+FB_UDR_BEGIN_FUNCTION(udr$finalize)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
@@ -429,11 +439,11 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function expunge returns ty$nano_blank
-//	external name 'nano!expunge'
+//	external name 'nano!udr$expunge'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(expunge)
+FB_UDR_BEGIN_FUNCTION(udr$expunge)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
@@ -462,11 +472,11 @@ FB_UDR_END_FUNCTION
 // create function locale (
 //   set_locale varchar(20) character set none default null
 //	) returns varchar(20)
-//	external name 'nano!locale'
+//	external name 'nano!udr$locale'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(locale)
+FB_UDR_BEGIN_FUNCTION(udr$locale)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -499,11 +509,11 @@ FB_UDR_END_FUNCTION
 //-----------------------------------------------------------------------------
 // create function error_message
 //	returns varchar(512) character set utf8
-//	external name 'nano!error_message'
+//	external name 'nano!udr$error_message'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(error_message)
+FB_UDR_BEGIN_FUNCTION(udr$error_message)
 
 	unsigned out_count;
 

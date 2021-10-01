@@ -62,27 +62,27 @@ BEGIN
       pass VARCHAR(63) CHARACTER SET UTF8,
       timeout INTEGER NOT NULL
     ) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!conn_connection'
+    EXTERNAL NAME 'nano!conn$connection'
     ENGINE UDR;
 
   FUNCTION valid(conn TY$POINTER NOT NULL) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!conn_valid'
+    EXTERNAL NAME 'nano!conn$valid'
     ENGINE UDR;
 
   FUNCTION release_(conn TY$POINTER NOT NULL) RETURNS TY$POINTER
-    EXTERNAL NAME 'nano!conn_release'
+    EXTERNAL NAME 'nano!conn$release'
     ENGINE UDR;
 
   FUNCTION expunge(conn ty$pointer NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!conn_expunge'
+    EXTERNAL NAME 'nano!conn$expunge'
     ENGINE UDR;
 
   FUNCTION allocate(conn TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!conn_allocate'
+    EXTERNAL NAME 'nano!conn$allocate'
     ENGINE UDR;
 
   FUNCTION deallocate(conn TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!conn_deallocate'
+    EXTERNAL NAME 'nano!conn$deallocate'
     ENGINE UDR;
 
   FUNCTION connect_(
@@ -92,46 +92,46 @@ BEGIN
       pass VARCHAR(63) CHARACTER SET UTF8,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!conn_connect'
+    EXTERNAL NAME 'nano!conn$connect'
     ENGINE UDR;
 
   FUNCTION connected(
       conn TY$POINTER NOT NULL
     ) RETURNS BOOLEAN
-    EXTERNAL NAME 'nano!conn_connected'
+    EXTERNAL NAME 'nano!conn$connected'
     ENGINE UDR;
 
   FUNCTION disconnect_(conn TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!conn_disconnect'
+    EXTERNAL NAME 'nano!conn$disconnect'
     ENGINE UDR;
 
   FUNCTION transactions(conn TY$POINTER NOT NULL) RETURNS INTEGER
-    EXTERNAL NAME 'nano!conn_transactions'
+    EXTERNAL NAME 'nano!conn$transactions'
     ENGINE UDR;
 
   FUNCTION get_info(conn TY$POINTER NOT NULL, info_type SMALLINT NOT NULL)
     RETURNS VARCHAR(256) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!conn_get_info'
+    EXTERNAL NAME 'nano!conn$get_info'
     ENGINE UDR;
 
   FUNCTION dbms_name(conn TY$POINTER NOT NULL) RETURNS VARCHAR(128) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!conn_dbms_name'
+    EXTERNAL NAME 'nano!conn$dbms_name'
     ENGINE UDR;
 
   FUNCTION dbms_version(conn TY$POINTER NOT NULL) RETURNS VARCHAR(128) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!conn_dbms_version'
+    EXTERNAL NAME 'nano!conn$dbms_version'
     ENGINE UDR;
 
   FUNCTION driver_name(conn TY$POINTER NOT NULL) RETURNS VARCHAR(128) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!conn_driver_name'
+    EXTERNAL NAME 'nano!conn$driver_name'
     ENGINE UDR;
 
   FUNCTION database_name(conn TY$POINTER NOT NULL) RETURNS VARCHAR(128) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!conn_database_name'
+    EXTERNAL NAME 'nano!conn$database_name'
     ENGINE UDR;
 
   FUNCTION catalog_name(conn TY$POINTER NOT NULL) RETURNS VARCHAR(128) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!conn_catalog_name'
+    EXTERNAL NAME 'nano!conn$catalog_name'
     ENGINE UDR;
 
 END^

@@ -33,9 +33,12 @@ namespace nanoudr
 // UDR Result class implementation
 //
 
-result::result(class nanoudr::connection& conn, class nanodbc::result&& rslt)
-	: nanodbc::result(rslt)
+result::result(
+	class attachment_resources& att_resources, class nanoudr::connection& conn, class nanodbc::result&& rslt)
+	: nanodbc::result(std::move(rslt))
 {
+	att_resources_ = &att_resources;
+	att_resources_->results.retain(this);
 	conn_ = &conn;
 }
 
@@ -53,11 +56,11 @@ nanoudr::connection* result::connection()
 // create function release_ (
 //	 rslt ty$pointer not null 
 // ) returns ty$pointer
-// external name 'nano!rslt_release'
+// external name 'nano!rslt$release'
 // engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_release)
+FB_UDR_BEGIN_FUNCTION(rslt$release)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -94,14 +97,14 @@ FB_UDR_BEGIN_FUNCTION(rslt_release)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function is_valid (
+// create function valid (
 //	 rslt ty$pointer not null, 
 //	) returns boolean
-//	external name 'nano!rslt_is_valid'
+//	external name 'nano!rslt$valid'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_is_valid)
+FB_UDR_BEGIN_FUNCTION(rslt$valid)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -129,11 +132,11 @@ FB_UDR_END_FUNCTION
 // create function connection (
 //	 rslt ty$pointer not null 
 //	) returns ty$pointer
-//	external name 'nano!rslt_connection'
+//	external name 'nano!rslt$connection'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_connection)
+FB_UDR_BEGIN_FUNCTION(rslt$connection)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -173,11 +176,11 @@ FB_UDR_END_FUNCTION
 // create function rowset_size  ( 
 //	 rslt ty$pointer not null 
 //	) returns integer
-//	external name 'nano!rslt_rowset_size'
+//	external name 'nano!rslt$rowset_size'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_rowset_size)
+FB_UDR_BEGIN_FUNCTION(rslt$rowset_size)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -216,11 +219,11 @@ FB_UDR_END_FUNCTION
 // create function affected_rows (
 //	 rslt ty$pointer not null 
 //	) returns integer
-//	external name 'nano!rslt_affected_rows'
+//	external name 'nano!rslt$affected_rows'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_affected_rows)
+FB_UDR_BEGIN_FUNCTION(rslt$affected_rows)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -259,11 +262,11 @@ FB_UDR_END_FUNCTION
 // create function has_affected_rows (
 //	 rslt ty$pointer not null 
 //	) returns boolean
-//	external name 'nano!rslt_has_affected_rows'
+//	external name 'nano!rslt$has_affected_rows'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_has_affected_rows)
+FB_UDR_BEGIN_FUNCTION(rslt$has_affected_rows)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -302,11 +305,11 @@ FB_UDR_END_FUNCTION
 // create function rows_ (
 //	 rslt ty$pointer not null 
 //	) returns integer
-//	external name 'nano!rslt_rows'
+//	external name 'nano!rslt$rows'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_rows)
+FB_UDR_BEGIN_FUNCTION(rslt$rows)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -345,11 +348,11 @@ FB_UDR_END_FUNCTION
 // create function columns (
 //	 rslt ty$pointer not null, 
 //	) returns smallint
-//	external name 'nano!rslt_columns'
+//	external name 'nano!rslt$columns'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_columns)
+FB_UDR_BEGIN_FUNCTION(rslt$columns)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -388,11 +391,11 @@ FB_UDR_END_FUNCTION
 // create function first_ (
 //	 rslt ty$pointer not null, 
 //	) returns boolean
-//	external name 'nano!rslt_first'
+//	external name 'nano!rslt$first'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_first)
+FB_UDR_BEGIN_FUNCTION(rslt$first)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -431,11 +434,11 @@ FB_UDR_END_FUNCTION
 // create function last_ (
 //	 rslt ty$pointer not null, 
 //	) returns boolean
-//	external name 'nano!rslt_last'
+//	external name 'nano!rslt$last'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_last)
+FB_UDR_BEGIN_FUNCTION(rslt$last)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -474,11 +477,11 @@ FB_UDR_END_FUNCTION
 // create function next_ (
 //	 rslt ty$pointer not null, 
 //	) returns boolean
-//	external name 'nano!rslt_next'
+//	external name 'nano!rslt$next'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_next)
+FB_UDR_BEGIN_FUNCTION(rslt$next)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -517,11 +520,11 @@ FB_UDR_END_FUNCTION
 // create function prior_ (
 //	 rslt ty$pointer not null, 
 //	) returns boolean
-//	external name 'nano!rslt_prior'
+//	external name 'nano!rslt$prior'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_prior)
+FB_UDR_BEGIN_FUNCTION(rslt$prior)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -561,11 +564,11 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 row_ integer not null 
 //	) returns boolean
-//	external name 'nano!rslt_move'
+//	external name 'nano!rslt$move'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_move)
+FB_UDR_BEGIN_FUNCTION(rslt$move)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -606,11 +609,11 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 row_ integer not null 
 //	) returns boolean
-//	external name 'nano!rslt_skip'
+//	external name 'nano!rslt$skip'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_skip)
+FB_UDR_BEGIN_FUNCTION(rslt$skip)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -650,11 +653,11 @@ FB_UDR_END_FUNCTION
 // create function position_ (
 //	 rslt ty$pointer not null 
 //	) returns integer
-//	external name 'nano!rslt_position'
+//	external name 'nano!rslt$position'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_position)
+FB_UDR_BEGIN_FUNCTION(rslt$position)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -693,11 +696,11 @@ FB_UDR_END_FUNCTION
 // create function at_end (
 //	 rslt ty$pointer not null, 
 //	) returns boolean
-//	external name 'nano!rslt_at_end'
+//	external name 'nano!rslt$at_end'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_at_end)
+FB_UDR_BEGIN_FUNCTION(rslt$at_end)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -737,14 +740,13 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 column_ varchar(63) character set utf8 not null 
 //	) returns ty$nano_blank
-//	external name 'nano!rslt_unbind'
+//	external name 'nano!rslt$unbind'
 //	engine udr; 
 //
-// \brief
 // unbind (?, ?) testing convertion the character string into a integer and call associate method
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_unbind)
+FB_UDR_BEGIN_FUNCTION(rslt$unbind)
 
 	unsigned in_count;
 
@@ -812,20 +814,27 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // todo: template <class T> T get
+//
+// create function get (
+//	 rslt ty$pointer not null, 
+//	 column_ varchar(63) character set utf8 not null 
+//	) returns boolean
+//	external name 'nano!rslt$is_null'
+//	engine udr; 
+//
 
 //-----------------------------------------------------------------------------
 // create function is_null (
 //	 rslt ty$pointer not null, 
 //	 column_ varchar(63) character set utf8 not null 
 //	) returns boolean
-//	external name 'nano!rslt_is_null'
+//	external name 'nano!rslt$is_null'
 //	engine udr; 
 //
-// \brief
 // is_null (?, ?) testing convertion the character string into a integer and call associate method
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_is_null)
+FB_UDR_BEGIN_FUNCTION(rslt$is_null)
 
 	unsigned in_count;
 
@@ -892,14 +901,13 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 column_ varchar(63) character set utf8 not null 
 //	) returns boolean
-//	external name 'nano!rslt_is_bound'
+//	external name 'nano!rslt$is_bound'
 //	engine udr; 
 //
-// \brief
 // is_bound (?, ?) testing convertion the character string into a integer and call associate method
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_is_bound)
+FB_UDR_BEGIN_FUNCTION(rslt$is_bound)
 
 	unsigned in_count;
 
@@ -966,11 +974,11 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 column_ varchar(63) character set utf8 not null 
 //	) returns smallint
-//	external name 'nano!rslt_column'
+//	external name 'nano!rslt$column'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_column)
+FB_UDR_BEGIN_FUNCTION(rslt$column)
 
 	unsigned in_count;
 
@@ -1032,11 +1040,11 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 index smallint not null 
 //	) returns varchar(63) character set utf8
-//	external name 'nano!rslt_column_name'
+//	external name 'nano!rslt$column_name'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_column_name)
+FB_UDR_BEGIN_FUNCTION(rslt$column_name)
 
 	unsigned out_count;
 
@@ -1099,14 +1107,13 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 column_ varchar(63) character set utf8 not null 
 //	) returns integer
-//	external name 'nano!rslt_column_size'
+//	external name 'nano!rslt$column_size'
 //	engine udr; 
 //
-// \brief
 // column_size (?, ?) testing covertion the character string into a integer and call associate method
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_column_size)
+FB_UDR_BEGIN_FUNCTION(rslt$column_size)
 
 	unsigned in_count;
 
@@ -1173,14 +1180,13 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 column_ varchar(63) character set utf8 not null 
 //	) returns integer
-//	external name 'nano!rslt_column_decimal_digits'
+//	external name 'nano!rslt$column_decimal_digits'
 //	engine udr; 
 //
-// \brief
 // column_decimal_digits (?, ?) testing covertion the character string into a integer and call associate method
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_column_decimal_digits)
+FB_UDR_BEGIN_FUNCTION(rslt$column_decimal_digits)
 
 	unsigned in_count;
 
@@ -1247,14 +1253,13 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 column_ varchar(63) character set utf8 not null 
 //	) returns integer
-//	external name 'nano!rslt_column_datatype'
+//	external name 'nano!rslt$column_datatype'
 //	engine udr; 
 //
-// \brief
 // column_datatype (?, ?) testing covertion the character string into a integer and call associate method
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_column_datatype)
+FB_UDR_BEGIN_FUNCTION(rslt$column_datatype)
 
 	unsigned in_count;
 
@@ -1321,14 +1326,13 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 column_ varchar(63) character set utf8 not null 
 //	) returns varchar(63) character set utf8
-//	external name 'nano!rslt_column_datatype_name'
+//	external name 'nano!rslt$column_datatype_name'
 //	engine udr; 
 //
-// \brief
 // column_datatype_name (?, ?) testing covertion the character string into a integer and call associate method
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_column_datatype_name)
+FB_UDR_BEGIN_FUNCTION(rslt$column_datatype_name)
 
 	unsigned in_count, out_count;
 
@@ -1411,14 +1415,13 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 column_ varchar(63) character set utf8 not null 
 //	) returns integer
-//	external name 'nano!rslt_column_c_datatype'
+//	external name 'nano!rslt$column_c_datatype'
 //	engine udr; 
 //
-// \brief
 // column_c_datatype (?, ?) testing covertion the character string into a integer and call associate method
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_column_c_datatype)
+FB_UDR_BEGIN_FUNCTION(rslt$column_c_datatype)
 
 	unsigned in_count;
 
@@ -1484,11 +1487,11 @@ FB_UDR_END_FUNCTION
 // create function next_result (
 //	 rslt ty$pointer not null 
 //	) returns boolean
-//	external name 'nano!rslt_next_result'
+//	external name 'nano!rslt$next_result'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_next_result)
+FB_UDR_BEGIN_FUNCTION(rslt$next_result)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -1527,11 +1530,11 @@ FB_UDR_END_FUNCTION
 // create function has_data (
 //	 rslt ty$pointer not null 
 //	) returns boolean
-//	external name 'nano!rslt_has_data'
+//	external name 'nano!rslt$has_data'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(rslt_has_data)
+FB_UDR_BEGIN_FUNCTION(rslt$has_data)
 
 	FB_UDR_MESSAGE(
 		InMessage,
