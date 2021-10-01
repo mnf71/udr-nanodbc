@@ -43,6 +43,11 @@ void attachment_resources::expunge()
 	for (auto c : connections.conn()) connections.release(c);
 }
 
+void attachment_resources::context(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
+{
+	attachment_context.status = status;
+	attachment_context.context = context;
+};
 
 const char* attachment_resources::locale(const char* set_locale)
 {
@@ -314,9 +319,7 @@ attachment_resources* resources::attachment(FB_UDR_STATUS_TYPE* status, FB_UDR_C
 	attachment_resources* att_resources;
 	att_it = att_m.find(attachment_id(status, context));
 	att_resources = (att_it == att_m.end() ? nullptr : att_it->second);
-	att_resources == nullptr ? 
-		att_resources->context(status, context) : // assign current pointer
-		att_resources->context(nullptr, nullptr);
+	if (att_resources != nullptr) att_resources->context(status, context); // assign current pointer
 	return att_resources;
 }
 
@@ -369,17 +372,11 @@ FB_UDR_BEGIN_FUNCTION(udr$initialize)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
-	{
-		attachment_resources*
-			att_resources = udr_resources.attachment(status, context);
+	{ 
+		attachment_resources* att_resources = nullptr;
 		out->blankNull = FB_TRUE;
 		try
 		{
-			if (att_resources != nullptr)
-			{
-				udr_resources.finalize(status, context);
-				att_resources = nullptr;
-			}
 			udr_resources.initialize(status, context);
 			att_resources = udr_resources.attachment(status, context);
 			if (udr_resources.resource_exception.number == 0)
@@ -416,16 +413,11 @@ FB_UDR_BEGIN_FUNCTION(udr$finalize)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		attachment_resources* 
-			att_resources = udr_resources.attachment(status, context);
+		attachment_resources* att_resources = nullptr;
 		out->blankNull = FB_TRUE;
 		try
 		{
-			if (att_resources != nullptr) 
-			{
-				udr_resources.finalize(status, context);
-				att_resources = nullptr;
-			}
+			udr_resources.finalize(status, context);
 			out->blank = BLANK;
 			out->blankNull = FB_FALSE;
 		}

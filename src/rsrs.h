@@ -157,19 +157,11 @@ public:
 	connection_statements statements = connection_statements(this);
 	connection_results results = connection_results(this);
 
-protected:
-
-	void context(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
-	{
-		attachment_context.status = status;
-		attachment_context.context = context;
-	};
-
-	void make_exceptions(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
-
 private:
 	ISC_UINT64 attachment_id;
 	fb_context attachment_context;
+
+	void context(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
 
 	// if number is zero then sended ANY_THROW 
 	exception att_exceptions[EXCEPTION_ARRAY_SIZE] = {
@@ -183,6 +175,7 @@ private:
 		{BINDING_ERR_MESSAGE,	0, ""}
 	};
 
+	void make_exceptions(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
 	void assign_exception(exception* att_exception, const short pos);
 
 	std::string att_error_message;
