@@ -492,7 +492,7 @@ FB_UDR_BEGIN_FUNCTION(udr$locale)
 		}
 		catch (std::runtime_error const& e)
 		{
-			NANODBC_THROW(e.what())
+			ANY_THROW(e.what())
 		}
 	}
 
