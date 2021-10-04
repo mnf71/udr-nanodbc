@@ -370,6 +370,33 @@ if (att_resources == nullptr)	\
 	return; \
 }	/* BINDING_THROW */
 
+#define	FETCHING_THROW(exception_message)	\
+{	\
+	ISC_LONG exception_number = att_resources->exception_number(FETCHING_ERR_MESSAGE);	\
+	att_resources->error_message((exception_message));	\
+	if (exception_number == 0)	\
+	{	\
+		ISC_STATUS_ARRAY vector = {	\
+			isc_arg_gds,	\
+			isc_exception_name, isc_arg_string, (ISC_STATUS)(FETCHING_ERR_MESSAGE),	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+			isc_arg_end};	\
+		status->setErrors(vector);	\
+	}	\
+	else	\
+	{	\
+		ISC_STATUS_ARRAY vector = {	\
+			isc_arg_gds,	\
+			isc_except, isc_arg_number, exception_number,	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+			isc_arg_end};	\
+		status->setErrors(vector);	\
+	}	\
+	return; \
+}	/* BINDING_THROW */
+
 //-----------------------------------------------------------------------------
 //
 
@@ -529,22 +556,22 @@ public:
 	FB_BOOLEAN fb_bool(bool value);
 	bool native_bool(const ISC_UCHAR value);
 
-	const size_t utf8_in(nanoudr::attachment_resources* att_resources, char* in, const size_t in_length,
-		const char* utf8, const size_t utf8_length);
-	const size_t utf8_out(nanoudr::attachment_resources* att_resources, char* out, const size_t out_length,
-		const char* locale, const size_t locale_length);
+	const ISC_USHORT utf8_in(nanoudr::attachment_resources* att_resources, char* in, const ISC_USHORT in_length,
+		const char* utf8, const ISC_USHORT utf8_length);
+	const ISC_USHORT utf8_out(nanoudr::attachment_resources* att_resources, char* out, const ISC_USHORT out_length,
+		const char* locale, const ISC_USHORT locale_length);
 
-	nanodbc::timestamp set_timestamp(nanoudr::timestamp* tm);
-	nanodbc::date set_date(nanoudr::date* d);
-	nanodbc::time set_time(nanoudr::time* t);
+	nanodbc::timestamp set_timestamp(const nanoudr::timestamp* tm);
+	nanodbc::date set_date(const nanoudr::date* d);
+	nanodbc::time set_time(const nanoudr::time* t);
 
-	nanoudr::timestamp get_timestamp(nanodbc::timestamp* tm);
-	nanoudr::date get_date(nanodbc::date* d);
-	nanoudr::time get_time(nanodbc::time* t);
+	nanoudr::timestamp get_timestamp(const nanodbc::timestamp* tm);
+	nanoudr::date get_date(const nanodbc::date* d);
+	nanoudr::time get_time(const nanodbc::time* t);
 
 private:
-	const size_t utf8_converter(char* dest, const size_t dest_length, const char* to, 
-		const char* src, const size_t src_length, const char* from);
+	const ISC_USHORT utf8_converter(char* dest, const ISC_USHORT dest_length, const char* to,
+		const char* src, const ISC_USHORT src_length, const char* from);
 };
 
 extern helper udr_helper;

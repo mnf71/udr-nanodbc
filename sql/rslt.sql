@@ -29,6 +29,68 @@ BEGIN
 
   ------------------------------------------------------------------------------
 
+  FUNCTION get_smallint(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS SMALLINT;
+
+  FUNCTION get_integer(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS INTEGER;
+
+/*
+  FUNCTION get_integer(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS INTEGER;
+*/
+
+  FUNCTION get_float(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS FLOAT;
+
+  FUNCTION get_double(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS DOUBLE PRECISION;
+
+  FUNCTION get_varchar(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS VARCHAR(32765) CHARACTER SET NONE;
+
+  FUNCTION get_char(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS CHAR(32767) CHARACTER SET NONE;
+
+  FUNCTION get_u8_varchar(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS VARCHAR(8191) CHARACTER SET UTF8;
+
+  FUNCTION get_u8_char(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS CHAR(8191) CHARACTER SET UTF8;
+
+  FUNCTION get_blob(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS BLOB CHARACTER SET NONE;
+
+  FUNCTION get_boolean(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS BOOLEAN;
+
+  FUNCTION get_date(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS DATE;
+
+/*
+  FUNCTION get_time(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS TIME;
+*/
+
+  FUNCTION get_timestamp(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS TIMESTAMP;
+
+  ------------------------------------------------------------------------------
+
   FUNCTION unbind(rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL)
     RETURNS TY$NANO_BLANK;
 
@@ -135,6 +197,96 @@ BEGIN
 
   FUNCTION at_end(rslt TY$POINTER NOT NULL) RETURNS BOOLEAN
     EXTERNAL NAME 'nano!rslt$at_end'
+    ENGINE UDR;
+
+  ------------------------------------------------------------------------------
+
+  FUNCTION get_smallint(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS SMALLINT
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+  FUNCTION get_integer(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS INTEGER
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+/*
+  FUNCTION get_bigint(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS BIGINT
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+*/
+
+  FUNCTION get_float(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS FLOAT
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+  FUNCTION get_double(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS DOUBLE PRECISION
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+  FUNCTION get_varchar(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS VARCHAR(32765) CHARACTER SET NONE
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+  FUNCTION get_char(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS CHAR(32767) CHARACTER SET NONE
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+  FUNCTION get_u8_varchar(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS VARCHAR(8191) CHARACTER SET UTF8
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+  FUNCTION get_u8_char(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS CHAR(8191) CHARACTER SET UTF8
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+  FUNCTION get_blob(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS BLOB CHARACTER SET NONE
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+  FUNCTION get_boolean(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS BOOLEAN
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+  FUNCTION get_date(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS DATE
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+/*
+  FUNCTION get_time(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS TIME
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+*/
+
+  FUNCTION get_timestamp(
+      rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS TIMESTAMP
+    EXTERNAL NAME 'nano!rslt$get'
     ENGINE UDR;
 
   ------------------------------------------------------------------------------

@@ -94,20 +94,20 @@ bool helper::native_bool(const FB_BOOLEAN value)
 //-----------------------------------------------------------------------------
 //
 
-const size_t helper::utf8_in(nanoudr::attachment_resources* att_resources, char* dest, const size_t dest_size,
-	const char* utf8, const size_t utf8_length)
+const ISC_USHORT helper::utf8_in(nanoudr::attachment_resources* att_resources, char* dest, const ISC_USHORT dest_size,
+	const char* utf8, const ISC_USHORT utf8_length)
 {
 	return utf8_converter(dest, dest_size, att_resources->locale(), utf8, utf8_length, "UTF-8");
 }
 
-const size_t helper::utf8_out(nanoudr::attachment_resources* att_resources, char* dest, const size_t dest_size,
-	const char* locale, const size_t locale_length)
+const ISC_USHORT helper::utf8_out(nanoudr::attachment_resources* att_resources, char* dest, const ISC_USHORT dest_size,
+	const char* locale, const ISC_USHORT locale_length)
 {
 	return utf8_converter(dest, dest_size, "UTF-8", locale, locale_length, att_resources->locale());
 }
 
-const size_t helper::utf8_converter(char* dest, const size_t dest_size, const char* to,  
-	const char* src, const size_t src_length, const char* from)
+const ISC_USHORT helper::utf8_converter(char* dest, const ISC_USHORT dest_size, const char* to,
+	const char* src, const ISC_USHORT src_length, const char* from)
 {
 	char* in = (char*)(src);
 	size_t in_length = src_length; // strlen() src
@@ -118,7 +118,7 @@ const size_t helper::utf8_converter(char* dest, const size_t dest_size, const ch
 	try
 	{
 		iconv_t ic = iconv_open(to, from);
-		iconv(ic, &in, &in_length, &out, &out_indicator);
+		iconv(ic, &in, &in_length, &out, &out_indicator); 
 		iconv_close(ic);
 	}
 	catch (...)
@@ -129,13 +129,13 @@ const size_t helper::utf8_converter(char* dest, const size_t dest_size, const ch
 	memcpy_s(dest, dest_size, converted, dest_size - out_indicator);
 	delete[] converted;
 
-	return (dest_size - out_indicator);
+	return (ISC_USHORT)(dest_size - out_indicator);
 }
 
 //-----------------------------------------------------------------------------
 //
 
-nanodbc::timestamp helper::set_timestamp(nanoudr::timestamp* tm)
+nanodbc::timestamp helper::set_timestamp(const nanoudr::timestamp* tm)
 {
 	nanodbc::timestamp tm_s;
 	tm_s.year = tm->year;
@@ -148,7 +148,7 @@ nanodbc::timestamp helper::set_timestamp(nanoudr::timestamp* tm)
 	return tm_s;
 }
 
-nanodbc::date helper::set_date(nanoudr::date* d)
+nanodbc::date helper::set_date(const nanoudr::date* d)
 {
 	nanodbc::date d_s;
 	d_s.year = d->year;
@@ -157,16 +157,17 @@ nanodbc::date helper::set_date(nanoudr::date* d)
 	return d_s;
 }
 
-nanodbc::time helper::set_time(nanoudr::time* t)
+nanodbc::time helper::set_time(const nanoudr::time* t)
 {
 	nanodbc::time t_s;
 	t_s.hour = t->hour;
 	t_s.min = t->min;
 	t_s.sec = t->sec;
+	// = t->fract
 	return t_s;
 }
 
-nanoudr::timestamp helper::get_timestamp(nanodbc::timestamp* tm)
+nanoudr::timestamp helper::get_timestamp(const nanodbc::timestamp* tm)
 {
 	nanoudr::timestamp tm_s;
 	tm_s.year = tm->year;
@@ -179,7 +180,7 @@ nanoudr::timestamp helper::get_timestamp(nanodbc::timestamp* tm)
 	return tm_s;
 }
 
-nanoudr::date helper::get_date(nanodbc::date* d)
+nanoudr::date helper::get_date(const nanodbc::date* d)
 {
 	nanoudr::date d_s;
 	d_s.year = d->year;
@@ -188,12 +189,13 @@ nanoudr::date helper::get_date(nanodbc::date* d)
 	return d_s;
 }
 
-nanoudr::time helper::get_time(nanodbc::time* t)
+nanoudr::time helper::get_time(const nanodbc::time* t)
 {
 	nanoudr::time t_s;
 	t_s.hour = t->hour;
 	t_s.min = t->min;
 	t_s.sec = t->sec;
+	t_s.fract = 0;
 	return t_s;
 }
 

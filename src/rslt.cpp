@@ -794,7 +794,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$unbind)
 					if (!isdigit(in->column.str[0]))
 						rslt->unbind(NANODBC_TEXT(in->column.str));
 					else
-						rslt->unbind((short)atoi(in->column.str));
+						rslt->unbind((short)(atoi(in->column.str)));
 				}
 				else
 					rslt->unbind();
@@ -813,15 +813,258 @@ FB_UDR_BEGIN_FUNCTION(rslt$unbind)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// todo: template <class T> T get
+// template <class T> T get (...
 //
 // create function get (
 //	 rslt ty$pointer not null, 
 //	 column_ varchar(63) character set utf8 not null 
-//	) returns boolean
-//	external name 'nano!rslt$is_null'
+//	) returns native Firebird datatype
+//	external name 'nano!rslt$get'
 //	engine udr; 
 //
+// get (?, ?) testing convertion the character string into a integer and call associate method
+//
+
+FB_UDR_BEGIN_FUNCTION(rslt$get)
+
+	unsigned in_count;
+
+	enum in : short {
+		rslt = 0, column
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	unsigned out_count = 1; // function returns only one value
+
+	enum out : short {
+		value = 0
+	};
+
+	AutoArrayDelete<unsigned> out_types;
+	AutoArrayDelete<unsigned> out_lengths;
+	AutoArrayDelete<unsigned> out_char_sets;
+	AutoArrayDelete<unsigned> out_offsets;
+	AutoArrayDelete<unsigned> out_null_offsets;
+
+	IUtil* utl = master->getUtilInterface();
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+
+		out_types.reset(new unsigned[out_count]);
+		out_lengths.reset(new unsigned[out_count]);
+		out_char_sets.reset(new unsigned[out_count]);
+		out_offsets.reset(new unsigned[out_count]);
+		out_null_offsets.reset(new unsigned[out_count]);
+
+		out_types[out::value] = out_metadata->getType(status, out::value);
+		out_lengths[out::value] = out_metadata->getLength(status, out::value);
+		out_char_sets[out::value] = out_metadata->getCharSet(status, out::value);
+		out_offsets[out::value] = out_metadata->getOffset(status, out::value);
+		out_null_offsets[out::value] = out_metadata->getNullOffset(status, out::value);
+	}
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, rslt)
+		(FB_VARCHAR(63 * 4), column)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		NANOUDR_RESOURCES
+		ISC_SHORT& null_flag = *(ISC_SHORT*)(out + out_null_offsets[out::value]);
+		*(ISC_SHORT*)(out + out_null_offsets[out::value]) = FB_TRUE;
+		nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
+		if (!in->rsltNull && att_resources->results.valid(rslt))
+		{
+			try
+			{
+				U8_VARIYNG(in, column);
+				bool is_digit = isdigit(in->column.str[0]);
+
+				short column_position = is_digit ? (short)(atoi(in->column.str)) : -1;
+				nanodbc::string column_name = is_digit ? "\0" : NANODBC_TEXT(in->column.str);
+
+				if (is_digit ? 
+					rslt->is_null(column_position) : rslt->is_null(column_name)) {
+					null_flag = FB_TRUE;
+				}
+				else 
+				{
+					switch (out_types[out::value])
+					{
+						case SQL_TEXT: // char
+						{
+							nanodbc::string value =
+								(is_digit ? rslt->get<nanodbc::string>(column_position) : rslt->get<nanodbc::string>(column_name));
+							ISC_USHORT length = (ISC_USHORT)(value.length());
+							if (out_char_sets[out::value] == fb_char_set::CS_UTF8)
+								length = 
+									udr_helper.utf8_out(att_resources,
+										(char*)(out + out_offsets[out::value]), out_lengths[out::value],
+										value.c_str(), length);
+							else
+								memcpy_s(
+									(char*)(out + out_offsets[out::value]), out_lengths[out::value], value.c_str(), length
+								);
+							if (out_lengths[out::value] > length)
+								memset((char*)(out + out_offsets[out::value]) + length, ' ', out_lengths[out::value] - length);
+							null_flag = FB_FALSE;
+							break;
+						}
+						case SQL_VARYING: // varchar
+						{
+							nanodbc::string value =
+								(is_digit ? rslt->get<nanodbc::string>(column_position) : rslt->get<nanodbc::string>(column_name));
+							ISC_USHORT length = (ISC_USHORT)(value.length());
+							if (out_char_sets[out::value] == fb_char_set::CS_UTF8)
+							{
+								*(ISC_USHORT*)(out + out_offsets[out::value]) = 
+									udr_helper.utf8_out(att_resources,
+										(char*)(out + sizeof(ISC_USHORT) + out_offsets[out::value]), out_lengths[out::value],
+										value.c_str(), length);
+							}
+							else
+							{
+								memcpy_s(
+									(char*)(out + sizeof(ISC_USHORT) + out_offsets[out::value]), out_lengths[out::value], value.c_str(), length
+								);
+								*(ISC_USHORT*)(out + out_offsets[out::value]) =	
+									out_lengths[out::value] > length ? length : out_lengths[out::value];
+							}
+							null_flag = FB_FALSE;
+							break;
+						}
+						case SQL_SHORT: // smallint
+						{
+							*(ISC_SHORT*)(out + out_offsets[out::value]) =
+								(is_digit ? rslt->get<ISC_SHORT>(column_position) : rslt->get<ISC_SHORT>(column_name));
+							null_flag = FB_FALSE;
+							break;
+						}
+						case SQL_LONG: // integer 
+						{
+							*(ISC_LONG*)(out + out_offsets[out::value]) =
+								(is_digit ? rslt->get<ISC_LONG>(column_position) : rslt->get<ISC_LONG>(column_name));
+							null_flag = FB_FALSE;
+							break;
+						}
+						case SQL_FLOAT: // float
+						{
+							*(float*)(out + out_offsets[out::value]) =
+								(is_digit ? rslt->get<float>(column_position) : rslt->get<float>(column_name));
+							null_flag = FB_FALSE;
+							break;
+						}
+						case SQL_DOUBLE: // double precision 
+						case SQL_D_FLOAT: 
+						{
+							*(double*)(out + out_offsets[out::value]) =
+								(is_digit ? rslt->get<double>(column_position) : rslt->get<double>(column_name));
+							null_flag = FB_FALSE;
+							break;
+						}
+						case SQL_TIMESTAMP: // timestamp
+						{
+							Firebird::FbTimestamp fb;
+							nanodbc::timestamp value =
+								is_digit ? rslt->get<nanodbc::timestamp>(column_position) : rslt->get<nanodbc::timestamp>(column_name);
+							nanoudr::timestamp tm = udr_helper.get_timestamp(&value);
+							fb.date.encode(utl, tm.year, tm.month, tm.day);
+							fb.time.encode(utl, tm.hour, tm.min, tm.sec, tm.fract);
+							// This class has memory layout identical to ISC_TIMESTAMP
+							memcpy((ISC_TIMESTAMP*)(out + out_offsets[out::value]), &fb, sizeof(FbTimestamp));
+							null_flag = FB_FALSE;
+							break;
+						}
+						case SQL_BLOB: // blob
+						{
+							FETCHING_THROW("Fetching BLOB to be developed.")
+							break;
+						}
+						case SQL_ARRAY: // array
+						{
+							FETCHING_THROW("Fetching SQL_ARRAY not supported.")
+							break;
+						}
+						case SQL_QUAD: // blob_id 
+						{
+							FETCHING_THROW("Fetching BLOB_ID to be developed.")
+							break;
+						}
+						case SQL_TYPE_TIME: // time
+						{
+							Firebird::FbTime fb;
+							nanodbc::time value =
+								is_digit ? rslt->get<nanodbc::time>(column_position) : rslt->get<nanodbc::time>(column_name);
+							nanoudr::time t = udr_helper.get_time(&value);
+							fb.encode(utl, t.hour, t.min, t.sec, t.fract);
+							// This class has memory layout identical to ISC_TIME
+							memcpy((ISC_TIME*)(out + out_offsets[out::value]), &fb, sizeof(FbTime));
+							null_flag = FB_FALSE;
+							break;
+						}
+						case SQL_TYPE_DATE: // date
+						{
+							Firebird::FbDate fb;
+							nanodbc::date value =
+								is_digit ? rslt->get<nanodbc::date>(column_position) : rslt->get<nanodbc::date>(column_name);
+							nanoudr::date d = udr_helper.get_date(&value);
+							fb.encode(utl, d.year, d.month, d.day);
+							// This class has memory layout identical to ISC_TIME
+							memcpy((ISC_DATE*)(out + out_offsets[out::value]), &fb, sizeof(FbDate));
+							null_flag = FB_FALSE;
+							break;
+						}
+						case SQL_INT64: // bigint
+						{
+							*(ISC_INT64*)(out + out_offsets[out::value]) =
+								(is_digit ? rslt->get<ISC_INT64>(column_position) : rslt->get<ISC_INT64>(column_name));
+							break;
+						}
+						case SQL_BOOLEAN: // boolean
+						{
+							bool value = 
+								(is_digit ? rslt->get<unsigned short>(column_position) : rslt->get<unsigned short>(column_name)) 
+									? true : false;
+							*(FB_BOOLEAN*)(out + out_offsets[out::value]) = udr_helper.fb_bool(value);
+							null_flag = FB_FALSE;
+							break;
+						}
+						case SQL_NULL: // null, nothing
+						{
+							break;
+						}
+						default:
+						{
+							FETCHING_THROW("Fetching unknow Firebird SQL datatype.")
+							break;
+						}
+					}
+				}
+			}
+			catch (std::runtime_error const& e)
+			{
+				NANODBC_THROW(e.what())
+			}
+		}
+		else
+			NANOUDR_THROW(POINTER_RSLT_INVALID)
+	}
+
+FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function is_null (
@@ -882,7 +1125,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_null)
 						udr_helper.fb_bool(rslt->is_null(NANODBC_TEXT(in->column.str)));
 				else
 					out->is_null = 
-						udr_helper.fb_bool(rslt->is_null((short)atoi(in->column.str)));
+						udr_helper.fb_bool(rslt->is_null((short)(atoi(in->column.str))));
 				out->is_nullNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -955,7 +1198,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_bound)
 						udr_helper.fb_bool(rslt->is_bound(NANODBC_TEXT(in->column.str)));
 				else
 					out->is_null = 
-						udr_helper.fb_bool(rslt->is_bound((short)atoi(in->column.str)));
+						udr_helper.fb_bool(rslt->is_bound((short)(atoi(in->column.str))));
 				out->is_nullNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1161,7 +1404,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_size)
 						rslt->column_size(NANODBC_TEXT(in->column.str));
 				else
 					out->size = 
-						rslt->column_size((short)atoi(in->column.str));
+						rslt->column_size((short)(atoi(in->column.str)));
 				out->sizeNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1234,7 +1477,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_decimal_digits)
 						rslt->column_decimal_digits(NANODBC_TEXT(in->column.str));
 				else
 					out->digits = 
-						rslt->column_decimal_digits((short)atoi(in->column.str));
+						rslt->column_decimal_digits((short)(atoi(in->column.str)));
 				out->digitsNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1307,7 +1550,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype)
 						rslt->column_datatype(NANODBC_TEXT(in->column.str));
 				else
 					out->datatype = 
-						rslt->column_datatype((short)atoi(in->column.str));
+						rslt->column_datatype((short)(atoi(in->column.str)));
 				out->datatypeNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1394,7 +1637,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype_name)
 						rslt->column_datatype_name(NANODBC_TEXT(in->column.str));
 				else
 					datatype_name = 
-						rslt->column_datatype_name((short)atoi(in->column.str));
+						rslt->column_datatype_name((short)(atoi(in->column.str)));
 				FB_VARIYNG(out->datatype_name, datatype_name);
 				U8_VARIYNG(out, datatype_name);
 				out->datatype_nameNull = FB_FALSE;
@@ -1469,7 +1712,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_c_datatype)
 						rslt->column_c_datatype(NANODBC_TEXT(in->column.str));
 				else
 					out->c_datatype = 
-						rslt->column_c_datatype((short)atoi(in->column.str));
+						rslt->column_c_datatype((short)(atoi(in->column.str)));
 				out->c_datatypeNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)

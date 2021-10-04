@@ -1604,7 +1604,7 @@ FB_UDR_END_FUNCTION
 // create function bind_[fb_type] (
 //	 stmt ty$pointer not null,
 // 	 param_index smallint not null,
-//   value_	[fb_type],
+//   value_	native Firebird datatype,
 //   param_size smallint default null
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$bind'
@@ -1677,11 +1677,11 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 							else
 							{
 								bool u8_string = (in_char_sets[in::value] == fb_char_set::CS_UTF8);
-								std::size_t length =
+								ISC_USHORT length =
 									(in_types[in::value] == SQL_TEXT ?
 										in_lengths[in::value] :	// полный размер переданного CHAR(N) с учетом пробелов 
 										*(ISC_USHORT*)(in + in_offsets[in::value])); 
-								std::size_t param_size = 0; 
+								ISC_USHORT param_size = 0;
 								if (in_count > in::param_size && !*(ISC_SHORT*)(in + in_null_offsets[in::param_size]))
 								{
 									param_size = *(ISC_SHORT*)(in + in_offsets[in::param_size]);
@@ -1699,7 +1699,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 											length);
 								else
 									memcpy(
-										param, 
+										param,
 										(char*)(in + (in_types[in::value] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
 										param_size
 									);
@@ -1814,9 +1814,8 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 							params->push(param_index, (nanodbc::string)(NANODBC_TEXT(param ? "True" : "False")), null_flag);
 							break;
 						}
-						case SQL_NULL: // null
+						case SQL_NULL: // null, nothing
 						{
-							params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), true);
 							break;
 						}
 						default:
