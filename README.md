@@ -49,7 +49,7 @@ BEGIN
     */
     conn = nano$conn.release_(conn);
     
-    nano$udr.finalize(); -- best, trigger on disconnect
+    nano$udr.finalize(); -- better use in trigger on disconnect
 
     WHEN EXCEPTION nano$pointer_conn_invalid, EXCEPTION nano$pointer_stmt_invalid,
          EXCEPTION nano$nanodbc_err_message
