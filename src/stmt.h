@@ -81,7 +81,7 @@ private:
 		bind_types batch;
 		std::vector<uint8_t> nulls;
 	};
-
+	
 	param* params;
 	short count_;
 };
@@ -89,6 +89,12 @@ private:
 //-----------------------------------------------------------------------------
 // UDR Statement class implementation
 //
+
+/* SQL_ATTR_CURSOR_SCROLLABLE values */
+#if (ODBCVER >= 0x0300)
+#define SQL_NONSCROLLABLE			0
+#define SQL_SCROLLABLE				1
+#endif  /* ODBCVER >= 0x0300 */ 
 
 #ifndef RSRS_H
 	class attachment_resources;
@@ -110,6 +116,8 @@ public:
 	statement(class attachment_resources& att_resources, class nanoudr::connection& conn, 
 		const nanodbc::string& query, long timeout = 0);
 	~statement() noexcept;
+
+	void scrollable_usage(bool scrollable = false);
 
 	void open(class nanoudr::connection& conn);
 	nanoudr::connection* connection();
@@ -133,11 +141,13 @@ public:
 	void release_params();
 
 	attachment_resources* attachment() { return att_resources_; };
+	bool scrollable() { return scrollable_; };
 
 private:
 	attachment_resources* att_resources_;
 	nanoudr::connection* conn_;
 	params_batch* params_;
+	bool scrollable_;
 };
 
 } // namespace nanoudr

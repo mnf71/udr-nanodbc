@@ -22,7 +22,7 @@
 
 #include "nano.h"
 
-//-----------------------------------------------------------------------------
+ //-----------------------------------------------------------------------------
 // package nano$stmt
 //
 
@@ -139,6 +139,7 @@ statement::statement(class attachment_resources& att_resources) : nanodbc::state
 {
 	att_resources_ = &att_resources;
 	att_resources_->statements.retain(this);
+	scrollable_ = false;
 	params_ = nullptr;
 	conn_ = nullptr;
 }
@@ -148,16 +149,18 @@ statement::statement(class attachment_resources& att_resources, class nanoudr::c
 {
 	att_resources_ = &att_resources;
 	att_resources_->statements.retain(this);
+	scrollable_ = false;
 	params_ = nullptr;
 	conn_ = &conn;
 }
 
-statement::statement(class attachment_resources& att_resources, class nanoudr::connection& conn, 
-	const nanodbc::string& query, long timeout)	
+statement::statement(class attachment_resources& att_resources, class nanoudr::connection& conn, const nanodbc::string& query, 
+	long timeout)	
 	: nanodbc::statement(conn, query, timeout)
 {
 	att_resources_ = &att_resources;
 	att_resources_->statements.retain(this);
+	scrollable_ = false;
 	prepare_params();
 	conn_ = &conn;
 }
@@ -980,6 +983,53 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare)
 				out->blank = BLANK;
 				out->blankNull = FB_FALSE;
 
+			}
+			catch (std::runtime_error const& e)
+			{
+				NANODBC_THROW(e.what())
+			}
+		}
+		else
+			NANOUDR_THROW(POINTER_STMT_INVALID)
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function scrollable (
+//	 stmt ty$pointer not null, 
+// 	 usage_ boolean default null 
+//	) returns boolean
+//	external name 'nano!stmt$scrollable'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(stmt$scrollable)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, stmt)
+		(FB_BOOLEAN, usage)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_BOOLEAN, scrollable)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		NANOUDR_RESOURCES
+		out->scrollableNull = FB_TRUE;
+		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		if (!in->stmtNull && att_resources->statements.valid(stmt))
+		{
+			try
+			{
+				if (!in->usageNull)
+					stmt->scrollable_usage(udr_helper.native_bool(in->usage));
+				out->scrollable = udr_helper.fb_bool(stmt->scrollable());
+				out->scrollableNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
 			{

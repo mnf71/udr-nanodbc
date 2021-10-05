@@ -15,7 +15,7 @@ elseif(MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
 
     set(FIREBIRD $ENV{ProgramW6432}/firebird/firebird_3_0)
     add_library(firebird SHARED IMPORTED)
-    set_target_properties(firebird 
+    set_target_properties(firebird  
         PROPERTIES
             IMPORTED_IMPLIB ${FIREBIRD}/lib/fbclient_ms.lib
             INTERFACE_INCLUDE_DIRECTORIES "${FIREBIRD}/include;${FIREBIRD}/include/firebird"

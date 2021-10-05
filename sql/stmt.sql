@@ -7,6 +7,7 @@ BEGIN
   FUNCTION statement_(
       conn TY$POINTER DEFAULT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 DEFAULT NULL,
+      -- scrollable BOOLEAN NOT NULL DEFAULT FALSE,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$POINTER;
 
@@ -31,14 +32,21 @@ BEGIN
       stmt TY$POINTER NOT NULL,
       conn TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      -- scrollable BOOLEAN NOT NULL DEFAULT FALSE,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION prepare_(
       stmt TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      -- scrollable BOOLEAN NOT NULL DEFAULT FALSE,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
+
+  FUNCTION scrollable(
+      stmt TY$POINTER NOT NULL,
+      usage_ BOOLEAN DEFAULT NULL /* NULL - get */
+    ) RETURNS BOOLEAN;
 
   FUNCTION timeout(
       stmt TY$POINTER NOT NULL,
@@ -49,6 +57,7 @@ BEGIN
       stmt TY$POINTER NOT NULL,
       conn TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      -- scrollable BOOLEAN NOT NULL DEFAULT FALSE,
       batch_operations INTEGER NOT NULL DEFAULT 1,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$POINTER;
@@ -57,6 +66,7 @@ BEGIN
       stmt TY$POINTER NOT NULL,
       conn TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      -- scrollable BOOLEAN NOT NULL DEFAULT FALSE,
       batch_operations INTEGER NOT NULL DEFAULT 1,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
@@ -211,6 +221,7 @@ BEGIN
   FUNCTION statement_(
       conn TY$POINTER,
       query VARCHAR(8191) CHARACTER SET UTF8,
+      -- scrollable BOOLEAN NOT NULL DEFAULT FALSE,
       timeout INTEGER NOT NULL
     ) RETURNS TY$POINTER
     EXTERNAL NAME 'nano!stmt$statement'
@@ -254,6 +265,7 @@ BEGIN
       stmt TY$POINTER NOT NULL,
       conn TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      -- scrollable BOOLEAN NOT NULL DEFAULT FALSE,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$prepare_direct'
@@ -262,9 +274,17 @@ BEGIN
   FUNCTION prepare_(
       stmt TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      -- scrollable BOOLEAN NOT NULL DEFAULT FALSE,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$prepare'
+    ENGINE UDR;
+
+  FUNCTION scrollable(
+      stmt TY$POINTER NOT NULL,
+      usage_ BOOLEAN
+    ) RETURNS BOOLEAN
+    EXTERNAL NAME 'nano!stmt$scrollable'
     ENGINE UDR;
 
   FUNCTION timeout(
@@ -278,6 +298,7 @@ BEGIN
       stmt TY$POINTER NOT NULL,
       conn TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      -- scrollable BOOLEAN NOT NULL DEFAULT FALSE,
       batch_operations INTEGER NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$POINTER
@@ -288,6 +309,7 @@ BEGIN
       stmt TY$POINTER NOT NULL,
       conn TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      -- scrollable BOOLEAN NOT NULL DEFAULT FALSE,
       batch_operations INTEGER NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
