@@ -135,32 +135,38 @@ short params_batch::count()
 // UDR Statement class implementation
 //
 
-statement::statement(class attachment_resources& att_resources) : nanodbc::statement()
+statement::statement(class attachment_resources& att_resources) 
+	: scrollable_(scroll_state::DEFAULT)
+	, nanodbc::statement()
+	
 {
 	att_resources_ = &att_resources;
 	att_resources_->statements.retain(this);
-	scrollable_ = false;
 	params_ = nullptr;
 	conn_ = nullptr;
 }
 
-statement::statement(class attachment_resources& att_resources, class nanoudr::connection& conn) 
-	: nanodbc::statement(conn)
+statement::statement(class attachment_resources& att_resources, class nanoudr::connection& conn, const scroll_state scrollable)
+	: scrollable_(scroll_state::DEFAULT)
+	, nanodbc::statement()
 {
 	att_resources_ = &att_resources;
 	att_resources_->statements.retain(this);
-	scrollable_ = false;
+	if (scrollable != scroll_state::DEFAULT) scrollable_usage(scrollable);
 	params_ = nullptr;
 	conn_ = &conn;
 }
 
-statement::statement(class attachment_resources& att_resources, class nanoudr::connection& conn, const nanodbc::string& query, 
-	long timeout)	
-	: nanodbc::statement(conn, query, timeout)
+statement::statement(
+	class attachment_resources& att_resources, class nanoudr::connection& conn, const nanodbc::string& query, 
+	const scroll_state scrollable, long timeout)
+	: scrollable_(scroll_state::DEFAULT)
+	, nanodbc::statement()
 {
 	att_resources_ = &att_resources;
 	att_resources_->statements.retain(this);
-	scrollable_ = false;
+	if (scrollable != scroll_state::DEFAULT) scrollable_usage(scrollable);
+	nanodbc::statement::prepare(query, timeout);
 	prepare_params();
 	conn_ = &conn;
 }
@@ -182,10 +188,13 @@ nanoudr::connection* statement::connection()
 	return conn_;
 }
 
-void statement::prepare(class nanoudr::connection& conn, const nanodbc::string& query, long timeout)
+void statement::prepare(class nanoudr::connection& conn, const nanodbc::string& query, 
+	const scroll_state scrollable, long timeout)
 {
 	release_params();
-	nanodbc::statement::prepare(conn, query, timeout);
+	nanodbc::statement::open(conn);
+	if (scrollable != scroll_state::DEFAULT) scrollable_usage(scrollable);
+	nanodbc::statement::prepare(query, timeout);
 	prepare_params();
 	conn_ = &conn;
 }
@@ -417,6 +426,7 @@ params_batch* statement::params()
 // create function statement_ (
 //	 conn ty$pointer default null, 
 //   query varchar(8191) character set utf8 default null,
+//   scrollable boolean default null,
 // 	 timeout integer not null default 0 
 //	) returns ty$pointer
 //	external name 'nano!stmt$statement'
@@ -432,7 +442,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$statement)
 	unsigned in_count;
 
 	enum in : short {
-		conn = 0, query, timeout
+		conn = 0, query, scrollable, timeout
 	};
 
 	AutoArrayDelete<unsigned> in_char_sets;
@@ -453,6 +463,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$statement)
 		InMessage,
 		(NANO_POINTER, conn)
 		(FB_VARCHAR(8191 * 4), query)
+		(FB_BOOLEAN, scrollable)
 		(FB_INTEGER, timeout)
 	);
 
@@ -477,10 +488,18 @@ FB_UDR_BEGIN_FUNCTION(stmt$statement)
 					{
 						U8_VARIYNG(in, query);
 						stmt = new nanoudr::statement(
-							*att_resources, *conn, NANODBC_TEXT(in->query.str), in->timeout);
+							*att_resources, *conn, NANODBC_TEXT(in->query.str), 
+							in->scrollableNull ? scroll_state::DEFAULT
+							: in->scrollable == FB_TRUE ? scroll_state::SCROLLABLE 
+							: scroll_state::NONSCROLLABLE,
+							in->timeout);
 					}
 					else
-						stmt = new nanoudr::statement(*att_resources, *conn);
+						stmt = new nanoudr::statement(
+							*att_resources, *conn,
+							in->scrollableNull ? scroll_state::DEFAULT
+							: in->scrollable == FB_TRUE ? scroll_state::SCROLLABLE
+							: scroll_state::NONSCROLLABLE);
 				}
 				else
 					NANOUDR_THROW(POINTER_CONN_INVALID)
@@ -852,6 +871,7 @@ FB_UDR_END_FUNCTION
 //	 stmt ty$pointer not null, 
 //	 conn ty$pointer not null,  
 //   query varchar(8191) character set utf8 not null,
+//   scrollable boolean default null,
 // 	 timeout integer not null default 0 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$prepare_direct'
@@ -863,7 +883,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare_direct)
 	unsigned in_count;
 
 	enum in : short {
-		stmt = 0, conn, query, timeout
+		stmt = 0, conn, query, scrollable, timeout
 	};
 
 	AutoArrayDelete<unsigned> in_char_sets;
@@ -885,6 +905,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare_direct)
 		(NANO_POINTER, stmt)
 		(NANO_POINTER, conn)
 		(FB_VARCHAR(8191 * 4), query)
+		(FB_BOOLEAN, scrollable)
 		(FB_INTEGER, timeout)
 	);
 
@@ -907,7 +928,12 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare_direct)
 				if (conn != nullptr && att_resources->connections.valid(conn))
 				{
 					U8_VARIYNG(in, query);
-					stmt->prepare(*conn, NANODBC_TEXT(in->query.str), in->timeout);
+					stmt->prepare(
+						*conn, NANODBC_TEXT(in->query.str), 
+						in->scrollableNull ? scroll_state::DEFAULT
+						: in->scrollable == FB_TRUE ? scroll_state::SCROLLABLE
+						: scroll_state::NONSCROLLABLE,
+						in->timeout);
 					out->blank = BLANK;
 					out->blankNull = FB_FALSE;
 				}
@@ -1028,8 +1054,15 @@ FB_UDR_BEGIN_FUNCTION(stmt$scrollable)
 			{
 				if (!in->usageNull)
 					stmt->scrollable_usage(udr_helper.native_bool(in->usage));
-				out->scrollable = udr_helper.fb_bool(stmt->scrollable());
+				scroll_state scrollable = stmt->scrollable();
 				out->scrollableNull = FB_FALSE;
+				switch (stmt->scrollable())
+				{
+					case scroll_state::SCROLLABLE: out->scrollable = FB_TRUE;
+					case scroll_state::NONSCROLLABLE: out->scrollable = FB_FALSE;
+					default:
+						out->scrollableNull = FB_TRUE;
+				}
 			}
 			catch (std::runtime_error const& e)
 			{

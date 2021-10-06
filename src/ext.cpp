@@ -70,32 +70,23 @@ namespace nanoudr
 // UDR Statement class implementation
 //
 
-void statement::scrollable_usage(bool scrollable)
+void statement::scrollable_usage(const bool scrollable)
 {
 #if (ODBCVER >= 0x0300)
 	RETCODE rc;
-	if (scrollable_ != scrollable)
+	if (scrollable_ != (scrollable ? scroll_state::SCROLLABLE : scroll_state::NONSCROLLABLE))
 	{
-		if(scrollable)
-			NANODBC_CALL_RC(
-				SQLSetStmtAttr,
-				rc,
-				native_statement_handle(),
-				SQL_ATTR_CURSOR_SCROLLABLE,
-				(SQLPOINTER)SQL_SCROLLABLE,
-				SQL_IS_INTEGER);
-		else
-			NANODBC_CALL_RC(
-				SQLSetStmtAttr,
-				rc,
-				native_statement_handle(),
-				SQL_ATTR_CURSOR_SCROLLABLE,
-				(SQLPOINTER)SQL_NONSCROLLABLE,
-				SQL_IS_INTEGER);
+		NANODBC_CALL_RC(
+			SQLSetStmtAttr,
+			rc,
+			native_statement_handle(),
+			SQL_ATTR_CURSOR_SCROLLABLE,
+			scrollable ? (SQLPOINTER)SQL_SCROLLABLE : (SQLPOINTER)SQL_NONSCROLLABLE,
+			SQL_IS_INTEGER);
 	}
 	if (!success(rc))
 		NANODBC_THROW_DATABASE_ERROR(native_statement_handle(), SQL_HANDLE_STMT);
-	scrollable_ = scrollable;
+	scrollable_ = scrollable ? scroll_state::SCROLLABLE : scroll_state::NONSCROLLABLE;
 #endif
 	return;
 }

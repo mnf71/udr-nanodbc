@@ -96,6 +96,10 @@ private:
 #define SQL_SCROLLABLE				1
 #endif  /* ODBCVER >= 0x0300 */ 
 
+enum scroll_state : short {
+	DEFAULT = 0 /* SQL_NULL */, SCROLLABLE /* TRUE */, NONSCROLLABLE /* FALSE*/
+};
+
 #ifndef RSRS_H
 	class attachment_resources;
 #endif
@@ -112,17 +116,17 @@ class statement : public nanodbc::statement
 {
 public:
 	statement(class attachment_resources& att_resources);
-	explicit statement(class attachment_resources& att_resources, class nanoudr::connection& conn);
-	statement(class attachment_resources& att_resources, class nanoudr::connection& conn, 
-		const nanodbc::string& query, long timeout = 0);
+	explicit statement(class attachment_resources& att_resources, class nanoudr::connection& conn, const scroll_state scrollable);
+	statement(class attachment_resources& att_resources, class nanoudr::connection& conn, const nanodbc::string& query, 
+		const scroll_state scrollable, long timeout = 0);
 	~statement() noexcept;
 
-	void scrollable_usage(bool scrollable = false);
+	void scrollable_usage(const bool scrollable = false);
 
 	void open(class nanoudr::connection& conn);
 	nanoudr::connection* connection();
 
-	void prepare(class nanoudr::connection& conn, const nanodbc::string& query, long timeout = 0);
+	void prepare(class nanoudr::connection& conn, const nanodbc::string& query, const scroll_state scrollable, long timeout = 0);
 	void prepare(const nanodbc::string& query, long timeout = 0);
 
 	nanoudr::result* execute_direct(
@@ -141,13 +145,13 @@ public:
 	void release_params();
 
 	attachment_resources* attachment() { return att_resources_; };
-	bool scrollable() { return scrollable_; };
+	scroll_state scrollable() { return scrollable_; };
 
 private:
 	attachment_resources* att_resources_;
 	nanoudr::connection* conn_;
+	scroll_state scrollable_;
 	params_batch* params_;
-	bool scrollable_;
 };
 
 } // namespace nanoudr
