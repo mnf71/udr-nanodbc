@@ -116,21 +116,22 @@ class statement : public nanodbc::statement
 {
 public:
 	statement(class attachment_resources& att_resources);
-	explicit statement(class attachment_resources& att_resources, class nanoudr::connection& conn, const scroll_state scrollable);
+	explicit statement(class attachment_resources& att_resources, class nanoudr::connection& conn, const scroll_state scrollable_usage);
 	statement(class attachment_resources& att_resources, class nanoudr::connection& conn, const nanodbc::string& query, 
-		const scroll_state scrollable, long timeout = 0);
+		const scroll_state scrollable_usage, long timeout = 0);
 	~statement() noexcept;
 
-	void scrollable_usage(const bool scrollable = false);
+	void scrollable(const scroll_state scrollable_usage);
 
-	void open(class nanoudr::connection& conn);
+	void open(class nanoudr::connection& conn, const scroll_state scrollable);
 	nanoudr::connection* connection();
+	void close();
 
 	void prepare(class nanoudr::connection& conn, const nanodbc::string& query, const scroll_state scrollable, long timeout = 0);
 	void prepare(const nanodbc::string& query, long timeout = 0);
 
 	nanoudr::result* execute_direct(
-		class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
+		class nanoudr::connection& conn, const nanodbc::string& query, const scroll_state scrollable_usage, long batch_operations = 1, long timeout = 0);
 	void just_execute_direct(
 		class nanoudr::connection& conn, const nanodbc::string& query, long batch_operations = 1, long timeout = 0);
 

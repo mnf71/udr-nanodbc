@@ -3,6 +3,11 @@ SET TERM ^ ;
 CREATE OR ALTER PACKAGE NANO$FUNC
 AS
 BEGIN
+  
+  /*  Note:
+        Result cursor by default ODBC driver (NANODBC implementation),
+        scrollable into NANO$STMT
+   */
 
   FUNCTION execute_conn(
       conn TY$POINTER NOT NULL,

@@ -38,8 +38,8 @@
 #define NANODBC_STRINGIZE_I(text) #text
 #define NANODBC_STRINGIZE(text) NANODBC_STRINGIZE_I(text)
 
-#define NANODBC_THROW_DATABASE_ERROR(handle, handle_type)                                          \
-    throw nanodbc::database_error(                                                                 \
+#define NANODBC_THROW_DATABASE_ERROR(handle, handle_type)	\
+    throw nanodbc::database_error(							\
         handle, handle_type, __FILE__ ":" NANODBC_STRINGIZE(__LINE__) ": ") 
 
 #define NANODBC_CALL_RC(FUNC, RC, ...) RC = FUNC(__VA_ARGS__)
@@ -70,23 +70,25 @@ namespace nanoudr
 // UDR Statement class implementation
 //
 
-void statement::scrollable_usage(const bool scrollable)
+void statement::scrollable(const scroll_state scrollable_usage)
 {
+	if (scrollable_usage == scroll_state::DEFAULT)
+		return;
 #if (ODBCVER >= 0x0300)
 	RETCODE rc;
-	if (scrollable_ != (scrollable ? scroll_state::SCROLLABLE : scroll_state::NONSCROLLABLE))
+	if (scrollable_ != scrollable_usage)
 	{
 		NANODBC_CALL_RC(
 			SQLSetStmtAttr,
 			rc,
 			native_statement_handle(),
 			SQL_ATTR_CURSOR_SCROLLABLE,
-			scrollable ? (SQLPOINTER)SQL_SCROLLABLE : (SQLPOINTER)SQL_NONSCROLLABLE,
+			scrollable_usage == scroll_state::SCROLLABLE ? (SQLPOINTER)SQL_SCROLLABLE : (SQLPOINTER)SQL_NONSCROLLABLE,
 			SQL_IS_INTEGER);
 	}
 	if (!success(rc))
 		NANODBC_THROW_DATABASE_ERROR(native_statement_handle(), SQL_HANDLE_STMT);
-	scrollable_ = scrollable ? scroll_state::SCROLLABLE : scroll_state::NONSCROLLABLE;
+	scrollable_ = scrollable_usage;
 #endif
 	return;
 }
