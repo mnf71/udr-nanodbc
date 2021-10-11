@@ -60,16 +60,6 @@ long params_batch::push(short param_index, T const value, const bool null)
 	return static_cast<long>(p->nulls.size() - 1); 
 }
 
-void params_batch::clear()
-{
-	for (std::size_t param_index = 0; param_index < count_; ++param_index)
-	{
-		param* p = &params[param_index];
-		std::visit([](auto&& arg) { arg.clear(); }, p->batch);
-		p->nulls.clear();
-	}
-}
-
 bind_type params_batch::touch(short param_index)
 {
 	bind_types& vec = params[param_index].batch;
@@ -130,6 +120,16 @@ bool params_batch::is_null(const short param_index, const long batch_index)
 short params_batch::count()
 {
 	return count_;
+}
+
+void params_batch::clear()
+{
+	for (std::size_t param_index = 0; param_index < count_; ++param_index)
+	{
+		param* p = &params[param_index];
+		std::visit([](auto&& arg) { arg.clear(); }, p->batch);
+		p->nulls.clear();
+	}
 }
 
 //-----------------------------------------------------------------------------
@@ -1604,7 +1604,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$reset_parameters)
 			try
 			{
 				stmt->reset_parameters();
-				if (stmt->params() != nullptr) stmt->params()->clear();
+				stmt->release_params();
 				out->blank = BLANK;
 				out->blankNull = FB_FALSE;
 			}

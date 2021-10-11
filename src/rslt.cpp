@@ -1006,7 +1006,14 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						}
 						case SQL_BLOB: // blob
 						{
-							FETCHING_THROW("Fetching BLOB to be developed.")
+							std::vector<std::uint8_t> value;
+							if (is_digit)
+								rslt->get_ref<std::vector<std::uint8_t>>(column_position, value); else
+								rslt->get_ref<std::vector<std::uint8_t>>(column_name, value);
+
+							udr_helper.stream_to_blob(att_resources, &value, (ISC_QUAD*)(out + value_offset[out::value]));
+
+							null_flag = FB_FALSE;
 							break;
 						}
 						case SQL_ARRAY: // array

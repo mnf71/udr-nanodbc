@@ -62,8 +62,6 @@ public:
 	template <class T>
 	long push(short param_index, T const value, const bool null = false);
 
-	void clear();
-
 	bind_type touch(short param_index);
 
 	template <class T> T* values(const short param_index);
@@ -75,6 +73,8 @@ public:
 	bool is_null(const short param_index, const long batch_index);
 
 	short count();
+
+	void clear();
 
 private:
 

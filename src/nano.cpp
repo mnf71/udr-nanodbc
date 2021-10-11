@@ -199,13 +199,53 @@ nanoudr::time helper::get_time(const nanodbc::time* t)
 	return t_s;
 }
 
-//std::vector<uint8_t> helper::get_blob(nanoudr::attachment_resources* att_resources, ISC_QUAD blob)
-//{
-//}
-
-ISC_QUAD helper::put_blob(nanoudr::attachment_resources* att_resources, std::vector<uint8_t> blob)
+void helper::blob_to_stream(nanoudr::attachment_resources* att_resources, ISC_QUAD* in, class std::vector<uint8_t>* out)
 {
-	return {0,0};
+	FB_UDR_STATUS_TYPE* status = att_resources->context()->status;
+	FB_UDR_CONTEXT_TYPE* context = att_resources->context()->context;
+
+	AutoRelease<IAttachment> att;
+	AutoRelease<ITransaction> tra;
+	AutoRelease<IBlob> blob;
+
+	try
+	{
+	}
+	catch (...)
+	{
+
+	}
+}
+
+void helper::stream_to_blob(nanoudr::attachment_resources* att_resources, class std::vector<uint8_t>* in, ISC_QUAD* out)
+{
+	FB_UDR_STATUS_TYPE* status = att_resources->context()->status;
+	FB_UDR_CONTEXT_TYPE* context = att_resources->context()->context;
+
+	AutoRelease<IAttachment> att;
+	AutoRelease<ITransaction> tra;
+	AutoRelease<IBlob> blob;
+
+	ISC_UCHAR* stream = reinterpret_cast<ISC_UCHAR*>(in->data());
+	std::size_t stream_size = (in->size() * sizeof(uint8_t)) / sizeof(ISC_UCHAR);
+	ISC_USHORT read;
+	try
+	{
+		att.reset(context->getAttachment(status));
+		tra.reset(context->getTransaction(status));
+		blob.reset(att->createBlob(status, tra, out, 0, NULL));
+		while (stream_size > 0)
+		{
+			read = stream_size > FB_SEGMENT_SIZE ? FB_SEGMENT_SIZE : (ISC_USHORT)(stream_size);
+			blob->putSegment(status, read, stream);
+			stream_size = stream_size - read;
+			*stream += read;
+		}
+		blob->close(status);
+	}
+	catch (...)
+	{
+	}
 }
 
 
