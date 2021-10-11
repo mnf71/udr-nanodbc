@@ -402,6 +402,9 @@ public:
 	nanoudr::date get_date(const nanodbc::date* d);
 	nanoudr::time get_time(const nanodbc::time* t);
 
+	std::vector<uint8_t> helper::get_blob(nanoudr::attachment_resources* att_resources, ISC_QUAD blob);
+	ISC_QUAD helper::put_blob(nanoudr::attachment_resources* att_resources, std::vector<uint8_t> blob);
+
 private:
 	const ISC_USHORT utf8_converter(char* dest, const ISC_USHORT dest_length, const char* to,
 		const char* src, const ISC_USHORT src_length, const char* from);

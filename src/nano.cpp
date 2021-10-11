@@ -199,6 +199,16 @@ nanoudr::time helper::get_time(const nanodbc::time* t)
 	return t_s;
 }
 
+//std::vector<uint8_t> helper::get_blob(nanoudr::attachment_resources* att_resources, ISC_QUAD blob)
+//{
+//}
+
+ISC_QUAD helper::put_blob(nanoudr::attachment_resources* att_resources, std::vector<uint8_t> blob)
+{
+	return {0,0};
+}
+
+
 } // namespace nanoudr
 
 FB_UDR_IMPLEMENT_ENTRY_POINT

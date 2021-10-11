@@ -20,8 +20,7 @@ BEGIN
 
   FUNCTION open_(
       stmt TY$POINTER NOT NULL,
-      conn TY$POINTER NOT NULL,
-      scrollable BOOLEAN DEFAULT NULL /* NULL - default ODBC driver, statement_() declaration */
+      conn TY$POINTER NOT NULL
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION close_(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK;
@@ -34,13 +33,14 @@ BEGIN
       stmt TY$POINTER NOT NULL,
       conn TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
-      scrollable BOOLEAN DEFAULT NULL/* NULL - default ODBC driver, statement_() or open() declaration */,
+      scrollable BOOLEAN DEFAULT NULL /* NULL - default ODBC driver */,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION prepare_(
       stmt TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      scrollable BOOLEAN DEFAULT NULL /* NULL - default ODBC driver */,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
@@ -58,7 +58,7 @@ BEGIN
       stmt TY$POINTER NOT NULL,
       conn TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
-      scrollable BOOLEAN DEFAULT NULL /* NULL - default ODBC driver, statement_() or open() declaration */,
+      scrollable BOOLEAN DEFAULT NULL /* NULL - default ODBC driver */,
       batch_operations INTEGER NOT NULL DEFAULT 1,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$POINTER;
@@ -245,8 +245,7 @@ BEGIN
 
   FUNCTION open_(
       stmt TY$POINTER NOT NULL,
-      conn TY$POINTER NOT NULL,
-      scrollable BOOLEAN
+      conn TY$POINTER NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$open'
     ENGINE UDR;
@@ -276,6 +275,7 @@ BEGIN
   FUNCTION prepare_(
       stmt TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      scrollable BOOLEAN,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$prepare'

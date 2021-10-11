@@ -43,6 +43,7 @@ transaction::transaction(class attachment_resources& att_resources, class nanoud
 
 transaction::~transaction()
 {
+	att_resources_->transactions.release(this);
 	nanodbc::transaction::~transaction();
 }
 
@@ -118,10 +119,10 @@ FB_UDR_BEGIN_FUNCTION(tnx$valid)
 	FB_UDR_EXECUTE_FUNCTION
 	{
 		NANOUDR_RESOURCES
-		out->valid =
-			in->tnxNull ?
-			udr_helper.fb_bool(false) :
-			att_resources->transactions.valid(udr_helper.tnx_ptr(in->tnx.str));
+		out->valid = udr_helper.fb_bool(
+			in->tnxNull ? false :
+				att_resources->transactions.valid(udr_helper.tnx_ptr(in->tnx.str))
+			);
 		out->validNull = FB_FALSE;
 	}
 
@@ -156,7 +157,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$release)
 			nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
 			try
 			{
-				att_resources->transactions.release(tnx);
+				delete (nanoudr::transaction*)(tnx);
 			}
 			catch (std::runtime_error const& e)
 			{

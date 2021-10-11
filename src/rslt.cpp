@@ -44,6 +44,7 @@ result::result(
 
 result::~result()
 {
+	att_resources_->results.release(this);
 	nanodbc::result::~result();
 }
 
@@ -81,7 +82,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$release)
 			nanoudr::result* rslt = udr_helper.rslt_ptr(in->rslt.str);
 			try
 			{
-				att_resources->results.release(rslt);
+				delete (nanoudr::result*)(rslt);
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -119,10 +120,10 @@ FB_UDR_BEGIN_FUNCTION(rslt$valid)
 	FB_UDR_EXECUTE_FUNCTION
 	{
 		NANOUDR_RESOURCES
-		out->valid =
-			in->rsltNull ?
-			udr_helper.fb_bool(false) :
-			att_resources->results.valid(udr_helper.rslt_ptr(in->rslt.str));
+		out->valid = udr_helper.fb_bool(
+			in->rsltNull ? false :
+				att_resources->results.valid(udr_helper.rslt_ptr(in->rslt.str))
+			);
 		out->validNull = FB_FALSE;
 	}
 
@@ -1015,7 +1016,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						}
 						case SQL_QUAD: // blob_id 
 						{
-							FETCHING_THROW("Fetching BLOB_ID to be developed.")
+							FETCHING_THROW("Fetching SQL_QUAD not supported.")
 							break;
 						}
 						case SQL_TYPE_TIME: // time

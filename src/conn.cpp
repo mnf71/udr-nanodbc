@@ -56,6 +56,7 @@ connection::connection(class attachment_resources& att_resources, const nanodbc:
 
 connection::~connection()
 {
+	att_resources_->connections.release(this);
 	nanodbc::connection::~connection();
 }
 
@@ -164,10 +165,10 @@ FB_UDR_BEGIN_FUNCTION(conn$valid)
 	FB_UDR_EXECUTE_FUNCTION
 	{
 		NANOUDR_RESOURCES
-		out->valid =
-			in->connNull ?
-			udr_helper.fb_bool(false) :
-			att_resources->connections.valid(udr_helper.conn_ptr(in->conn.str));
+		out->valid = udr_helper.fb_bool(
+			in->connNull ? false :
+				att_resources->connections.valid(udr_helper.conn_ptr(in->conn.str))
+			);
 		out->validNull = FB_FALSE;
 	}
 
@@ -202,7 +203,7 @@ FB_UDR_BEGIN_FUNCTION(conn$release)
 			nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
 			try
 			{
-				att_resources->connections.release(conn);
+				delete (nanoudr::connection*)(conn);
 			}
 			catch (std::runtime_error const& e)
 			{

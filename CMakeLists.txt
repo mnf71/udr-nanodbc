@@ -42,7 +42,7 @@ endif()
 
 file(GLOB files ${SOURCE}/*) 
 
-add_library(nano SHARED ${files})
+add_library(nano SHARED ${files}) 
 
 set_property(TARGET nano PROPERTY CXX_STANDARD 17)
 set_property(TARGET nano PROPERTY CXX_STANDARD_REQUIRED ON)

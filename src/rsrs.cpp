@@ -40,7 +40,7 @@ attachment_resources::~attachment_resources() noexcept
 
 void attachment_resources::expunge()
 {
-	for (auto c : connections.conn()) connections.release(c);
+	for (auto c : connections.conn()) delete (nanoudr::connection*)(c);
 }
 
 void attachment_resources::context(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
@@ -135,9 +135,9 @@ void attachment_resources::attachment_connections::expunge(const nanoudr::connec
 	conn_it = std::find(conn_v.begin(), conn_v.end(), conn);
 	if (conn_it != conn_v.end())
 	{
-		for (auto t : outer->transactions.tnx()) if (t->connection() == conn) outer->transactions.release(t);
-		for (auto s : outer->statements.stmt())	if (s->connection() == conn) outer->statements.release(s);
-		for (auto r : outer->results.rslt()) if (r->connection() == conn) outer->results.release(r);
+		for (auto t : outer->transactions.tnx()) if (t->connection() == conn) delete (nanoudr::transaction*)(t);
+		for (auto s : outer->statements.stmt())	if (s->connection() == conn) delete (nanoudr::statement*)(s);
+		for (auto r : outer->results.rslt()) if (r->connection() == conn) delete (nanoudr::result*)(r);
 	}
 }
 
@@ -146,10 +146,9 @@ void attachment_resources::attachment_connections::release(const nanoudr::connec
 	conn_it = std::find(conn_v.begin(), conn_v.end(), conn);
 	if (conn_it != conn_v.end())
 	{
-		for (auto t : outer->transactions.tnx()) if (t->connection() == conn) outer->transactions.release(t);
-		for (auto s : outer->statements.stmt()) if (s->connection() == conn) outer->statements.release(s);
-		for (auto r : outer->results.rslt()) if (r->connection() == conn) outer->results.release(r);
-		delete (nanoudr::connection*)(conn);
+		for (auto t : outer->transactions.tnx()) if (t->connection() == conn) delete (nanoudr::transaction*)(t);
+		for (auto s : outer->statements.stmt()) if (s->connection() == conn) delete (nanoudr::statement*)(s);
+		for (auto r : outer->results.rslt()) if (r->connection() == conn) delete (nanoudr::result*)(r);
 		conn_v.erase(conn_it);
 	}
 }
@@ -175,11 +174,7 @@ void attachment_resources::connection_transactions::retain(const nanoudr::transa
 void attachment_resources::connection_transactions::release(const nanoudr::transaction* tnx)
 {
 	tnx_it = std::find(tnx_v.begin(), tnx_v.end(), tnx);
-	if (tnx_it != tnx_v.end())
-	{
-		delete (nanoudr::transaction*)(tnx);
-		tnx_v.erase(tnx_it);
-	}
+	if (tnx_it != tnx_v.end()) tnx_v.erase(tnx_it);
 }
 
 bool attachment_resources::connection_transactions::valid(const nanoudr::transaction* tnx)
@@ -203,11 +198,7 @@ void attachment_resources::connection_statements::retain(const nanoudr::statemen
 void attachment_resources::connection_statements::release(const nanoudr::statement* stmt)
 {
 	stmt_it = std::find(stmt_v.begin(), stmt_v.end(), stmt);
-	if (stmt_it != stmt_v.end())
-	{
-		delete (nanoudr::statement*)(stmt);
-		stmt_v.erase(stmt_it);
-	}
+	if (stmt_it != stmt_v.end()) stmt_v.erase(stmt_it);
 }
 
 bool attachment_resources::connection_statements::valid(const nanoudr::statement* stmt)
@@ -231,11 +222,7 @@ void attachment_resources::connection_results::retain(const nanoudr::result* rsl
 void attachment_resources::connection_results::release(const nanoudr::result* rslt)
 {
 	rslt_it = std::find(rslt_v.begin(), rslt_v.end(), rslt);
-	if (rslt_it != rslt_v.end())
-	{
-		delete (nanoudr::result*)(rslt);
-		rslt_v.erase(rslt_it);
-	}
+	if (rslt_it != rslt_v.end()) rslt_v.erase(rslt_it);
 }
 
 bool attachment_resources::connection_results::valid(const nanoudr::result* rslt)

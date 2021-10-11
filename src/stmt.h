@@ -37,9 +37,10 @@ enum bind_type : short {
 	NANODBC_LONG, NANODBC_ULONG, NANODBC_INT64, NANODBC_UINT64, 
 	NANODBC_FLOAT, NANODBC_DOUBLE,
 	NANODBC_DATE, NANODBC_TIME, NANODBC_TIMESTAMP,
-	NANODBC_S_VALUE_TYPE, NANODBC_W_VALUE_TYPE,
-	NANODBC_STRING, NANODBC_WIDE_STRING,
-	NANODBC_UNKNOWN
+	NANODBC_WSTRING_VALUE_TYPE, NANODBC_WIDE_STRING,
+	NANODBC_STRING_VALUE_TYPE, NANODBC_STRING,
+	NANODBC_BINARY,
+	UNKNOWN
 };
 
 using bind_types = std::variant <
@@ -47,8 +48,9 @@ using bind_types = std::variant <
 	std::vector<long int>, std::vector<unsigned long int>, std::vector<long long>, std::vector<unsigned long long>, 
 	std::vector<float>, std::vector<double>,
 	std::vector<nanodbc::date>, std::vector<nanodbc::time>, std::vector<nanodbc::timestamp>,
-	std::vector<nanodbc::string::value_type>, std::vector<nanodbc::wide_string::value_type>,
-	std::vector<nanodbc::string>, std::vector<nanodbc::wide_string>
+	std::vector<nanodbc::wide_string::value_type>, std::vector<nanodbc::wide_string>,
+	std::vector<nanodbc::string::value_type>, std::vector<nanodbc::string>,
+	std::vector<std::vector<uint8_t>>
 >;
 
 class params_batch
@@ -64,13 +66,13 @@ public:
 
 	bind_type touch(short param_index);
 
-	template <class T> T* data(short param_index);
-	template <class T> T* value(short param_index, long batch_index);
-	template <class T> std::vector<T>* batch(short param_index);
+	template <class T> T* values(const short param_index);
+	template <class T> std::vector<T>* vector(const short param_index);
+	template <class T> T* value(const short param_index, const long batch_index);
 
-	bool* nulls(short param_index);
+	bool* nulls(const short param_index);
 
-	bool is_null(short param_index, long batch_index);
+	bool is_null(const short param_index, const long batch_index);
 
 	short count();
 
@@ -116,19 +118,19 @@ class statement : public nanodbc::statement
 {
 public:
 	statement(class attachment_resources& att_resources);
-	explicit statement(class attachment_resources& att_resources, class nanoudr::connection& conn, const scroll_state scrollable_usage);
+	explicit statement(class attachment_resources& att_resources, class nanoudr::connection& conn);
 	statement(class attachment_resources& att_resources, class nanoudr::connection& conn, const nanodbc::string& query, 
 		const scroll_state scrollable_usage, long timeout = 0);
 	~statement() noexcept;
 
 	void scrollable(const scroll_state scrollable_usage);
 
-	void open(class nanoudr::connection& conn, const scroll_state scrollable);
+	void open(class nanoudr::connection& conn);
 	nanoudr::connection* connection();
 	void close();
 
-	void prepare(class nanoudr::connection& conn, const nanodbc::string& query, const scroll_state scrollable, long timeout = 0);
-	void prepare(const nanodbc::string& query, long timeout = 0);
+	void prepare(class nanoudr::connection& conn, const nanodbc::string& query, const scroll_state scrollable_usage, long timeout = 0);
+	void prepare(const nanodbc::string& query, const scroll_state scrollable_usage, long timeout = 0);
 
 	nanoudr::result* execute_direct(
 		class nanoudr::connection& conn, const nanodbc::string& query, const scroll_state scrollable_usage, long batch_operations = 1, long timeout = 0);
