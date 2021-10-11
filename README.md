@@ -19,7 +19,7 @@ BEGIN
   
   BEGIN
     conn = nano$conn.connection(ora_conn_str);
-    WHEN EXCEPTION NANO$NANODBC_ERR_MESSAGE do
+    WHEN EXCEPTION nano$nanodbc_err_message DO
     BEGIN
       e = 'ORA connect failed: ' || nano$udr.error_message();
       SUSPEND;
