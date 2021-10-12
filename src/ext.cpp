@@ -62,7 +62,6 @@ inline bool success(RETCODE rc)
 //
 
 #include "conn.h"
-#include "tnx.h"
 #include "stmt.h"
 
 namespace nanoudr
