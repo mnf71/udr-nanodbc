@@ -33,7 +33,7 @@ BEGIN
   FUNCTION txn_serializable RETURNS SMALLINT;
 
   FUNCTION isolation_level(
-      tnx TY$POINTER NOT NULL,
+      conn TY$POINTER NOT NULL,
       level_ SMALLINT DEFAULT NULL /* NULL - get usage */
     ) RETURNS SMALLINT;
 
@@ -100,7 +100,7 @@ BEGIN
   FUNCTION txn_repeatable_read RETURNS SMALLINT AS BEGIN RETURN 4; END
   FUNCTION txn_serializable RETURNS SMALLINT AS BEGIN RETURN 8; END
 
-  FUNCTION isolation_level(tnx TY$POINTER NOT NULL, level_ SMALLINT) RETURNS SMALLINT
+  FUNCTION isolation_level(conn TY$POINTER NOT NULL, level_ SMALLINT) RETURNS SMALLINT
     EXTERNAL NAME 'nano!conn$isolation_level'
     ENGINE UDR;
 
