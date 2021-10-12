@@ -72,8 +72,8 @@ void attachment_resources::make_resources()
 
 void attachment_resources::make_exceptions(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
-	IAttachment* att;
-	ITransaction* tra;
+	AutoRelease<IAttachment> att;
+	AutoRelease<ITransaction> tra;
 	AutoRelease<IStatement> stmt;
 	AutoRelease<IMessageMetadata> meta;
 	AutoRelease<IResultSet> curs;
@@ -88,18 +88,18 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 
 	try
 	{
-		att = context->getAttachment(status);
-		tra = context->getTransaction(status);
+		att.reset(context->getAttachment(status));
+		tra.reset(context->getTransaction(status));
 		stmt.reset(att->prepare(status, tra, 0, sql_stmt, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
 		meta.reset(stmt->getOutputMetadata(status));
 		curs.reset(stmt->openCursor(status, tra, NULL, NULL, meta, 0));
-		unsigned buf_length = meta->getMessageLength(status);
-		unsigned char* buffer = new unsigned char[buf_length];
+		AutoArrayDelete<unsigned char> buffer;
 
 		nanoudr::exception udr_exception = { "\0", 0, "\0" };
 		for (int i = 0; i < EXCEPTION_ARRAY_SIZE; ++i)
 			assign_exception(&udr_exception, i);
 
+		buffer.reset(new unsigned char[meta->getMessageLength(status)]);
 		for (int i = 0; curs->fetchNext(status, buffer) == IStatus::RESULT_OK && i < EXCEPTION_ARRAY_SIZE; ++i)
 		{
 			memcpy( // this SQL_VARYING, see sql_stmt
@@ -114,7 +114,6 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 			assign_exception(&udr_exception, i);
 		}
 		curs->close(status);
-		delete[] buffer;
 	}
 	catch (...)
 	{

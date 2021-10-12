@@ -893,15 +893,13 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 			try
 			{
 				U8_VARIYNG(in, column);
-				bool is_digit = isdigit(in->column.str[0]);
 
-				short column_position = is_digit ? (short)(atoi(in->column.str)) : -1;
-				nanodbc::string column_name = is_digit ? "\0" : NANODBC_TEXT(in->column.str);
+				short column_position = -1;
+				if (isdigit(in->column.str[0]))
+					column_position = (short)(atoi(in->column.str)); else
+					column_position = rslt->column(NANODBC_TEXT(in->column.str));
 
-				if (is_digit ?  rslt->is_null(column_position) : rslt->is_null(column_name)) 
-				{
-					null_flag = FB_TRUE;
-				}
+				if (rslt->is_null(column_position)) null_flag = FB_TRUE;
 				else 
 				{
 					switch (value_type[out::value])
@@ -909,9 +907,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						case SQL_TEXT: // char
 						{
 							nanodbc::string value;
-							if (is_digit)
-								rslt->get_ref<nanodbc::string>(column_position, value); else
-								rslt->get_ref<nanodbc::string>(column_name, value);
+							rslt->get_ref<nanodbc::string>(column_position, value);
 							ISC_USHORT length = (ISC_USHORT)(value.length());
 
 							if (value_char_set[out::value] == fb_char_set::CS_UTF8)
@@ -934,9 +930,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						case SQL_VARYING: // varchar
 						{
 							nanodbc::string value;
-							if (is_digit)
-								rslt->get_ref<nanodbc::string>(column_position, value); else
-								rslt->get_ref<nanodbc::string>(column_name, value);
+							rslt->get_ref<nanodbc::string>(column_position, value);
 							ISC_USHORT length = (ISC_USHORT)(value.length());
 
 							if (value_char_set[out::value] == fb_char_set::CS_UTF8)
@@ -960,39 +954,33 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						}
 						case SQL_SHORT: // smallint
 						{
-							*(ISC_SHORT*)(out + value_offset[out::value]) =
-								(is_digit ? rslt->get<ISC_SHORT>(column_position) : rslt->get<ISC_SHORT>(column_name));
+							*(ISC_SHORT*)(out + value_offset[out::value]) = rslt->get<ISC_SHORT>(column_position);
 							null_flag = FB_FALSE;
 							break;
 						}
 						case SQL_LONG: // integer 
 						{
-							*(ISC_LONG*)(out + value_offset[out::value]) =
-								(is_digit ? rslt->get<ISC_LONG>(column_position) : rslt->get<ISC_LONG>(column_name));
+							*(ISC_LONG*)(out + value_offset[out::value]) = rslt->get<ISC_LONG>(column_position);
 							null_flag = FB_FALSE;
 							break;
 						}
 						case SQL_FLOAT: // float
 						{
-							*(float*)(out + value_offset[out::value]) =
-								(is_digit ? rslt->get<float>(column_position) : rslt->get<float>(column_name));
+							*(float*)(out + value_offset[out::value]) = rslt->get<float>(column_position);
 							null_flag = FB_FALSE;
 							break;
 						}
 						case SQL_DOUBLE: // double precision 
 						case SQL_D_FLOAT: 
 						{
-							*(double*)(out + value_offset[out::value]) =
-								(is_digit ? rslt->get<double>(column_position) : rslt->get<double>(column_name));
+							*(double*)(out + value_offset[out::value]) = rslt->get<double>(column_position);
 							null_flag = FB_FALSE;
 							break;
 						}
 						case SQL_TIMESTAMP: // timestamp
 						{
 							nanodbc::timestamp value;
-							if (is_digit)
-								rslt->get_ref<nanodbc::timestamp>(column_position, value); else
-								rslt->get_ref<nanodbc::timestamp>(column_name, value);
+							rslt->get_ref<nanodbc::timestamp>(column_position, value);
 							nanoudr::timestamp tm = udr_helper.get_timestamp(&value);
 
 							Firebird::FbTimestamp fb;
@@ -1006,14 +994,26 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						}
 						case SQL_BLOB: // blob
 						{
-							std::vector<std::uint8_t> value;
-							if (is_digit)
-								rslt->get_ref<std::vector<std::uint8_t>>(column_position, value); else
-								rslt->get_ref<std::vector<std::uint8_t>>(column_name, value);
-
-							udr_helper.stream_to_blob(att_resources, &value, (ISC_QUAD*)(out + value_offset[out::value]));
-
-							null_flag = FB_FALSE;
+							try 
+							{
+								if (rslt->column_c_datatype(column_position) < 0) // SQL_C_BINARY...
+								{
+									std::vector<std::uint8_t> value;
+									rslt->get_ref<std::vector<std::uint8_t>>(column_position, value);
+									udr_helper.write_blob(att_resources, &value, (ISC_QUAD*)(out + value_offset[out::value]));
+								}
+								else // SQL_C_[W]CHAR... char datatype return BLOB Subtype TEXT
+								{
+									nanodbc::string value;
+									rslt->get_ref<nanodbc::string>(column_position, value);
+									udr_helper.write_blob(att_resources, &value, (ISC_QUAD*)(out + value_offset[out::value]));
+								}
+								null_flag = FB_FALSE;
+							}
+							catch (...)
+							{
+								FETCHING_THROW("Error writing stream to BLOB.")
+							}
 							break;
 						}
 						case SQL_ARRAY: // array
@@ -1029,9 +1029,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						case SQL_TYPE_TIME: // time
 						{
 							nanodbc::time value; 
-							if (is_digit)
-								rslt->get_ref<nanodbc::time>(column_position, value); else
-								rslt->get_ref<nanodbc::time>(column_name, value);
+							rslt->get_ref<nanodbc::time>(column_position, value);
 							nanoudr::time t = udr_helper.get_time(&value);
 
 							Firebird::FbTime fb;
@@ -1045,9 +1043,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						case SQL_TYPE_DATE: // date
 						{
 							nanodbc::date value;
-							if (is_digit)
-								rslt->get<nanodbc::date>(column_position, value); else 
-								rslt->get<nanodbc::date>(column_name, value);
+							rslt->get<nanodbc::date>(column_position, value); 
 							nanoudr::date d = udr_helper.get_date(&value);
 
 							Firebird::FbDate fb;
@@ -1060,15 +1056,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						}
 						case SQL_INT64: // bigint
 						{
-							*(ISC_INT64*)(out + value_offset[out::value]) =
-								(is_digit ? rslt->get<ISC_INT64>(column_position) : rslt->get<ISC_INT64>(column_name));
+							*(ISC_INT64*)(out + value_offset[out::value]) = rslt->get<ISC_INT64>(column_position);
 							break;
 						}
 						case SQL_BOOLEAN: // boolean
 						{
-							bool value = 
-								(is_digit ? rslt->get<unsigned short>(column_position) : rslt->get<unsigned short>(column_name)) 
-									? true : false;
+							bool value = rslt->get<unsigned short>(column_position) ? true : false;
 							*(FB_BOOLEAN*)(out + value_offset[out::value]) = udr_helper.fb_bool(value);
 							null_flag = FB_FALSE;
 							break;

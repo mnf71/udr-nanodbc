@@ -94,13 +94,13 @@ bool helper::native_bool(const FB_BOOLEAN value)
 //-----------------------------------------------------------------------------
 //
 
-const ISC_USHORT helper::utf8_in(nanoudr::attachment_resources* att_resources, char* dest, const ISC_USHORT dest_size,
+const ISC_USHORT helper::utf8_in(attachment_resources* att_resources, char* dest, const ISC_USHORT dest_size,
 	const char* utf8, const ISC_USHORT utf8_length)
 {
 	return utf8_converter(dest, dest_size, att_resources->locale(), utf8, utf8_length, "UTF-8");
 }
 
-const ISC_USHORT helper::utf8_out(nanoudr::attachment_resources* att_resources, char* dest, const ISC_USHORT dest_size,
+const ISC_USHORT helper::utf8_out(attachment_resources* att_resources, char* dest, const ISC_USHORT dest_size,
 	const char* locale, const ISC_USHORT locale_length)
 {
 	return utf8_converter(dest, dest_size, "UTF-8", locale, locale_length, att_resources->locale());
@@ -199,52 +199,96 @@ nanoudr::time helper::get_time(const nanodbc::time* t)
 	return t_s;
 }
 
-void helper::blob_to_stream(nanoudr::attachment_resources* att_resources, ISC_QUAD* in, class std::vector<uint8_t>* out)
+void helper::read_blob(attachment_resources* att_resources, ISC_QUAD* in, class std::vector<uint8_t>* out)
 {
-	FB_UDR_STATUS_TYPE* status = att_resources->context()->status;
-	FB_UDR_CONTEXT_TYPE* context = att_resources->context()->context;
+	const resources_context* att_context = att_resources->context();
+
+	FB_UDR_STATUS_TYPE* status = att_context->status;
+	FB_UDR_CONTEXT_TYPE* context = att_context->context;
 
 	AutoRelease<IAttachment> att;
 	AutoRelease<ITransaction> tra;
 	AutoRelease<IBlob> blob;
 
+	AutoArrayDelete<unsigned char> buffer;
+	out->clear();
 	try
 	{
-	}
-	catch (...)
-	{
-
-	}
-}
-
-void helper::stream_to_blob(nanoudr::attachment_resources* att_resources, class std::vector<uint8_t>* in, ISC_QUAD* out)
-{
-	FB_UDR_STATUS_TYPE* status = att_resources->context()->status;
-	FB_UDR_CONTEXT_TYPE* context = att_resources->context()->context;
-
-	AutoRelease<IAttachment> att;
-	AutoRelease<ITransaction> tra;
-	AutoRelease<IBlob> blob;
-
-	ISC_UCHAR* stream = reinterpret_cast<ISC_UCHAR*>(in->data());
-	std::size_t stream_size = (in->size() * sizeof(uint8_t)) / sizeof(ISC_UCHAR);
-	ISC_USHORT read;
-	try
-	{
+		unsigned read = 0;
 		att.reset(context->getAttachment(status));
 		tra.reset(context->getTransaction(status));
-		blob.reset(att->createBlob(status, tra, out, 0, NULL));
-		while (stream_size > 0)
+		blob.reset(att->openBlob(status, tra, in, 0, NULL));
+		buffer.reset(new unsigned char[FB_SEGMENT_SIZE]);
+		for (bool eof = false; !eof; )
 		{
-			read = stream_size > FB_SEGMENT_SIZE ? FB_SEGMENT_SIZE : (ISC_USHORT)(stream_size);
-			blob->putSegment(status, read, stream);
-			stream_size = stream_size - read;
-			*stream += read;
+			switch (blob->getSegment(status, FB_SEGMENT_SIZE, buffer, &read))
+			{
+				case IStatus::RESULT_OK: 
+				case IStatus::RESULT_SEGMENT: 
+				{
+					out->insert(out->end(), reinterpret_cast<uint8_t*>(static_cast<unsigned char*>(buffer)),
+						reinterpret_cast<uint8_t*>(static_cast<unsigned char*>(buffer)) + (read * sizeof(unsigned char)) / sizeof(uint8_t)
+					);
+					break;
+				}
+				default:
+				{
+					eof = true;
+					continue;
+				}
+			}
 		}
 		blob->close(status);
 	}
 	catch (...)
 	{
+		throw;
+	}
+}
+
+void helper::write_blob(attachment_resources* att_resources, class std::vector<uint8_t>* in, ISC_QUAD* out)
+{
+	write_blob(att_resources, 
+		reinterpret_cast<unsigned char*>(in->data()), (in->size() * sizeof(uint8_t)) / sizeof(unsigned char), out);
+}
+
+void helper::write_blob(attachment_resources* att_resources, nanodbc::string* in, ISC_QUAD* out)
+{
+	write_blob(att_resources, (unsigned char*)(in->c_str()), in->length(), out);
+}
+
+void helper::write_blob(
+	attachment_resources* att_resources, const unsigned char* in, const std::size_t in_length, ISC_QUAD* out)
+{
+	const resources_context* att_context = att_resources->context();
+
+	FB_UDR_STATUS_TYPE* status = att_context->status;
+	FB_UDR_CONTEXT_TYPE* context = att_context->context;
+
+	AutoRelease<IAttachment> att;
+	AutoRelease<ITransaction> tra;
+	AutoRelease<IBlob> blob;
+
+	unsigned char* stream = (unsigned char*)(in);
+	std::size_t stream_size = (std::size_t)(in_length);
+	try
+	{
+		unsigned write = 0;
+		att.reset(context->getAttachment(status));
+		tra.reset(context->getTransaction(status));
+		blob.reset(att->createBlob(status, tra, out, 0, NULL));
+		while (stream_size > 0)
+		{
+			write = stream_size < FB_SEGMENT_SIZE ? (unsigned)(stream_size) : FB_SEGMENT_SIZE;
+			blob->putSegment(status, write, stream);
+			stream_size = stream_size - write;
+			stream += write;
+		}
+		blob->close(status);
+	}
+	catch (...)
+	{
+		throw;
 	}
 }
 

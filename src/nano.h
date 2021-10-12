@@ -45,10 +45,12 @@ namespace nanoudr
 //-----------------------------------------------------------------------------
 //
 
-#define POINTER_SIZE			8	
-#define	NANO_POINTER			FB_CHAR(POINTER_SIZE)	// domain types
-#define	NANO_BLANK				FB_INTEGER	// domain types
-#define	BLANK					-1	// void function emulation
+#define POINTER_SIZE	8	
+#define	NANO_POINTER	FB_CHAR(POINTER_SIZE)	// domain types
+#define	NANO_BLANK		FB_INTEGER	// domain types
+#define	BLANK			-1	// void function emulation
+
+#define FB_SEGMENT_SIZE	32768	// BLOB segment size
 
 //-----------------------------------------------------------------------------
 //
@@ -375,8 +377,6 @@ struct timestamp
 	unsigned fract;
 };
 
-#define FB_SEGMENT_SIZE 16383
-
 class helper
 {
 public:
@@ -391,9 +391,9 @@ public:
 	FB_BOOLEAN fb_bool(bool value);
 	bool native_bool(const ISC_UCHAR value);
 
-	const ISC_USHORT utf8_in(nanoudr::attachment_resources* att_resources, char* in, const ISC_USHORT in_length,
+	const ISC_USHORT utf8_in(attachment_resources* att_resources, char* in, const ISC_USHORT in_length,
 		const char* utf8, const ISC_USHORT utf8_length);
-	const ISC_USHORT utf8_out(nanoudr::attachment_resources* att_resources, char* out, const ISC_USHORT out_length,
+	const ISC_USHORT utf8_out(attachment_resources* att_resources, char* out, const ISC_USHORT out_length,
 		const char* locale, const ISC_USHORT locale_length);
 
 	nanodbc::timestamp set_timestamp(const nanoudr::timestamp* tm);
@@ -404,12 +404,16 @@ public:
 	nanoudr::date get_date(const nanodbc::date* d);
 	nanoudr::time get_time(const nanodbc::time* t);
 
-	void blob_to_stream(nanoudr::attachment_resources* att_resources, ISC_QUAD* blob, class std::vector<uint8_t>* stream);
-	void stream_to_blob(nanoudr::attachment_resources* att_resources, class std::vector<uint8_t>* stream, ISC_QUAD* blob);
+	void read_blob(attachment_resources* att_resources, ISC_QUAD* blob, class std::vector<uint8_t>* stream);
+	
+	void write_blob(attachment_resources* att_resources, class std::vector<uint8_t>* stream, ISC_QUAD* blob);
+	void write_blob(attachment_resources* att_resources, nanodbc::string* stream, ISC_QUAD* blob);
 
 private:
 	const ISC_USHORT utf8_converter(char* dest, const ISC_USHORT dest_length, const char* to,
 		const char* src, const ISC_USHORT src_length, const char* from);
+	void write_blob(
+		attachment_resources* att_resources, const unsigned char* in, const std::size_t in_length, ISC_QUAD* out);
 };
 
 extern helper udr_helper;

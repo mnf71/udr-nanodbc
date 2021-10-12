@@ -52,7 +52,7 @@ long params_batch::push(short param_index, T const value, const bool null)
 	
 	bind_types& vec = p->batch;
 	if (!std::holds_alternative<std::vector<T>>(vec)) 
-		vec = std::vector<T>{ value }; // init allocator
+		vec = std::vector<T>{value}; // init allocator
 	else		
 		std::get<std::vector<T>>(vec).push_back(value);
 	p->nulls.push_back(null);
@@ -1783,7 +1783,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 						case SQL_VARYING: // varchar
 						{
 							if (null_flag)
-								params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), null_flag);
+								params->push(param_index, std::move((nanodbc::string)(NANODBC_TEXT("\0"))), null_flag);
 							else
 							{
 								bool u8_string = (in_char_sets[in::value] == fb_char_set::CS_UTF8);
@@ -1814,7 +1814,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 										param_size
 									);
 								param[param_size] = '\0';
-								params->push(param_index, (nanodbc::string)(NANODBC_TEXT(param)), null_flag);
+								params->push(param_index, std::move((nanodbc::string)(NANODBC_TEXT(param))), null_flag);
 								delete[] param;
 							}
 							break;
@@ -1850,7 +1850,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 								fb.time.decode(utl, &tm.hour, &tm.min, &tm.sec, &tm.fract);
 								param = udr_helper.set_timestamp(&tm);
 							}
-							params->push(param_index, param, null_flag);
+							params->push(param_index, std::move(param), null_flag);
 							break;
 						}
 						case SQL_BLOB: // blob
@@ -1858,7 +1858,18 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 							if (null_flag)
 								params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), null_flag);
 							else
-								BINDING_THROW("Binding BLOB to be developed.")
+							{
+								try
+								{
+									std::vector<std::uint8_t> param;
+									udr_helper.read_blob(att_resources, (ISC_QUAD*)(in + in_offsets[in::value]), &param);
+									params->push(param_index, std::move(param), null_flag);
+								}
+								catch (...)
+								{
+									BINDING_THROW("Error reading BLOB to stream.")
+								}
+							}
 							break;
 						}
 						case SQL_ARRAY: // array
@@ -1887,7 +1898,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 								fb.decode(utl, &t.hour, &t.min, &t.sec, &t.fract);
 								nanodbc::time param = udr_helper.set_time(&t);
 							}
-							params->push(param_index, param, null_flag);
+							params->push(param_index, std::move(param), null_flag);
 							break;
 						}
 						case SQL_TYPE_DATE: // date
@@ -1906,7 +1917,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 								fb.decode(utl, &d.year, &d.month, &d.day);
 								nanodbc::date param = udr_helper.set_date(&d);
 							}
-							params->push(param_index, param, null_flag);
+							params->push(param_index, std::move(param), null_flag);
 							break;
 						}
 						case SQL_INT64: // bigint

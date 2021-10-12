@@ -42,7 +42,7 @@ namespace nanoudr
 #define	BINDING_ERR_MESSAGE		"NANO$BINDING_ERR_MESSAGE"
 #define	FETCHING_ERR_MESSAGE	"NANO$FETCHING_ERR_MESSAGE"
 
-struct fb_context
+struct resources_context
 {
 	FB_UDR_STATUS_TYPE* status;
 	FB_UDR_CONTEXT_TYPE* context;
@@ -84,7 +84,7 @@ public:
 	};
 	~attachment_resources() noexcept;
 
-	const fb_context* context() { return &attachment_context; };
+	const resources_context* context() { return &attachment_context; };
 
 	void expunge();
 
@@ -160,7 +160,7 @@ public:
 
 private:
 	ISC_UINT64 attachment_id;
-	fb_context attachment_context;
+	resources_context attachment_context;
 
 	void context(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
 
