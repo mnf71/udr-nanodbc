@@ -24,7 +24,7 @@
 
 //-----------------------------------------------------------------------------
 // Convenience functions
-// package nano$func
+// package nano$fnc
 //
 
 namespace nanoudr

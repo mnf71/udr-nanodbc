@@ -144,7 +144,7 @@ statement::statement(class attachment_resources& att_resources)
 	att_resources_->statements.retain(this);
 	conn_ = nullptr;
 
-	scrollable_ = scroll_state::DEFAULT;
+	scrollable_ = scroll_state::STMT_DEFAULT;
 	params_ = nullptr;
 }
 
@@ -155,14 +155,14 @@ statement::statement(class attachment_resources& att_resources, class nanoudr::c
 	att_resources_->statements.retain(this);
 	conn_ = &conn;
 
-	scrollable_ = scroll_state::DEFAULT;
+	scrollable_ = scroll_state::STMT_DEFAULT;
 	params_ = nullptr;
 }
 
 statement::statement(
 	class attachment_resources& att_resources, class nanoudr::connection& conn, const nanodbc::string& query, 
 	const scroll_state scrollable_usage, long timeout)
-	: scrollable_(scroll_state::DEFAULT)
+	: scrollable_(scroll_state::STMT_DEFAULT)
 	, nanodbc::statement(conn)
 {
 	att_resources_ = &att_resources;
@@ -196,7 +196,7 @@ nanoudr::connection* statement::connection()
 void statement::close()
 {
 	release_params();
-	scrollable_ = scroll_state::DEFAULT;
+	scrollable_ = scroll_state::STMT_DEFAULT;
 	nanodbc::statement::close();
 }
 
@@ -508,8 +508,8 @@ FB_UDR_BEGIN_FUNCTION(stmt$statement)
 						stmt = new nanoudr::statement(
 							*att_resources, *conn,
 							NANODBC_TEXT(in->query.str),
-							in->scrollableNull ? scroll_state::DEFAULT : 
-								in->scrollable == FB_TRUE ? scroll_state::SCROLLABLE : scroll_state::NONSCROLLABLE,
+							in->scrollableNull ? scroll_state::STMT_DEFAULT : 
+								in->scrollable == FB_TRUE ? scroll_state::STMT_SCROLLABLE : scroll_state::STMT_NONSCROLLABLE,
 							in->timeout);
 					}
 					else
@@ -943,8 +943,8 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare_direct)
 					stmt->prepare(
 						*conn, 
 						NANODBC_TEXT(in->query.str),
-						in->scrollableNull ? scroll_state::DEFAULT : 
-							in->scrollable == FB_TRUE ? scroll_state::SCROLLABLE : scroll_state::NONSCROLLABLE,
+						in->scrollableNull ? scroll_state::STMT_DEFAULT : 
+							in->scrollable == FB_TRUE ? scroll_state::STMT_SCROLLABLE : scroll_state::STMT_NONSCROLLABLE,
 						in->timeout);
 					out->blank = BLANK;
 					out->blankNull = FB_FALSE;
@@ -1021,8 +1021,8 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare)
 				U8_VARIYNG(in, query);
 				stmt->prepare(
 					NANODBC_TEXT(in->query.str), 
-					in->scrollableNull ? scroll_state::DEFAULT :
-						in->scrollable == FB_TRUE ? scroll_state::SCROLLABLE : scroll_state::NONSCROLLABLE,
+					in->scrollableNull ? scroll_state::STMT_DEFAULT :
+						in->scrollable == FB_TRUE ? scroll_state::STMT_SCROLLABLE : scroll_state::STMT_NONSCROLLABLE,
 					in->timeout);
 				out->blank = BLANK;
 				out->blankNull = FB_FALSE;
@@ -1072,14 +1072,13 @@ FB_UDR_BEGIN_FUNCTION(stmt$scrollable)
 			{
 				if (!in->usageNull)
 					stmt->scrollable(
-						in->usage == FB_TRUE ? scroll_state::SCROLLABLE : scroll_state::NONSCROLLABLE
+						in->usage == FB_TRUE ? scroll_state::STMT_SCROLLABLE : scroll_state::STMT_NONSCROLLABLE
 					);
-				scroll_state scrollable = (scroll_state)(stmt->scrollable());
 				out->scrollableNull = FB_FALSE;
 				switch (stmt->scrollable())
 				{
-					case scroll_state::SCROLLABLE: out->scrollable = FB_TRUE;
-					case scroll_state::NONSCROLLABLE: out->scrollable = FB_FALSE;
+					case scroll_state::STMT_SCROLLABLE: out->scrollable = FB_TRUE;
+					case scroll_state::STMT_NONSCROLLABLE: out->scrollable = FB_FALSE;
 					default:
 						out->scrollableNull = FB_TRUE;
 				}
@@ -1210,8 +1209,8 @@ FB_UDR_BEGIN_FUNCTION(stmt$execute_direct)
 						stmt->execute_direct(
 							*conn, 
 							NANODBC_TEXT(in->query.str),
-							in->scrollableNull ? scroll_state::DEFAULT :
-								in->scrollable == FB_TRUE ? scroll_state::SCROLLABLE : scroll_state::NONSCROLLABLE,
+							in->scrollableNull ? scroll_state::STMT_DEFAULT :
+								in->scrollable == FB_TRUE ? scroll_state::STMT_SCROLLABLE : scroll_state::STMT_NONSCROLLABLE,
 							in->batch_operations, in->timeout);
 					udr_helper.fb_ptr(out->rslt.str, (int64_t)rslt);
 					out->rsltNull = FB_FALSE;
@@ -1925,11 +1924,11 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 							break;
 						case SQL_BOOLEAN: // boolean
 						{
-							bool param;
-							if (null_flag) param = false;
-							else
-								param = udr_helper.native_bool(*(FB_BOOLEAN*)(in + in_offsets[in::value]));
-							params->push(param_index, (nanodbc::string)(NANODBC_TEXT(param ? "True" : "False")), null_flag);
+							FB_BOOLEAN param;
+							if (null_flag) 
+								param = FB_FALSE; else
+								param = *(FB_BOOLEAN*)(in + in_offsets[in::value]);
+							params->push(param_index, (short)(param ? true : false), null_flag);
 							break;
 						}
 						case SQL_NULL: // null, nothing
@@ -1990,7 +1989,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind_null)
 		{
 			try
 			{
-				stmt->bind_null(in->param_index, in->batch_size);
+				stmt->params()->push(in->param_index, (unsigned short)(0), true);
 				out->blank = BLANK;
 				out->blankNull = FB_FALSE;
 			}

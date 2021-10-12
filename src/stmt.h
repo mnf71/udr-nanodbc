@@ -99,7 +99,7 @@ private:
 #endif  /* ODBCVER >= 0x0300 */ 
 
 enum scroll_state : short {
-	DEFAULT = 0 /* SQL_NULL */, SCROLLABLE /* TRUE */, NONSCROLLABLE /* FALSE*/
+	STMT_DEFAULT = 0 /* NULL */, STMT_SCROLLABLE, STMT_NONSCROLLABLE
 };
 
 #ifndef RSRS_H
@@ -120,7 +120,7 @@ public:
 	statement(class attachment_resources& att_resources);
 	explicit statement(class attachment_resources& att_resources, class nanoudr::connection& conn);
 	statement(class attachment_resources& att_resources, class nanoudr::connection& conn, const nanodbc::string& query, 
-		const scroll_state scrollable_usage, long timeout = 0);
+		const scroll_state scrollable_usage = scroll_state::STMT_DEFAULT, long timeout = 0);
 	~statement() noexcept;
 
 	void scrollable(const scroll_state scrollable_usage);
@@ -148,7 +148,7 @@ public:
 	void release_params();
 
 	attachment_resources* attachment() { return att_resources_; };
-	scroll_state scrollable() { return scrollable_; };
+	short scrollable() { return (short)(scrollable_); };
 
 private:
 	attachment_resources* att_resources_;

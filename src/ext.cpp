@@ -61,10 +61,43 @@ inline bool success(RETCODE rc)
 // NANODBC extensions for UDR
 //
 
+#include "conn.h"
+#include "tnx.h"
 #include "stmt.h"
 
 namespace nanoudr
 {
+
+//-----------------------------------------------------------------------------
+// UDR Connection class implementation
+//
+
+void connection::isolation_level(const isolation_state isolation_usage)
+{
+	if (isolation_usage == isolation_state::TXN_DEFAULT)
+		return;
+#if (ODBCVER >= 0x0300)
+	RETCODE rc;
+	if (isolation_ != isolation_usage)
+	{
+		NANODBC_CALL_RC(
+			SQLSetConnectAttr,
+			rc,
+			native_dbc_handle(),
+			SQL_TXN_ISOLATION,
+			isolation_usage == isolation_state::TXN_READ_COMMITTED ? (SQLPOINTER)SQL_TXN_READ_COMMITTED
+			: isolation_usage == isolation_state::TXN_READ_UNCOMMITTED ? (SQLPOINTER)SQL_TXN_READ_UNCOMMITTED
+			: isolation_usage == isolation_state::TXN_REPEATABLE_READ ? (SQLPOINTER)SQL_TXN_REPEATABLE_READ
+			: isolation_usage == isolation_state::TXN_SERIALIZABLE ? (SQLPOINTER)SQL_TXN_SERIALIZABLE
+			: throw std::runtime_error("Invalid SQL_TXN_ISOLATION state."),
+			SQL_IS_UINTEGER);
+	}
+	if (!success(rc))
+		NANODBC_THROW_DATABASE_ERROR(native_dbc_handle(), SQL_HANDLE_DBC);
+	isolation_ = isolation_usage;
+#endif
+	return;
+}
 
 //-----------------------------------------------------------------------------
 // UDR Statement class implementation
@@ -72,7 +105,7 @@ namespace nanoudr
 
 void statement::scrollable(const scroll_state scrollable_usage)
 {
-	if (scrollable_usage == scroll_state::DEFAULT)
+	if (scrollable_usage == scroll_state::STMT_DEFAULT)
 		return;
 #if (ODBCVER >= 0x0300)
 	RETCODE rc;
@@ -83,7 +116,9 @@ void statement::scrollable(const scroll_state scrollable_usage)
 			rc,
 			native_statement_handle(),
 			SQL_ATTR_CURSOR_SCROLLABLE,
-			scrollable_usage == scroll_state::SCROLLABLE ? (SQLPOINTER)SQL_SCROLLABLE : (SQLPOINTER)SQL_NONSCROLLABLE,
+			scrollable_usage == scroll_state::STMT_SCROLLABLE ? (SQLPOINTER)SQL_SCROLLABLE 
+			: scrollable_usage == scroll_state::STMT_NONSCROLLABLE ? (SQLPOINTER)SQL_NONSCROLLABLE
+			: throw std::runtime_error("Invalid SQL_ATTR_CURSOR_SCROLLABLE state."),
 			SQL_IS_INTEGER);
 	}
 	if (!success(rc))

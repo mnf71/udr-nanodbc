@@ -7,7 +7,7 @@ BEGIN
   FUNCTION statement_(
       conn TY$POINTER DEFAULT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 DEFAULT NULL,
-      scrollable BOOLEAN DEFAULT NULL /* default ODBC driver */,
+      scrollable BOOLEAN DEFAULT NULL /* NULL - default ODBC driver */,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$POINTER;
 

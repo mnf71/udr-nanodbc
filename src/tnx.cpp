@@ -81,7 +81,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$transaction)
 		{
 			try
 			{
-				nanoudr::transaction* tnx = new nanoudr::transaction(*att_resources, *conn);
+				nanoudr::transaction* tnx =	new nanoudr::transaction(*att_resources, *conn);
 				udr_helper.fb_ptr(out->tnx.str, (int64_t)tnx);
 				out->tnxNull = FB_FALSE;
 			}

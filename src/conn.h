@@ -30,6 +30,11 @@ namespace nanoudr
 // UDR Connection class implementation
 //
 
+enum isolation_state : short {
+	TXN_DEFAULT = /* NULL */ 0, TXN_READ_UNCOMMITTED = 1, TXN_READ_COMMITTED = 2,
+	TXN_REPEATABLE_READ = 4, TXN_SERIALIZABLE = 8
+};
+
 #ifndef RSRS_H
 	class attachment_resources;
 #endif
@@ -43,10 +48,14 @@ public:
 	connection(class attachment_resources& att_resources, const nanodbc::string& connection_string, long timeout = 0);
 	~connection() noexcept;
 
+	void isolation_level(const isolation_state isolation_usage);
+
 	attachment_resources* attachment() { return att_resources_; };
+	short isolation_level() { return (short)(isolation_); };
 
 private:
 	attachment_resources* att_resources_;
+	isolation_state isolation_;
 };
 
 } // namespace nanoudr

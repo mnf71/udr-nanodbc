@@ -27,6 +27,16 @@ BEGIN
   FUNCTION allocate(conn ty$pointer NOT NULL) RETURNS TY$NANO_BLANK;
   FUNCTION deallocate(conn ty$pointer NOT NULL) RETURNS TY$NANO_BLANK;
 
+  FUNCTION txn_read_uncommitted RETURNS SMALLINT;
+  FUNCTION txn_read_committed RETURNS SMALLINT;
+  FUNCTION txn_repeatable_read RETURNS SMALLINT;
+  FUNCTION txn_serializable RETURNS SMALLINT;
+
+  FUNCTION isolation_level(
+      tnx TY$POINTER NOT NULL,
+      level_ SMALLINT DEFAULT NULL /* NULL - get usage */
+    ) RETURNS SMALLINT;
+
   FUNCTION connect_(
       conn TY$POINTER NOT NULL,
       attr VARCHAR(512) CHARACTER SET UTF8 NOT NULL,
@@ -83,6 +93,15 @@ BEGIN
 
   FUNCTION deallocate(conn TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!conn$deallocate'
+    ENGINE UDR;
+
+  FUNCTION txn_read_uncommitted RETURNS SMALLINT AS BEGIN RETURN 1; END
+  FUNCTION txn_read_committed RETURNS SMALLINT AS BEGIN RETURN 2; END
+  FUNCTION txn_repeatable_read RETURNS SMALLINT AS BEGIN RETURN 4; END
+  FUNCTION txn_serializable RETURNS SMALLINT AS BEGIN RETURN 8; END
+
+  FUNCTION isolation_level(tnx TY$POINTER NOT NULL, level_ SMALLINT) RETURNS SMALLINT
+    EXTERNAL NAME 'nano!conn$isolation_level'
     ENGINE UDR;
 
   FUNCTION connect_(

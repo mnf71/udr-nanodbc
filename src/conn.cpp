@@ -351,6 +351,52 @@ FB_UDR_BEGIN_FUNCTION(conn$deallocate)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
+// create function isolation_level (
+//	 tnx ty$pointer not null, 
+// 	 level_ smallint default null 
+//	) returns smallint
+//	external name 'nano!conn$isolation_level'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(conn$isolation_level)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, conn)
+		(FB_SMALLINT, level)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_SMALLINT, isolation_level)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		NANOUDR_RESOURCES
+		out->isolation_levelNull = FB_TRUE;
+		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
+		if (!in->connNull && att_resources->connections.valid(conn))
+		{
+			try
+			{
+				if (!in->levelNull)	conn->isolation_level((isolation_state)(in->level));
+				out->isolation_level = conn->isolation_level();
+				out->isolation_levelNull = FB_FALSE;
+			}
+			catch (std::runtime_error const& e)
+			{
+				NANODBC_THROW(e.what())
+			}
+		}
+		else
+			NANOUDR_THROW(POINTER_CONN_INVALID)
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
 // create function connect_ (
 //	 conn ty$pointer not null, 
 //	 attr varchar(512) character set utf8 not null, 
