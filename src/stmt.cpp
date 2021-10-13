@@ -46,18 +46,31 @@ params_batch::~params_batch() noexcept
 }
 
 template <class T>
-long params_batch::push(short param_index, T const value, const bool null)
+long params_batch::push(const short param_index, T const value, const bool null)
 {
-	param* p = &params[param_index];
-	
-	bind_types& vec = p->batch;
-	if (!std::holds_alternative<std::vector<T>>(vec)) 
-		vec = std::vector<T>{value}; // init allocator
-	else		
-		std::get<std::vector<T>>(vec).push_back(value);
-	p->nulls.push_back(null);
-	
-	return static_cast<long>(p->nulls.size() - 1); 
+	bind_types& batch = (&params[param_index])->batch;
+	std::vector<uint8_t>& nulls = (&params[param_index])->nulls;
+
+	if (!std::holds_alternative<std::vector<T>>(batch))
+		batch = std::vector<T>{};
+	std::get<std::vector<T>>(batch).push_back(value); 
+	nulls.push_back(null);
+
+	return static_cast<long>(nulls.size() - 1);
+}
+
+template <class T>
+long params_batch::push(const short param_index, T && value, const bool * null)
+{
+	bind_types& batch = (&params[param_index])->batch;
+	std::vector<uint8_t>& nulls = (&params[param_index])->nulls;
+
+	if (!std::holds_alternative<std::vector<T>>(batch))
+		batch = std::vector<T>{};
+	std::get<std::vector<T>>(batch).push_back(std::move(value)); 
+	nulls.push_back(*null);
+
+	return static_cast<long>(nulls.size() - 1);
 }
 
 bind_type params_batch::touch(short param_index)
@@ -499,7 +512,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$statement)
 			nanoudr::statement* stmt;
 			if (!in->connNull)
 			{
-				nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
+				nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
 				if (att_resources->connections.valid(conn))
 				{
 					if (!in->queryNull)
@@ -556,7 +569,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$valid)
 		NANOUDR_RESOURCES
 		out->valid = udr_helper.fb_bool(
 			in->stmtNull ? false :
-				att_resources->statements.valid(udr_helper.stmt_ptr(in->stmt.str))
+				att_resources->statements.valid(udr_helper.native_ptr<statement>(in->stmt.str))
 			);
 		out->validNull = FB_FALSE;
 	}
@@ -589,7 +602,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$release)
 		out->stmtNull = FB_TRUE;
 		if (!in->stmtNull)
 		{
-			nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+			nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 			try
 			{
 				delete (nanoudr::statement*)(stmt);
@@ -631,7 +644,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$connected)
 	{
 		NANOUDR_RESOURCES
 		out->connectedNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -674,7 +687,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$connection)
 	{
 		NANOUDR_RESOURCES
 		out->connNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -720,11 +733,11 @@ FB_UDR_BEGIN_FUNCTION(stmt$open)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			nanoudr::connection* 
-				conn = in->connNull ? nullptr : udr_helper.conn_ptr(in->conn.str);
+				conn = in->connNull ? nullptr : udr_helper.native_ptr<connection>(in->conn.str);
 			try
 			{
 				if (conn != nullptr && att_resources->connections.valid(conn))
@@ -771,7 +784,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$close)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -815,7 +828,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$cancel)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -859,7 +872,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$closed)
 	{
 		NANOUDR_RESOURCES
 		out->closedNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -930,11 +943,11 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare_direct)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			nanoudr::connection* 
-				conn = in->connNull ? nullptr : udr_helper.conn_ptr(in->conn.str);
+				conn = in->connNull ? nullptr : udr_helper.native_ptr<connection>(in->conn.str);
 			try
 			{
 				if (conn != nullptr && att_resources->connections.valid(conn))
@@ -1013,7 +1026,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1065,7 +1078,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$scrollable)
 	{
 		NANOUDR_RESOURCES
 		out->scrollableNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1120,7 +1133,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$timeout)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1195,11 +1208,11 @@ FB_UDR_BEGIN_FUNCTION(stmt$execute_direct)
 	{
 		NANOUDR_RESOURCES
 		out->rsltNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			nanoudr::connection* 
-				conn = in->connNull ? nullptr : udr_helper.conn_ptr(in->conn.str);
+				conn = in->connNull ? nullptr : udr_helper.native_ptr<connection>(in->conn.str);
 			try
 			{
 				if (conn != nullptr && att_resources->connections.valid(conn))
@@ -1281,11 +1294,11 @@ FB_UDR_BEGIN_FUNCTION(stmt$just_execute_direct)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			nanoudr::connection* 
-				conn = in->connNull ? nullptr : udr_helper.conn_ptr(in->conn.str);
+				conn = in->connNull ? nullptr : udr_helper.native_ptr<connection>(in->conn.str);
 			try
 			{
 				if (conn != nullptr && att_resources->connections.valid(conn))
@@ -1337,7 +1350,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$execute)
 	{
 		NANOUDR_RESOURCES
 		out->rsltNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1386,7 +1399,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$just_execute)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1459,7 +1472,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$procedure_columns)
 	{
 		NANOUDR_RESOURCES
 		out->rsltNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1510,7 +1523,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$affected_rows)
 	{
 		NANOUDR_RESOURCES
 		out->affectedNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1553,7 +1566,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$columns)
 	{
 		NANOUDR_RESOURCES
 		out->columnsNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1597,7 +1610,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$reset_parameters)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1642,7 +1655,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$parameters)
 	{
 		NANOUDR_RESOURCES
 		out->parametersNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1687,7 +1700,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$parameter_size)
 	{
 		NANOUDR_RESOURCES
 		out->sizeNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1766,7 +1779,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr((char*)(in + in_offsets[in::stmt]));
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>((char*)(in + in_offsets[in::stmt]));
 		if (!*(ISC_SHORT*)(in + in_null_offsets[in::stmt]) && att_resources->statements.valid(stmt))
 		{
 			try
@@ -1782,7 +1795,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 						case SQL_VARYING: // varchar
 						{
 							if (null_flag)
-								params->push(param_index, std::move((nanodbc::string)(NANODBC_TEXT("\0"))), null_flag);
+								params->push(param_index, std::move((nanodbc::string)(NANODBC_TEXT("\0"))), &null_flag);
 							else
 							{
 								bool u8_string = (in_char_sets[in::value] == fb_char_set::CS_UTF8);
@@ -1813,7 +1826,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 										param_size
 									);
 								param[param_size] = '\0';
-								params->push(param_index, std::move((nanodbc::string)(NANODBC_TEXT(param))), null_flag);
+								params->push(param_index, std::move((nanodbc::string)(NANODBC_TEXT(param))), &null_flag);
 								delete[] param;
 							}
 							break;
@@ -1844,25 +1857,25 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 								Firebird::FbTimestamp fb;
 								// This class has memory layout identical to ISC_TIMESTAMP
 								memcpy(&fb, (ISC_TIMESTAMP*)(in + in_offsets[in::value]), sizeof(FbTimestamp));
-								struct nanoudr::timestamp tm;
-								fb.date.decode(utl, &tm.year, &tm.month, &tm.day);
-								fb.time.decode(utl, &tm.hour, &tm.min, &tm.sec, &tm.fract);
-								param = udr_helper.set_timestamp(&tm);
+								struct nanoudr::timestamp ts;
+								fb.date.decode(utl, &ts.d.year, &ts.d.month, &ts.d.day);
+								fb.time.decode(utl, &ts.t.hour, &ts.t.min, &ts.t.sec, &ts.t.fract);
+								param = udr_helper.set_timestamp(&ts);
 							}
-							params->push(param_index, std::move(param), null_flag);
+							params->push(param_index, (nanodbc::timestamp)(param), null_flag);
 							break;
 						}
 						case SQL_BLOB: // blob
 						{
 							if (null_flag)
-								params->push(param_index, (nanodbc::string)(NANODBC_TEXT("\0")), null_flag);
+								params->push(param_index, std::move((nanodbc::string)(NANODBC_TEXT("\0"))), &null_flag);
 							else
 							{
 								try
 								{
 									std::vector<std::uint8_t> param;
 									udr_helper.read_blob(att_resources, (ISC_QUAD*)(in + in_offsets[in::value]), &param);
-									params->push(param_index, std::move(param), null_flag);
+									params->push(param_index, std::move(param), &null_flag);
 								}
 								catch (...)
 								{
@@ -1897,7 +1910,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 								fb.decode(utl, &t.hour, &t.min, &t.sec, &t.fract);
 								nanodbc::time param = udr_helper.set_time(&t);
 							}
-							params->push(param_index, std::move(param), null_flag);
+							params->push(param_index, (nanodbc::time)(param), null_flag);
 							break;
 						}
 						case SQL_TYPE_DATE: // date
@@ -1916,7 +1929,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 								fb.decode(utl, &d.year, &d.month, &d.day);
 								nanodbc::date param = udr_helper.set_date(&d);
 							}
-							params->push(param_index, std::move(param), null_flag);
+							params->push(param_index, (nanodbc::date)(param), null_flag);
 							break;
 						}
 						case SQL_INT64: // bigint
@@ -1928,7 +1941,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 							if (null_flag) 
 								param = FB_FALSE; else
 								param = *(FB_BOOLEAN*)(in + in_offsets[in::value]);
-							params->push(param_index, (short)(param ? true : false), null_flag);
+							params->push(param_index, (unsigned short)(param ? true : false), null_flag);
 							break;
 						}
 						case SQL_NULL: // null, nothing
@@ -1984,7 +1997,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind_null)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
@@ -2036,7 +2049,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$describe_parameters)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::statement* stmt = udr_helper.stmt_ptr(in->stmt.str);
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try

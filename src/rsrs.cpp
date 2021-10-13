@@ -124,6 +124,8 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 //-----------------------------------------------------------------------------
 //	
 
+resources udr_resources;
+
 void attachment_resources::attachment_connections::retain(const nanoudr::connection* conn)
 {
 	conn_v.push_back((nanoudr::connection*)(conn));

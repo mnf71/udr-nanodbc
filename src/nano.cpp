@@ -22,77 +22,51 @@
 
 #include "nano.h"
 
-#include <iconv.h>
 #include <string>
 
 namespace nanoudr
 {
 
 //-----------------------------------------------------------------------------
-// Initialize global class 
 //
 
-nanoudr::resources udr_resources;
-nanoudr::helper udr_helper;
+helper udr_helper;
+
+void helper::fb_ptr(char* nano_pointer, const int64_t ptr)
+{
+	memcpy(nano_pointer, &ptr, POINTER_SIZE);
+}
+
+template <class T> T* helper::native_ptr(const char* nano_pointer) const
+{
+	int64_t ptr = 0x0;
+	memcpy(&ptr, nano_pointer, POINTER_SIZE);
+	return (T*)(ptr);
+}
+
+// The following are the only supported instantiations of pointer.
+template nanoudr::connection* helper::native_ptr(const char*) const;
+template nanoudr::transaction* helper::native_ptr(const char*) const;
+template nanoudr::statement* helper::native_ptr(const char*) const;
+template nanoudr::result* helper::native_ptr(const char*) const;
 
 //-----------------------------------------------------------------------------
 //
 
-void helper::fb_ptr(char* cptr, int64_t iptr)
-{
-	memcpy(cptr, &iptr, POINTER_SIZE);
-}
-
-int64_t helper::native_ptr(const char* cptr)
-{
-	int64_t iptr = 0;
-	memcpy(&iptr, cptr, POINTER_SIZE);
-	return iptr;
-}
-
-nanoudr::connection* helper::conn_ptr(const char* cptr)
-{
-	int64_t conn = 0;
-	memcpy(&conn, cptr, POINTER_SIZE);
-	return (nanoudr::connection*)conn;
-}
-
-nanoudr::transaction* helper::tnx_ptr(const char* cptr)
-{
-	int64_t tnx = 0;
-	memcpy(&tnx, cptr, POINTER_SIZE);
-	return (nanoudr::transaction*)tnx;
-}
-
-nanoudr::statement* helper::stmt_ptr(const char* cptr)
-{
-	int64_t stmt = 0;
-	memcpy(&stmt, cptr, POINTER_SIZE);
-	return (nanoudr::statement*)stmt;
-}
-
-nanoudr::result* helper::rslt_ptr(const char* cptr)
-{
-	int64_t rslt = 0;
-	memcpy(&rslt, cptr, POINTER_SIZE);
-	return (nanoudr::result*)rslt;
-}
-
-//-----------------------------------------------------------------------------
-//
-
-FB_BOOLEAN helper::fb_bool(bool value)
+FB_BOOLEAN helper::fb_bool(bool value) const
 {
 	return (value ? FB_TRUE : FB_FALSE);
 }
 
-bool helper::native_bool(const FB_BOOLEAN value)
+bool helper::native_bool(const FB_BOOLEAN value) const
 {
 	return (value == FB_TRUE ? true : value == FB_FALSE ? false : throw "Invalid FB_BOOLEAN value.");
 }
 
 //-----------------------------------------------------------------------------
 //
+
+#include <iconv.h>
 
 const ISC_USHORT helper::utf8_in(attachment_resources* att_resources, char* dest, const ISC_USHORT dest_size,
 	const char* utf8, const ISC_USHORT utf8_length)
@@ -137,66 +111,49 @@ const ISC_USHORT helper::utf8_converter(char* dest, const ISC_USHORT dest_size, 
 
 nanodbc::timestamp helper::set_timestamp(const nanoudr::timestamp* tm)
 {
-	nanodbc::timestamp tm_s;
-	tm_s.year = tm->year;
-	tm_s.month = tm->month;
-	tm_s.day = tm->day;
-	tm_s.hour = tm->hour;
-	tm_s.min = tm->min;
-	tm_s.sec = tm->sec;
-	tm_s.fract = tm->fract;
-	return tm_s;
+	return nanodbc::timestamp({
+		static_cast<int16_t>(tm->d.year), static_cast<int16_t>(tm->d.month), static_cast<int16_t>(tm->d.day),
+		static_cast<int16_t>(tm->t.hour), static_cast<int16_t>(tm->t.min), static_cast<int16_t>(tm->t.sec),
+		static_cast<int16_t>(tm->t.fract)
+		});
 }
 
 nanodbc::date helper::set_date(const nanoudr::date* d)
 {
-	nanodbc::date d_s;
-	d_s.year = d->year;
-	d_s.month = d->month;
-	d_s.day = d->day;
-	return d_s;
+	return nanodbc::date({ 
+		static_cast<int16_t>(d->year), static_cast<int16_t>(d->month), static_cast<int16_t>(d->day) 
+		});
 }
 
 nanodbc::time helper::set_time(const nanoudr::time* t)
 {
-	nanodbc::time t_s;
-	t_s.hour = t->hour;
-	t_s.min = t->min;
-	t_s.sec = t->sec;
-	// = t->fract
-	return t_s;
+	return nanodbc::time({ 
+		static_cast<int16_t>(t->hour), static_cast<int16_t>(t->min), static_cast<int16_t>(t->sec) 
+		});
 }
 
 nanoudr::timestamp helper::get_timestamp(const nanodbc::timestamp* tm)
 {
-	nanoudr::timestamp tm_s;
-	tm_s.year = tm->year;
-	tm_s.month = tm->month;
-	tm_s.day = tm->day;
-	tm_s.hour = tm->hour;
-	tm_s.min = tm->min;
-	tm_s.sec = tm->sec;
-	tm_s.fract = tm->fract;
-	return tm_s;
+	return nanoudr::timestamp({
+		static_cast<unsigned>(tm->year), static_cast<unsigned>(tm->month), static_cast<unsigned>(tm->day),
+		static_cast<unsigned>(tm->hour), static_cast<unsigned>(tm->min), static_cast<unsigned>(tm->sec),
+		static_cast<unsigned>(tm->fract)
+	});
 }
 
 nanoudr::date helper::get_date(const nanodbc::date* d)
 {
-	nanoudr::date d_s;
-	d_s.year = d->year;
-	d_s.month = d->month;
-	d_s.day = d->day;
-	return d_s;
+	return nanoudr::date({
+		static_cast<unsigned>(d->year), static_cast<unsigned>(d->month), static_cast<unsigned>(d->day)
+		});
 }
 
 nanoudr::time helper::get_time(const nanodbc::time* t)
 {
-	nanoudr::time t_s;
-	t_s.hour = t->hour;
-	t_s.min = t->min;
-	t_s.sec = t->sec;
-	t_s.fract = 0;
-	return t_s;
+	return nanoudr::time({
+		static_cast<unsigned>(t->hour), static_cast<unsigned>(t->min), static_cast<unsigned>(t->sec),
+		static_cast<unsigned>(0)
+		});
 }
 
 void helper::read_blob(attachment_resources* att_resources, ISC_QUAD* in, class std::vector<uint8_t>* out)
@@ -226,9 +183,9 @@ void helper::read_blob(attachment_resources* att_resources, ISC_QUAD* in, class 
 				case IStatus::RESULT_OK: 
 				case IStatus::RESULT_SEGMENT: 
 				{
-					out->insert(out->end(), reinterpret_cast<uint8_t*>(static_cast<unsigned char*>(buffer)),
-						reinterpret_cast<uint8_t*>(static_cast<unsigned char*>(buffer)) + (read * sizeof(unsigned char)) / sizeof(uint8_t)
-					);
+					out->insert(out->end(), 
+						reinterpret_cast<uint8_t*>(static_cast<unsigned char*>(buffer)),
+						reinterpret_cast<uint8_t*>(static_cast<unsigned char*>(buffer)) + read);
 					break;
 				}
 				default:
@@ -248,8 +205,7 @@ void helper::read_blob(attachment_resources* att_resources, ISC_QUAD* in, class 
 
 void helper::write_blob(attachment_resources* att_resources, class std::vector<uint8_t>* in, ISC_QUAD* out)
 {
-	write_blob(att_resources, 
-		reinterpret_cast<unsigned char*>(in->data()), (in->size() * sizeof(uint8_t)) / sizeof(unsigned char), out);
+	write_blob(att_resources, reinterpret_cast<unsigned char*>(in->data()), in->size(), out);
 }
 
 void helper::write_blob(attachment_resources* att_resources, nanodbc::string* in, ISC_QUAD* out)

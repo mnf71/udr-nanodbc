@@ -33,8 +33,10 @@ namespace nanoudr
 //
 
 enum bind_type : short {
-	NANODBC_SHORT = 0, NANODBC_USHORT, NANODBC_INT, NANODBC_UINT,
-	NANODBC_LONG, NANODBC_ULONG, NANODBC_INT64, NANODBC_UINT64, 
+	NANODBC_SHORT, NANODBC_USHORT, 
+	NANODBC_INT, NANODBC_UINT,
+	NANODBC_LONG, NANODBC_ULONG, 
+	NANODBC_INT64, NANODBC_UINT64, 
 	NANODBC_FLOAT, NANODBC_DOUBLE,
 	NANODBC_DATE, NANODBC_TIME, NANODBC_TIMESTAMP,
 	NANODBC_WSTRING_VALUE_TYPE, NANODBC_WIDE_STRING,
@@ -44,8 +46,10 @@ enum bind_type : short {
 };
 
 using bind_types = std::variant <
-	std::vector<short>, std::vector<unsigned short>, std::vector<int>, std::vector<unsigned int>,
-	std::vector<long int>, std::vector<unsigned long int>, std::vector<long long>, std::vector<unsigned long long>, 
+	std::vector<short>, std::vector<unsigned short>, 
+	std::vector<int>, std::vector<unsigned int>,
+	std::vector<long int>, std::vector<unsigned long int>, 
+	std::vector<long long>, std::vector<unsigned long long>, 
 	std::vector<float>, std::vector<double>,
 	std::vector<nanodbc::date>, std::vector<nanodbc::time>, std::vector<nanodbc::timestamp>,
 	std::vector<nanodbc::wide_string::value_type>, std::vector<nanodbc::wide_string>,
@@ -60,13 +64,16 @@ public:
 	~params_batch() noexcept;
 
 	template <class T>
-	long push(short param_index, T const value, const bool null = false);
+	long push(const short param_index, T const value, const bool null = false);
+
+	template <class T>
+	long push(const short param_index, T && value, const bool * null = false);
 
 	bind_type touch(short param_index);
 
-	template <class T> T* values(const short param_index);
 	template <class T> std::vector<T>* vector(const short param_index);
 	template <class T> T* value(const short param_index, const long batch_index);
+	template <class T> T* values(const short param_index);
 
 	bool* nulls(const short param_index);
 

@@ -353,43 +353,28 @@ enum fb_char_set
 
 struct date
 {
-	unsigned year;
-	unsigned month;
-	unsigned day;
+	unsigned year; unsigned month; unsigned day;
 };
 
 struct time
 {
-	unsigned hour;
-	unsigned min;
-	unsigned sec;
-	unsigned fract;
+	unsigned hour; unsigned min; unsigned sec; unsigned fract;
 };
 
 struct timestamp
 {
-	unsigned year;
-	unsigned month;
-	unsigned day;
-	unsigned hour;
-	unsigned min;
-	unsigned sec;
-	unsigned fract;
+	date d;
+	time t;
 };
 
 class helper
 {
 public:
-	void fb_ptr(char* cptr, int64_t iptr);
-	int64_t native_ptr(const char* cptr);
+	void fb_ptr(char* nano_pointer, const int64_t ptr);
+	template <class T> T* native_ptr(const char* nano_pointer) const;
 
-	nanoudr::connection* conn_ptr(const char* cptr);
-	nanoudr::transaction* tnx_ptr(const char* cptr);
-	nanoudr::statement* stmt_ptr(const char* cptr);
-	nanoudr::result* rslt_ptr(const char* cptr);
-
-	FB_BOOLEAN fb_bool(bool value);
-	bool native_bool(const ISC_UCHAR value);
+	FB_BOOLEAN fb_bool(bool value) const;
+	bool native_bool(const ISC_UCHAR value) const;
 
 	const ISC_USHORT utf8_in(attachment_resources* att_resources, char* in, const ISC_USHORT in_length,
 		const char* utf8, const ISC_USHORT utf8_length);
@@ -585,5 +570,4 @@ namespace
 	};
 }
 
-#endif	/* NANO_H */
-      
+#endif	/* NANO_H */     

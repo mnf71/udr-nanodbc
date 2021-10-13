@@ -76,7 +76,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$transaction)
 	{
 		NANOUDR_RESOURCES
 		out->tnxNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.conn_ptr(in->conn.str);
+		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -121,7 +121,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$valid)
 		NANOUDR_RESOURCES
 		out->valid = udr_helper.fb_bool(
 			in->tnxNull ? false :
-				att_resources->transactions.valid(udr_helper.tnx_ptr(in->tnx.str))
+				att_resources->transactions.valid(udr_helper.native_ptr<transaction>(in->tnx.str))
 			);
 		out->validNull = FB_FALSE;
 	}
@@ -154,14 +154,14 @@ FB_UDR_BEGIN_FUNCTION(tnx$release)
 		out->tnxNull = FB_TRUE;
 		if (!in->tnxNull)
 		{
-			nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
+			nanoudr::transaction* tnx = udr_helper.native_ptr<transaction>(in->tnx.str);
 			try
 			{
 				delete (nanoudr::transaction*)(tnx);
 			}
 			catch (std::runtime_error const& e)
 			{
-				udr_helper.fb_ptr(out->tnx.str, udr_helper.native_ptr(in->tnx.str));
+				udr_helper.fb_ptr(out->tnx.str, (int64_t)tnx);
 				out->tnxNull = FB_FALSE;
 				NANODBC_THROW(e.what())
 			}
@@ -196,7 +196,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$connection)
 	{
 		NANOUDR_RESOURCES
 		out->connNull = FB_TRUE;
-		nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
+		nanoudr::transaction* tnx = udr_helper.native_ptr<transaction>(in->tnx.str);
 		if (!in->tnxNull && att_resources->transactions.valid(tnx))
 		{
 			try
@@ -240,7 +240,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$commit)
 	{
 		NANOUDR_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
+		nanoudr::transaction* tnx = udr_helper.native_ptr<transaction>(in->tnx.str);
 		if (!in->tnxNull && att_resources->transactions.valid(tnx))
 		{
 			try
@@ -284,7 +284,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$rollback)
 	{
 		NANOUDR_RESOURCES
 		out->blank = BLANK;
-		nanoudr::transaction* tnx = udr_helper.tnx_ptr(in->tnx.str);
+		nanoudr::transaction* tnx = udr_helper.native_ptr<transaction>(in->tnx.str);
 		if (!in->tnxNull && att_resources->transactions.valid(tnx))
 		{
 			try
