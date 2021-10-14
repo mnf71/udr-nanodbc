@@ -1969,13 +1969,17 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind_null)
 		{
 			try
 			{
-				stmt->batchs()->push(in->parameter_index, (unsigned short)(0), true);
+				if (in->batch_size == 1)
+					stmt->batchs()->push(in->parameter_index, (unsigned short)(0), true);
+				else
+					stmt->bind_null(in->parameter_index, in->batch_size); // call nulls all batch
 				out->blank = BLANK;
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANODBC_THROW(e.what())
+				if (in->batch_size == 1) ANY_THROW(e.what()) 
+				else NANODBC_THROW(e.what())
 			}
 		}
 		else
@@ -1983,6 +1987,51 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind_null)
 	}
 
 FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
+// create function purge_bindings (
+//	 stmt ty$pointer not null
+//	) returns ty$nano_blank
+//	external name 'nano!stmt$purge_bindings'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(stmt$purge_bindings)
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, stmt)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_BLANK, blank)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		NANOUDR_RESOURCES
+		out->blankNull = FB_TRUE;
+		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
+		if (!in->stmtNull && att_resources->statements.valid(stmt))
+		{
+			try
+			{
+				stmt->batchs()->clear();
+				out->blank = BLANK;
+				out->blankNull = FB_FALSE;
+			}
+			catch (std::runtime_error const& e)
+			{
+				ANY_THROW(e.what())
+			}
+		}
+		else
+			NANOUDR_THROW(POINTER_STMT_INVALID)
+	}
+
+FB_UDR_END_FUNCTION
+
 
 //-----------------------------------------------------------------------------
 // create function declare_parameter (
@@ -2077,7 +2126,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$describe_parameters)
 			}
 		}
 		else
-				NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(POINTER_STMT_INVALID)
 	}
 
 FB_UDR_END_FUNCTION

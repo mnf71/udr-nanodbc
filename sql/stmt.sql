@@ -196,8 +196,10 @@ BEGIN
   FUNCTION bind_null(
       stmt TY$POINTER NOT NULL,
       parameter_index SMALLINT NOT NULL,
-      batch_size INTEGER NOT NULL DEFAULT 1
+      batch_size INTEGER NOT NULL DEFAULT 1 -- <> 1 call nulls all batch
     ) RETURNS TY$NANO_BLANK;
+
+  FUNCTION purge_bindings(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK;
 
   ------------------------------------------------------------------------------
 
@@ -489,6 +491,10 @@ BEGIN
       batch_size INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind_null'
+    ENGINE UDR;
+
+  FUNCTION purge_bindings(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!stmt$purge_bindings'
     ENGINE UDR;
 
   ------------------------------------------------------------------------------
