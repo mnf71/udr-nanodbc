@@ -24,6 +24,7 @@
 #define NANO_H
 
 #ifdef __GNUC__
+	#include "../linux-sgx/common/inc/tlibc/mbusafecrt.h"
 #else
 #endif
 
