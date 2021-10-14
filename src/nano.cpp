@@ -26,7 +26,7 @@ namespace nanoudr
 {
 
 #ifdef __GNUC__
-	#include "../linux-sgx/sdk/tsafecrt/pal/src/safecrt/memcpy_s.c"
+#include "../linux-sgx/sdk/tsafecrt/pal/src/safecrt/memcpy_s.c"
 #else
 #endif
 
