@@ -93,96 +93,94 @@ BEGIN
 
   FUNCTION affected_rows(stmt TY$POINTER NOT NULL) RETURNS INTEGER;
   FUNCTION columns(stmt TY$POINTER NOT NULL) RETURNS SMALLINT;
-  FUNCTION reset_parameters(stmt TY$POINTER NOT NULL, timeout INTEGER NOT NULL DEFAULT 0)
-    RETURNS TY$NANO_BLANK;
   FUNCTION parameters(stmt TY$POINTER NOT NULL) RETURNS SMALLINT;
-  FUNCTION parameter_size(stmt TY$POINTER NOT NULL, param_index SMALLINT NOT NULL)
+  FUNCTION parameter_size(stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL)
     RETURNS INTEGER;
 
   ------------------------------------------------------------------------------
 
   FUNCTION bind_smallint(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ SMALLINT
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_integer(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ INTEGER
     ) RETURNS TY$NANO_BLANK;
 
 /*
   FUNCTION bind_bigint(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ BIGINT
     ) RETURNS TY$NANO_BLANK;
 */
 
   FUNCTION bind_float(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ FLOAT
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_double(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ DOUBLE PRECISION
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_varchar(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ VARCHAR(32765) CHARACTER SET NONE,
       param_size SMALLINT NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_char(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ CHAR(32767) CHARACTER SET NONE,
       param_size SMALLINT NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_u8_varchar(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ VARCHAR(8191) CHARACTER SET UTF8,
       param_size SMALLINT NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_u8_char(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ CHAR(8191) CHARACTER SET UTF8,
       param_size SMALLINT NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_blob(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ BLOB CHARACTER SET NONE
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_boolean(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ BOOLEAN
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_date(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ DATE
     ) RETURNS TY$NANO_BLANK;
 
 /*
   FUNCTION bind_time(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ TIME
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt_bind'
@@ -191,19 +189,19 @@ BEGIN
 
   FUNCTION bind_timestamp(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ TIMESTAMP
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_null(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       batch_size INTEGER NOT NULL DEFAULT 1
     ) RETURNS TY$NANO_BLANK;
 
   ------------------------------------------------------------------------------
 
-  FUNCTION describe_parameters(
+  FUNCTION declare_parameter(
       stmt TY$POINTER NOT NULL,
       idx SMALLINT NOT NULL,
       type_ SMALLINT NOT NULL,
@@ -211,6 +209,10 @@ BEGIN
       scale_ SMALLINT NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
+  FUNCTION describe_parameters(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK;
+
+  FUNCTION reset_parameters(stmt TY$POINTER NOT NULL, timeout INTEGER NOT NULL DEFAULT 0)
+    RETURNS TY$NANO_BLANK;
 
 END^
 
@@ -350,16 +352,11 @@ BEGIN
     EXTERNAL NAME 'nano!stmt$columns'
     ENGINE UDR;
 
-  FUNCTION reset_parameters(stmt TY$POINTER NOT NULL, timeout INTEGER NOT NULL)
-    RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt$reset_parameters'
-    ENGINE UDR;
-
   FUNCTION parameters(stmt TY$POINTER NOT NULL) RETURNS SMALLINT
     EXTERNAL NAME 'nano!stmt$parameters'
     ENGINE UDR;
 
-  FUNCTION parameter_size(stmt TY$POINTER NOT NULL, param_index SMALLINT NOT NULL)
+  FUNCTION parameter_size(stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL)
     RETURNS INTEGER
     EXTERNAL NAME 'nano!stmt$parameter_size'
     ENGINE UDR;
@@ -368,7 +365,7 @@ BEGIN
 
   FUNCTION bind_smallint(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ SMALLINT
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
@@ -376,7 +373,7 @@ BEGIN
 
   FUNCTION bind_integer(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ INTEGER
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
@@ -385,7 +382,7 @@ BEGIN
 /*
   FUNCTION bind_bigint(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ BIGINT
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
@@ -394,7 +391,7 @@ BEGIN
 
   FUNCTION bind_float(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ FLOAT
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
@@ -402,7 +399,7 @@ BEGIN
 
   FUNCTION bind_double(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ DOUBLE PRECISION
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
@@ -410,7 +407,7 @@ BEGIN
 
   FUNCTION bind_varchar(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ VARCHAR(32765) CHARACTER SET NONE,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
@@ -419,7 +416,7 @@ BEGIN
 
   FUNCTION bind_char(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ CHAR(32767) CHARACTER SET NONE,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
@@ -428,7 +425,7 @@ BEGIN
 
   FUNCTION bind_u8_varchar(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ VARCHAR(8191) CHARACTER SET UTF8,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
@@ -437,7 +434,7 @@ BEGIN
 
   FUNCTION bind_u8_char(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ CHAR(8191) CHARACTER SET UTF8,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
@@ -446,7 +443,7 @@ BEGIN
 
   FUNCTION bind_blob(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ BLOB CHARACTER SET NONE
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
@@ -454,7 +451,7 @@ BEGIN
 
   FUNCTION bind_boolean(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ BOOLEAN
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
@@ -462,7 +459,7 @@ BEGIN
 
   FUNCTION bind_date(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ DATE
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
@@ -471,7 +468,7 @@ BEGIN
 /*
   FUNCTION bind_time(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ TIME
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
@@ -480,7 +477,7 @@ BEGIN
 
   FUNCTION bind_timestamp(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       value_ TIMESTAMP
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
@@ -488,7 +485,7 @@ BEGIN
 
   FUNCTION bind_null(
       stmt TY$POINTER NOT NULL,
-      param_index SMALLINT NOT NULL,
+      parameter_index SMALLINT NOT NULL,
       batch_size INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind_null'
@@ -496,14 +493,23 @@ BEGIN
 
   ------------------------------------------------------------------------------
 
-  FUNCTION describe_parameters(
+  FUNCTION declare_parameter(
       stmt TY$POINTER NOT NULL,
       idx SMALLINT NOT NULL,
       type_ SMALLINT NOT NULL,
       size_ INTEGER NOT NULL,
       scale_ SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!stmt$declare_parameter'
+    ENGINE UDR;
+
+  FUNCTION describe_parameters(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$describe_parameters'
+    ENGINE UDR;
+
+  FUNCTION reset_parameters(stmt TY$POINTER NOT NULL, timeout INTEGER NOT NULL)
+    RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!stmt$reset_parameters'
     ENGINE UDR;
 
 END^

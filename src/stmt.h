@@ -57,41 +57,37 @@ using bind_types = std::variant <
 	std::vector<std::vector<uint8_t>>
 >;
 
-class params_batch
+class params_batchs
 {
 public:
-	params_batch(short count);
-	~params_batch() noexcept;
+	params_batchs(const short count);
+	~params_batchs() noexcept;
 
-	template <class T>
-	long push(const short param_index, T const value, const bool null = false);
+	short count();
 
-	template <class T>
-	long push(const short param_index, T && value, const bool * null = false);
+	template <class T> long push(const short parameter_index, T const value, const bool null = false);
+	template <class T> long push(const short parameter_index, T && value, const bool * null = false);
 
 	bind_type touch(short param_index);
 
-	template <class T> std::vector<T>* vector(const short param_index);
-	template <class T> T* value(const short param_index, const long batch_index);
-	template <class T> T* values(const short param_index);
-
+	template <class T> T* values(const short parameter_index);
+	template <class T> std::vector<T>* vvalues(const short parameter_index);
+	template <class T> T* value(const short parameter_index, const long batch_index);
+	
+	bool is_null(const short parameter_index, const long batch_index);
 	bool* nulls(const short param_index);
-
-	bool is_null(const short param_index, const long batch_index);
-
-	short count();
 
 	void clear();
 
 private:
 
-	struct param
+	struct batch
 	{
-		bind_types batch;
+		bind_types values;
 		std::vector<uint8_t> nulls;
 	};
-	
-	param* params;
+
+	batch* batchs;
 	short count_;
 };
 
@@ -147,21 +143,33 @@ public:
 	nanoudr::result* execute(long batch_operations = 1, long timeout = 0);
 	void just_execute(long batch_operations = 1, long timeout = 0);
 
-	void bind_params(long batch_operations = 1);
+	void bind_parameters(long batch_operations = 1);
+	void prepare_parameters();
+	void clear_parameters();
 
-	params_batch* params();
-
-	void prepare_params();
-	void release_params();
+	void declare_parameter(const short idx, const short type, const unsigned long size, const short scale);
 
 	attachment_resources* attachment() { return att_resources_; };
 	short scrollable() { return (short)(scrollable_); };
+	
+	struct descr_parameters
+	{
+		std::vector<short> idx;
+		std::vector<short> type;
+		std::vector<unsigned long> size;
+		std::vector<short> scale;
+	};
+
+	descr_parameters* describe() { return &desc_params_; }
+	params_batchs* batchs() { return batchs_; }
 
 private:
 	attachment_resources* att_resources_;
 	nanoudr::connection* conn_;
 	scroll_state scrollable_;
-	params_batch* params_;
+
+	descr_parameters desc_params_;
+	params_batchs* batchs_;
 };
 
 } // namespace nanoudr
