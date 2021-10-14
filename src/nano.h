@@ -333,7 +333,7 @@ enum fb_char_set
 };
 
 #define U8_VARIYNG(message, param)	\
-	if (##message##_char_sets[##message::##param] == fb_char_set::CS_UTF8)	\
+	if (message##_char_sets[##message::##param] == fb_char_set::CS_UTF8)	\
 	{	\
 		udr_helper.utf8_##message(	\
 			att_resources, ##message->##param.str, sizeof(##message->##param.str),	\
@@ -341,7 +341,7 @@ enum fb_char_set
 	}	/* U8_VARIYNG */  
 
 #define U8_STRING(message, param)	\
-	if (##message##_char_sets[##message::##param] == fb_char_set::CS_UTF8)	\
+	if (message##_char_sets[##message::##param] == fb_char_set::CS_UTF8)	\
 	{	\
 		size_t param_length = sizeof(##message->##param.str);	\
 		udr_helper.utf8_##message(	\
