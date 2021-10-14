@@ -22,10 +22,12 @@
 
 #include "nano.h"
 
-#include <string>
-
 namespace nanoudr
 {
+
+#ifdef __GNUC__
+#else
+#endif
 
 //-----------------------------------------------------------------------------
 //

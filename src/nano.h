@@ -23,6 +23,12 @@
 #ifndef NANO_H
 #define NANO_H
 
+#ifdef __GNUC__
+#else
+#endif
+
+#include <string.h>
+
 #define FB_UDR_STATUS_TYPE ::Firebird::ThrowStatusWrapper
 #define FB_UDR_CONTEXT_TYPE ::Firebird::IExternalContext
 
