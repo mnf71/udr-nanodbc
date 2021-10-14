@@ -239,7 +239,7 @@ std::vector<nanoudr::result*>& attachment_resources::connection_results::rslt()
 //-----------------------------------------------------------------------------
 //
 
-const long attachment_resources::exception_number(const char* name) // simple find num
+const ISC_LONG attachment_resources::exception_number(const char* name) // simple find num
 {
 	for (auto x : att_exceptions) 
 		if (strcmp(x.name, name) == 0) return x.number;

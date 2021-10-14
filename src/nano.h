@@ -106,7 +106,7 @@ if (att_resources == nullptr)	\
 	}	\
 	else	\
 	{	\
-		ISC_LONG exception_number = att_resources->exception_number(NANOUDR_ERR_MESSAGE);	\
+		const ISC_LONG exception_number = att_resources->exception_number(NANOUDR_ERR_MESSAGE);	\
 		att_resources->error_message((exception_message));	\
 		if (exception_number == 0)	\
 		{	\
@@ -134,7 +134,7 @@ if (att_resources == nullptr)	\
 
 #define	NANODBC_THROW(exception_message)	\
 {	\
-	ISC_LONG exception_number = att_resources->exception_number(NANODBC_ERR_MESSAGE);	\
+	const ISC_LONG exception_number = att_resources->exception_number(NANODBC_ERR_MESSAGE);	\
 	att_resources->error_message((exception_message));	\
 	if (exception_number == 0)	\
 	{	\
@@ -161,7 +161,7 @@ if (att_resources == nullptr)	\
 
 #define	NANOUDR_THROW(exception_name)	\
 {	\
-	ISC_LONG exception_number = att_resources->exception_number((exception_name));		\
+	const ISC_LONG exception_number = att_resources->exception_number((exception_name));		\
 	att_resources->error_message(att_resources->exception_message((exception_name)));	\
 	if (exception_number == 0)	\
 	{	\
@@ -188,7 +188,7 @@ if (att_resources == nullptr)	\
 
 #define	BINDING_THROW(exception_message)	\
 {	\
-	ISC_LONG exception_number = att_resources->exception_number(BINDING_ERR_MESSAGE);	\
+	const ISC_LONG exception_number = att_resources->exception_number(BINDING_ERR_MESSAGE);	\
 	att_resources->error_message((exception_message));	\
 	if (exception_number == 0)	\
 	{	\
@@ -215,7 +215,7 @@ if (att_resources == nullptr)	\
 
 #define	FETCHING_THROW(exception_message)	\
 {	\
-	ISC_LONG exception_number = att_resources->exception_number(FETCHING_ERR_MESSAGE);	\
+	const ISC_LONG exception_number = att_resources->exception_number(FETCHING_ERR_MESSAGE);	\
 	att_resources->error_message((exception_message));	\
 	if (exception_number == 0)	\
 	{	\
