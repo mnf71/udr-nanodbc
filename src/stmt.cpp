@@ -78,7 +78,7 @@ long params_batchs::push(const short parameter_index, T && value, const bool * n
 	return static_cast<long>(nulls.size() - 1);
 }
 
-bind_type params_batchs::touch(short parameter_index)
+bind_type params_batchs::touch(const short parameter_index)
 {
 	bind_types& vec = batchs[parameter_index].values;
 	return
