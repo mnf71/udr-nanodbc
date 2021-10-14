@@ -57,7 +57,6 @@ connection::connection(class attachment_resources& att_resources, const nanodbc:
 connection::~connection()
 {
 	att_resources_->connections.release(this);
-	nanodbc::connection::~connection();
 }
 
 //-----------------------------------------------------------------------------

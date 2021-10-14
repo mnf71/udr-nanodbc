@@ -188,7 +188,6 @@ statement::~statement()
 {
 	clear_parameters();
 	att_resources_->statements.release(this);
-	nanodbc::statement::~statement();
 }
 
 void statement::open(class nanoudr::connection& conn)

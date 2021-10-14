@@ -45,7 +45,6 @@ result::result(
 result::~result()
 {
 	att_resources_->results.release(this);
-	nanodbc::result::~result();
 }
 
 nanoudr::connection* result::connection()

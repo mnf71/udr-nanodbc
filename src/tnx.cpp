@@ -44,7 +44,6 @@ transaction::transaction(class attachment_resources& att_resources, class nanoud
 transaction::~transaction()
 {
 	att_resources_->transactions.release(this);
-	nanodbc::transaction::~transaction();
 }
 
 nanoudr::connection* transaction::connection()
