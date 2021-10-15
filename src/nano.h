@@ -23,14 +23,6 @@
 #ifndef NANO_H
 #define NANO_H
 
-#ifdef __GNUC__
-#include "../linux-sgx/common/inc/tlibc/string.h"
-#include "../linux-sgx/common/inc/tlibc/mbusafecrt.h"
-#else
-#endif
-
-#include <string.h>
-
 #define FB_UDR_STATUS_TYPE ::Firebird::ThrowStatusWrapper
 #define FB_UDR_CONTEXT_TYPE ::Firebird::IExternalContext
 
@@ -40,6 +32,8 @@
 #include <nanodbc.h> 
 
 using namespace Firebird;
+
+#include <string.h>
 
 #include "conn.h" 
 #include "tnx.h" 

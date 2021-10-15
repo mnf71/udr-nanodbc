@@ -279,13 +279,13 @@ resources::~resources() noexcept
 
 void resources::initialize(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
-	ISC_UINT64 àttachment_id = attachment_id(status, context);
-	att_it = att_m.find(àttachment_id);
+	ISC_UINT64 att_id = attachment_id(status, context);
+	att_it = att_m.find(att_id);
 	if (att_it == att_m.end())
 	{
-		attachment_resources* att_resources = new attachment_resources(àttachment_id);
+		attachment_resources* att_resources = new attachment_resources(att_id);
 		att_m.insert(
-			std::pair<ISC_UINT64, nanoudr::attachment_resources*>(àttachment_id, att_resources));
+			std::pair<ISC_UINT64, nanoudr::attachment_resources*>(att_id, att_resources));
 		att_resources->context(status, context);
 		att_resources->make_resources();
 	}
@@ -293,8 +293,8 @@ void resources::initialize(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* cont
 
 void resources::finalize(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
-	ISC_UINT64 àttachment_id = attachment_id(status, context);
-	att_it = att_m.find(àttachment_id);
+	ISC_UINT64 att_id = attachment_id(status, context);
+	att_it = att_m.find(att_id);
 	if (att_it != att_m.end())
 	{
 		delete (attachment_resources*)(att_it->second);

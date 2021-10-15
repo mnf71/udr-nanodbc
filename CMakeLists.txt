@@ -1,6 +1,10 @@
 ﻿cmake_minimum_required (VERSION 3.4)
-
 project ("udr-nanodbc")
+
+# CMake standard options
+option(BUILD_SHARED_LIBS "Build shared library" ON)
+# nanoudr specific options
+
 
 set(SOURCE ${CMAKE_SOURCE_DIR}/src)
 
