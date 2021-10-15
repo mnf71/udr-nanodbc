@@ -22,13 +22,12 @@
 
 #include "nano.h"
 
+#define __SGX_SOURCE__
+#include "sgx.inc"
+#undef __SGX_SOURCE__
+
 namespace nanoudr
 {
-
-#ifdef __GNUC__
-#include "../linux-sgx/sdk/tsafecrt/pal/src/safecrt/memcpy_s.c"
-#else
-#endif
 
 //-----------------------------------------------------------------------------
 //

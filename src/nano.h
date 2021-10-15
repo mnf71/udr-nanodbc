@@ -23,11 +23,9 @@
 #ifndef NANO_H
 #define NANO_H
 
-#ifdef __GNUC__
-#include "../linux-sgx/common/inc/tlibc/string.h"
-#include "../linux-sgx/common/inc/tlibc/mbusafecrt.h"
-#else
-#endif
+#define __SGX_HEADER__
+#include "sgx.inc"
+#undef __SGX_HEADER__
 
 #include <string.h>
 
