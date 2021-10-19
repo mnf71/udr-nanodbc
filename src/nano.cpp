@@ -98,7 +98,7 @@ const ISC_USHORT helper::utf8_converter(char* dest, const ISC_USHORT dest_size, 
 		throw "iconv: UTF8 character conversion error.";
 	}
 	memset(dest, '\0', dest_size); // not null-term string, just buffer
-	memcpy_s(dest, dest_size, converted, dest_size - out_indicator);
+	memcpy(dest, converted, dest_size - out_indicator);
 	delete[] converted;
 
 	return (ISC_USHORT)(dest_size - out_indicator);

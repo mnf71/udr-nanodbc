@@ -915,8 +915,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 										(char*)(out + value_offset[out::value]), value_length[out::value],
 										value.c_str(), length);
 							else
-								memcpy_s(
-									(char*)(out + value_offset[out::value]), value_length[out::value], value.c_str(), length
+								memcpy(
+									(char*)(out + value_offset[out::value]), value.c_str(), std::min<ISC_USHORT>(value_length[out::value], length)
 								);
 							if (value_length[out::value] > length)
 								memset(
@@ -941,11 +941,9 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 							}
 							else
 							{
-								memcpy_s(
-									(char*)(out + sizeof(ISC_USHORT) + value_offset[out::value]), value_length[out::value], 
-									value.c_str(), length);
-								*(ISC_USHORT*)(out + value_offset[out::value]) =
-									value_length[out::value] > length ? length : value_length[out::value];
+								length = std::min<ISC_USHORT>(value_length[out::value], length);
+								memcpy((char*)(out + sizeof(ISC_USHORT) + value_offset[out::value]), value.c_str(), length);
+								*(ISC_USHORT*)(out + value_offset[out::value]) = length;
 							}
 
 							null_flag = FB_FALSE;

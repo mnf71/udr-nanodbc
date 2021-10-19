@@ -255,9 +255,7 @@ const char* attachment_resources::exception_message(const char* name) // simple 
 
 void attachment_resources::assign_exception(exception* att_exception, const short pos)
 {
-	memcpy_s(
-		&att_exceptions[pos], sizeof(att_exceptions[pos]), att_exception, sizeof(exception)
-	);
+	memcpy(&att_exceptions[pos], att_exception, sizeof(exception));
 }
 
 //-----------------------------------------------------------------------------

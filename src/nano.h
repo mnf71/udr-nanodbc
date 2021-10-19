@@ -241,7 +241,7 @@ if (att_resources == nullptr)	\
 {	\
 	(fb_varchar).length = (ISC_USHORT)sizeof((fb_varchar).str);	\
 	ISC_USHORT string_length = (ISC_USHORT)(string).length();	\
-	memcpy_s((fb_varchar).str, (fb_varchar).length, (string).c_str(), string_length);	\
+	memcpy((fb_varchar).str, (string).c_str(), std::min<ISC_USHORT>((fb_varchar).length, string_length));	\
 	if ((fb_varchar).length > string_length) (fb_varchar).length = string_length;	\
 }	/* FB_VARIYNG */
 
@@ -249,7 +249,7 @@ if (att_resources == nullptr)	\
 {	\
 	ISC_USHORT fb_char_length = (ISC_USHORT)sizeof((fb_char).str);	\
 	ISC_USHORT string_length = (ISC_USHORT)(string).length();	\
-	memcpy_s((fb_char).str, fb_char_length, (string).c_str(), string_length);	\
+	memcpy((fb_char).str, (string).c_str(), std::min<ISC_USHORT>(fb_char_length, string_length));	\
 	if (fb_char_length > string_length)	\
 		memset((fb_char).str + string_length, ' ', fb_char_length - string_length);	\
 }	/* FB_STRING */
