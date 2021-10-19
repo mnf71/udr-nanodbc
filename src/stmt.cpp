@@ -529,7 +529,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$statement)
 				{
 					if (!in->queryNull)
 					{
-						U8_VARIYNG(in, query);
+						U8_VARIYNG(in, query)
 						stmt = new nanoudr::statement(
 							*att_resources, *conn,
 							NANODBC_TEXT(in->query.str),
@@ -964,7 +964,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare_direct)
 			{
 				if (conn != nullptr && att_resources->connections.valid(conn))
 				{
-					U8_VARIYNG(in, query);
+					U8_VARIYNG(in, query)
 					stmt->prepare(
 						*conn, 
 						NANODBC_TEXT(in->query.str),
@@ -1043,7 +1043,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare)
 		{
 			try
 			{
-				U8_VARIYNG(in, query);
+				U8_VARIYNG(in, query)
 				stmt->prepare(
 					NANODBC_TEXT(in->query.str), 
 					in->scrollableNull ? scroll_state::STMT_DEFAULT :
@@ -1229,7 +1229,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$execute_direct)
 			{
 				if (conn != nullptr && att_resources->connections.valid(conn))
 				{
-					U8_VARIYNG(in, query);
+					U8_VARIYNG(in, query)
 					nanoudr::result* rslt =
 						stmt->execute_direct(
 							*conn, 
@@ -1315,7 +1315,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$just_execute_direct)
 			{
 				if (conn != nullptr && att_resources->connections.valid(conn))
 				{
-					U8_VARIYNG(in, query);
+					U8_VARIYNG(in, query)
 					stmt->just_execute_direct(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
 					out->blank = BLANK;
 					out->blankNull = FB_FALSE;
@@ -1489,10 +1489,10 @@ FB_UDR_BEGIN_FUNCTION(stmt$procedure_columns)
 		{
 			try
 			{
-				U8_VARIYNG(in, catalog);
-				U8_VARIYNG(in, schema);
-				U8_VARIYNG(in, procedure);
-				U8_VARIYNG(in, column);
+				U8_VARIYNG(in, catalog)
+				U8_VARIYNG(in, schema)
+				U8_VARIYNG(in, procedure)
+				U8_VARIYNG(in, column)
 				nanodbc::result rslt =
 					stmt->procedure_columns(NANODBC_TEXT(in->catalog.str), NANODBC_TEXT(in->schema.str), 
 						NANODBC_TEXT(in->procedure.str), NANODBC_TEXT(in->column.str));
@@ -1780,11 +1780,16 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 									param_size == 0 || param_size > length ? length : param_size;
 								char* param = new char[param_size + 1]; // null-term string
 								if (u8_string)
-									param_size =
-										udr_helper.utf8_in(
-											att_resources, param, param_size,
-											(const char*)(in + (in_types[in::value] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
-											length);
+									try {
+										param_size =
+											udr_helper.utf8_in(
+												att_resources, param, param_size,
+												(const char*)(in + (in_types[in::value] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
+												length);
+									}
+									catch (std::runtime_error const& e) {
+										BINDING_THROW(e.what())
+									}
 								else
 									memcpy(
 										param,
@@ -1837,16 +1842,13 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 								batchs->push(parameter_index, std::move((nanodbc::string)(NANODBC_TEXT("\0"))), &null_flag);
 							else
 							{
-								try
-								{
-									std::vector<std::uint8_t> param;
+								std::vector<std::uint8_t> param;
+								try {
 									udr_helper.read_blob(att_resources, (ISC_QUAD*)(in + in_offsets[in::value]), &param);
-									batchs->push(parameter_index, std::move(param), &null_flag);
+								} catch (std::runtime_error const& e) {
+									BINDING_THROW(e.what())
 								}
-								catch (...)
-								{
-									BINDING_THROW("Error reading BLOB to stream.")
-								}
+								batchs->push(parameter_index, std::move(param), &null_flag);
 							}
 							break;
 						}
@@ -1910,8 +1912,9 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 							batchs->push(parameter_index, (unsigned short)(param ? true : false), null_flag);
 							break;
 						}
-						case SQL_NULL: // null, nothing
+						case SQL_NULL: // null
 						{
+							BINDING_THROW("Binding SQL_NULL not supported.")
 							break;
 						}
 						default:

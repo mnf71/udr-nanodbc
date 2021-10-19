@@ -788,7 +788,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$unbind)
 		{
 			try
 			{
-				U8_VARIYNG(in, column);
+				U8_VARIYNG(in, column)
 				if (!in->columnNull)
 				{
 					if (!isdigit(in->column.str[0]))
@@ -891,7 +891,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 		{
 			try
 			{
-				U8_VARIYNG(in, column);
+				U8_VARIYNG(in, column)
 
 				short column_position = -1;
 				if (isdigit(in->column.str[0]))
@@ -991,26 +991,28 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						}
 						case SQL_BLOB: // blob
 						{
-							try 
+							if (rslt->column_c_datatype(column_position) == -2) // SQL_C_BINARY...
 							{
-								if (rslt->column_c_datatype(column_position) == -2) // SQL_C_BINARY...
-								{
-									std::vector<std::uint8_t> value;
-									rslt->get_ref<std::vector<std::uint8_t>>(column_position, value);
+								std::vector<std::uint8_t> value;
+								rslt->get_ref<std::vector<std::uint8_t>>(column_position, value);
+								try {
 									udr_helper.write_blob(att_resources, &value, (ISC_QUAD*)(out + value_offset[out::value]));
 								}
-								else // SQL_C_[W]CHAR... char datatype return BLOB Subtype TEXT
-								{
-									nanodbc::string value;
-									rslt->get_ref<nanodbc::string>(column_position, value);
-									udr_helper.write_blob(att_resources, &value, (ISC_QUAD*)(out + value_offset[out::value]));
+								catch (std::runtime_error const& e) {
+									FETCHING_THROW(e.what())
 								}
-								null_flag = FB_FALSE;
 							}
-							catch (...)
+							else // SQL_C_[W]CHAR... char datatype return BLOB Subtype TEXT
 							{
-								FETCHING_THROW("Error writing stream to BLOB.")
+								nanodbc::string value;
+								rslt->get_ref<nanodbc::string>(column_position, value);
+								try {
+									udr_helper.write_blob(att_resources, &value, (ISC_QUAD*)(out + value_offset[out::value]));
+								} catch (std::runtime_error const& e) {
+									FETCHING_THROW(e.what())
+								}
 							}
+							null_flag = FB_FALSE;
 							break;
 						}
 						case SQL_ARRAY: // array
@@ -1139,7 +1141,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_null)
 		{
 			try
 			{
-				U8_VARIYNG(in, column);
+				U8_VARIYNG(in, column)
 				if (!isdigit(in->column.str[0]))
 					out->is_null = 
 						udr_helper.fb_bool(rslt->is_null(NANODBC_TEXT(in->column.str)));
@@ -1212,7 +1214,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_bound)
 		{
 			try
 			{
-				U8_VARIYNG(in, column);
+				U8_VARIYNG(in, column)
 				if (!isdigit(in->column.str[0]))
 					out->is_bound =
 						udr_helper.fb_bool(rslt->is_bound(NANODBC_TEXT(in->column.str)));
@@ -1288,7 +1290,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column)
 		{
 			try
 			{
-				U8_VARIYNG(in, column);
+				U8_VARIYNG(in, column)
 				out->index = rslt->column(NANODBC_TEXT(in->column.str));
 				out->indexNull = FB_FALSE;
 			}
@@ -1355,8 +1357,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_name)
 			try
 			{
 				nanodbc::string column_name = rslt->column_name(NANODBC_TEXT(in->index));
-				FB_VARIYNG(out->column, column_name);
-				U8_VARIYNG(out, column);
+				FB_VARIYNG(out->column, column_name)
+				U8_VARIYNG(out, column)
 				out->columnNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1423,7 +1425,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_size)
 		{
 			try
 			{
-				U8_VARIYNG(in, column);
+				U8_VARIYNG(in, column)
 				if (!isdigit(in->column.str[0]))
 					out->size = 
 						rslt->column_size(NANODBC_TEXT(in->column.str));
@@ -1496,7 +1498,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_decimal_digits)
 		{
 			try
 			{
-				U8_VARIYNG(in, column);
+				U8_VARIYNG(in, column)
 				if (!isdigit(in->column.str[0]))
 					out->digits = 
 						rslt->column_decimal_digits(NANODBC_TEXT(in->column.str));
@@ -1569,7 +1571,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype)
 		{
 			try
 			{
-				U8_VARIYNG(in, column);
+				U8_VARIYNG(in, column)
 				if (!isdigit(in->column.str[0]))
 					out->datatype = 
 						rslt->column_datatype(NANODBC_TEXT(in->column.str));
@@ -1655,7 +1657,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype_name)
 		{
 			try
 			{
-				U8_VARIYNG(in, column);
+				U8_VARIYNG(in, column)
 				nanodbc::string datatype_name;
 				if (!isdigit(in->column.str[0]))
 					datatype_name = 
@@ -1663,8 +1665,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype_name)
 				else
 					datatype_name = 
 						rslt->column_datatype_name((short)(atoi(in->column.str)));
-				FB_VARIYNG(out->datatype_name, datatype_name);
-				U8_VARIYNG(out, datatype_name);
+				FB_VARIYNG(out->datatype_name, datatype_name)
+				U8_VARIYNG(out, datatype_name)
 				out->datatype_nameNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1731,7 +1733,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_c_datatype)
 		{
 			try
 			{
-				U8_VARIYNG(in, column);
+				U8_VARIYNG(in, column)
 				if (!isdigit(in->column.str[0]))
 					out->c_datatype = 
 						rslt->column_c_datatype(NANODBC_TEXT(in->column.str));

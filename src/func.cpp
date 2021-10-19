@@ -95,7 +95,7 @@ FB_UDR_BEGIN_FUNCTION(func$execute_conn)
 		{
 			try
 			{
-				U8_VARIYNG(in, query);
+				U8_VARIYNG(in, query)
 				nanodbc::result odbc = 
 					nanodbc::execute(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
 				nanoudr::result* rslt = new nanoudr::result(*att_resources, *conn, std::move(odbc));
@@ -168,7 +168,7 @@ FB_UDR_BEGIN_FUNCTION(func$just_execute_conn)
 		{
 			try
 			{
-				U8_VARIYNG(in, query);
+				U8_VARIYNG(in, query)
 				nanodbc::just_execute
 					(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
 				out->blank = BLANK;
@@ -424,7 +424,7 @@ FB_UDR_BEGIN_FUNCTION(func$prepare_stmt)
 		{
 			try
 			{
-				U8_VARIYNG(in, query);
+				U8_VARIYNG(in, query)
 				nanodbc::prepare(*stmt, (NANODBC_TEXT(in->query.str)), in->timeout);
 				out->blank = BLANK;
 				out->blankNull = FB_FALSE;

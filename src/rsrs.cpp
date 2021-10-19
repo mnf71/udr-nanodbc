@@ -117,7 +117,7 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 	}
 	catch (...)
 	{
-		throw("Make exceptions crashed.");
+		throw std::runtime_error("Make exceptions crashed.");
 	}
 }
 
@@ -334,7 +334,7 @@ ISC_UINT64 resources::attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_T
 	}
 	catch (...)
 	{
-		throw("Get info for attachment ID failed.");
+		throw std::runtime_error("Get info for attachment ID failed.");
 	}
 
 	return àttachment_id;
@@ -473,7 +473,7 @@ FB_UDR_BEGIN_FUNCTION(udr$locale)
 		try
 		{
 			if (!in->set_localeNull) att_resources->locale(in->set_locale.str);
-			FB_VARIYNG(out->locale, std::string(att_resources->locale()));
+			FB_VARIYNG(out->locale, std::string(att_resources->locale()))
 			out->localeNull = FB_FALSE;
 		}
 		catch (std::runtime_error const& e)
@@ -523,8 +523,8 @@ FB_UDR_BEGIN_FUNCTION(udr$error_message)
 		NANOUDR_RESOURCES
 		out->e_msgNull = FB_FALSE;
 		std::string e_msg = att_resources->error_message();
-		FB_VARIYNG(out->e_msg, e_msg); 
-		U8_VARIYNG(out, e_msg);
+		FB_VARIYNG(out->e_msg, e_msg) 
+		U8_VARIYNG(out, e_msg)
 	}
 
 FB_UDR_END_FUNCTION

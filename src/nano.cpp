@@ -58,7 +58,11 @@ FB_BOOLEAN helper::fb_bool(bool value) const
 
 bool helper::native_bool(const FB_BOOLEAN value) const
 {
-	return (value == FB_TRUE ? true : value == FB_FALSE ? false : throw "Invalid FB_BOOLEAN value.");
+	return (
+		value == FB_TRUE ? true 
+		: value == FB_FALSE ? false 
+		: throw std::runtime_error("Invalid FB_BOOLEAN value.")
+	);
 }
 
 //-----------------------------------------------------------------------------
@@ -83,8 +87,8 @@ const ISC_USHORT helper::utf8_converter(char* dest, const ISC_USHORT dest_size, 
 {
 	char* in = (char*)(src);
 	size_t in_length = src_length; // strlen() src
-	char* converted = new char[dest_size + 1];
-	memset(converted, '\0', dest_size + 1);
+	char* converted = new char[(size_t)(dest_size) + 1];
+	memset(converted, '\0', (size_t)(dest_size) + 1);
 	char* out = converted;
 	size_t out_indicator = dest_size; // sizeof() dest
 	try
@@ -95,13 +99,13 @@ const ISC_USHORT helper::utf8_converter(char* dest, const ISC_USHORT dest_size, 
 	}
 	catch (...)
 	{
-		throw "iconv: UTF8 character conversion error.";
+		throw std::runtime_error("iconv: UTF8 character conversion error.");
 	}
 	memset(dest, '\0', dest_size); // not null-term string, just buffer
 	memcpy(dest, converted, dest_size - out_indicator);
 	delete[] converted;
 
-	return (ISC_USHORT)(dest_size - out_indicator);
+	return (dest_size - (ISC_USHORT)(out_indicator));
 }
 
 //-----------------------------------------------------------------------------
@@ -113,21 +117,21 @@ nanodbc::timestamp helper::set_timestamp(const nanoudr::timestamp* tm)
 		static_cast<int16_t>(tm->d.year), static_cast<int16_t>(tm->d.month), static_cast<int16_t>(tm->d.day),
 		static_cast<int16_t>(tm->t.hour), static_cast<int16_t>(tm->t.min), static_cast<int16_t>(tm->t.sec),
 		static_cast<int16_t>(tm->t.fract)
-		});
+	});
 }
 
 nanodbc::date helper::set_date(const nanoudr::date* d)
 {
 	return nanodbc::date({ 
 		static_cast<int16_t>(d->year), static_cast<int16_t>(d->month), static_cast<int16_t>(d->day) 
-		});
+	});
 }
 
 nanodbc::time helper::set_time(const nanoudr::time* t)
 {
 	return nanodbc::time({ 
 		static_cast<int16_t>(t->hour), static_cast<int16_t>(t->min), static_cast<int16_t>(t->sec) 
-		});
+	});
 }
 
 nanoudr::timestamp helper::get_timestamp(const nanodbc::timestamp* tm)
@@ -143,7 +147,7 @@ nanoudr::date helper::get_date(const nanodbc::date* d)
 {
 	return nanoudr::date({
 		static_cast<unsigned>(d->year), static_cast<unsigned>(d->month), static_cast<unsigned>(d->day)
-		});
+	});
 }
 
 nanoudr::time helper::get_time(const nanodbc::time* t)
@@ -151,7 +155,7 @@ nanoudr::time helper::get_time(const nanodbc::time* t)
 	return nanoudr::time({
 		static_cast<unsigned>(t->hour), static_cast<unsigned>(t->min), static_cast<unsigned>(t->sec),
 		static_cast<unsigned>(0)
-		});
+	});
 }
 
 void helper::read_blob(attachment_resources* att_resources, ISC_QUAD* in, class std::vector<uint8_t>* out)
@@ -197,7 +201,7 @@ void helper::read_blob(attachment_resources* att_resources, ISC_QUAD* in, class 
 	}
 	catch (...)
 	{
-		throw;
+		throw std::runtime_error("Error reading BLOB to stream.");
 	}
 }
 
@@ -242,7 +246,7 @@ void helper::write_blob(
 	}
 	catch (...)
 	{
-		throw;
+		throw std::runtime_error("Error writing stream to BLOB.");
 	}
 }
 

@@ -115,9 +115,9 @@ FB_UDR_BEGIN_FUNCTION(conn$connection)
 		out->connNull = FB_TRUE;
 		try
 		{
-			U8_VARIYNG(in, attr);
-			U8_VARIYNG(in, user);
-			U8_VARIYNG(in, pass);
+			U8_VARIYNG(in, attr)
+			U8_VARIYNG(in, user)
+			U8_VARIYNG(in, pass)
 			nanoudr::connection* conn;
 			if (in->userNull && in->passNull)
 			{
@@ -453,9 +453,9 @@ FB_UDR_BEGIN_FUNCTION(conn$connect)
 		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
-			U8_VARIYNG(in, attr);
-			U8_VARIYNG(in, user);
-			U8_VARIYNG(in, pass);
+			U8_VARIYNG(in, attr)
+			U8_VARIYNG(in, user)
+			U8_VARIYNG(in, pass)
 			nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
 			try
 			{
@@ -660,8 +660,8 @@ FB_UDR_BEGIN_FUNCTION(conn$get_info)
 			try
 			{
 				nanodbc::string info = conn->get_info<nanodbc::string>(in->info_type);
-				FB_VARIYNG(out->info, info);
-				U8_VARIYNG(out, info);
+				FB_VARIYNG(out->info, info)
+				U8_VARIYNG(out, info)
 				out->infoNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -725,8 +725,8 @@ FB_UDR_BEGIN_FUNCTION(conn$dbms_name)
 			try
 			{
 				nanodbc::string dbms_name = conn->dbms_name();
-				FB_VARIYNG(out->dbms_name, dbms_name);
-				U8_VARIYNG(out, dbms_name);
+				FB_VARIYNG(out->dbms_name, dbms_name)
+				U8_VARIYNG(out, dbms_name)
 				out->dbms_nameNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -790,8 +790,8 @@ FB_UDR_BEGIN_FUNCTION(conn$dbms_version)
 			try
 			{
 				nanodbc::string dbms_version = conn->dbms_version();
-				FB_VARIYNG(out->version, dbms_version);
-				U8_VARIYNG(out, version);
+				FB_VARIYNG(out->version, dbms_version)
+				U8_VARIYNG(out, version)
 				out->versionNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -855,8 +855,8 @@ FB_UDR_BEGIN_FUNCTION(conn$driver_name)
 			try
 			{
 				nanodbc::string driver_name = conn->driver_name();
-				FB_VARIYNG(out->drv_name, driver_name);
-				U8_VARIYNG(out, drv_name);
+				FB_VARIYNG(out->drv_name, driver_name)
+				U8_VARIYNG(out, drv_name)
 				out->drv_nameNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -920,8 +920,8 @@ FB_UDR_BEGIN_FUNCTION(conn$database_name)
 			try
 			{
 				nanodbc::string db_name = conn->database_name();
-				FB_VARIYNG(out->db_name, db_name);
-				U8_VARIYNG(out, db_name);
+				FB_VARIYNG(out->db_name, db_name)
+				U8_VARIYNG(out, db_name)
 				out->db_nameNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -985,8 +985,8 @@ FB_UDR_BEGIN_FUNCTION(conn$catalog_name)
 			try
 			{
 				nanodbc::string ctlg_name = conn->catalog_name();
-				FB_VARIYNG(out->ctlg_name, ctlg_name);
-				U8_VARIYNG(out, ctlg_name);
+				FB_VARIYNG(out->ctlg_name, ctlg_name)
+				U8_VARIYNG(out, ctlg_name)
 				out->ctlg_nameNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
