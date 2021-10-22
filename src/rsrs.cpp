@@ -563,7 +563,7 @@ FB_UDR_BEGIN_FUNCTION(udr$convert)
 					*(ISC_USHORT*)(in + in_offsets[in::value]));
 
 			ISC_USHORT convert_size = *(ISC_SHORT*)(in + in_offsets[in::convert_size]);
-			if (convert_size < 0) NANOUDR_THROW("PARAM_SIZE, expected zero or positive value.")
+			if (convert_size < 0) ANY_THROW("CONVERT_SIZE, expected zero or positive value.")
 			convert_size = (convert_size == 0 || convert_size > length) ? length : convert_size;
 
 			try
