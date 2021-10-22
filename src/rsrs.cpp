@@ -485,6 +485,120 @@ FB_UDR_BEGIN_FUNCTION(udr$locale)
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
+// create function convert_[var]char (
+//   value_ [var]char() character set none,
+//   from_ varchar(20) character set none not null,
+//   to_ varchar(20) character set none not null,
+//   convert_size smallint not null default 0
+//  ) returns [var]char() character set none
+//  external name 'nano!udr$convert'
+//  engine udr;
+//
+
+FB_UDR_BEGIN_FUNCTION(udr$convert)
+
+	unsigned in_count;
+
+	enum in : short {
+		value = 0, from, to, convert_size
+	};
+
+	const unsigned out_count = 1;
+
+	enum out : short {
+		result = 0
+	};
+
+	AutoArrayDelete<unsigned> in_types;
+	AutoArrayDelete<unsigned> in_lengths;
+	AutoArrayDelete<unsigned> in_offsets;
+	AutoArrayDelete<unsigned> in_null_offsets;
+
+	AutoArrayDelete<unsigned> out_type;
+	AutoArrayDelete<unsigned> out_length;
+	AutoArrayDelete<unsigned> out_offset;
+	AutoArrayDelete<unsigned> out_null_offset;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+
+		in_types.reset(new unsigned[in_count]);
+		in_lengths.reset(new unsigned[in_count]);
+		in_offsets.reset(new unsigned[in_count]);
+		in_null_offsets.reset(new unsigned[in_count]);
+
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_types[i] = in_metadata->getType(status, i);
+			in_lengths[i] = in_metadata->getLength(status, i);
+			in_offsets[i] = in_metadata->getOffset(status, i);
+			in_null_offsets[i] = in_metadata->getNullOffset(status, i);
+		}
+
+		out_type.reset(new unsigned[out_count]);
+		out_length.reset(new unsigned[out_count]);
+		out_offset.reset(new unsigned[out_count]);
+		out_null_offset.reset(new unsigned[out_count]);
+
+		out_type[out::result] = out_metadata->getType(status, out::result);
+		out_length[out::result] = out_metadata->getLength(status, out::result);
+		out_offset[out::result] = out_metadata->getOffset(status, out::result);
+		out_null_offset[out::result] = out_metadata->getNullOffset(status, out::result);
+	}
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		NANOUDR_RESOURCES
+		if (!*(ISC_SHORT*)(in + in_null_offsets[in::value]) ||
+			!(in_types[in::value] == SQL_TEXT || in_types[in::value] == SQL_VARYING) ||
+			!(out_type[out::result] == SQL_TEXT || out_type[out::result] == SQL_VARYING))
+		{
+			ISC_USHORT length =
+				(in_types[in::value] == SQL_TEXT ?
+					in_lengths[in::value] :	// полный размер переданного CHAR(N) с учетом пробелов 
+					*(ISC_USHORT*)(in + in_offsets[in::value]));
+
+			ISC_USHORT convert_size = *(ISC_SHORT*)(in + in_offsets[in::convert_size]);
+			if (convert_size < 0) NANOUDR_THROW("PARAM_SIZE, expected zero or positive value.")
+			convert_size = (convert_size == 0 || convert_size > length) ? length : convert_size;
+
+			try
+			{
+				convert_size =
+					udr_helper.unicode_converter(
+						(char*)(out + (out_type[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + out_offset[out::result]),
+						out_length[out::result], (const char*)(in + sizeof(ISC_USHORT) + in_offsets[in::to]),
+						(const char*)(in + (in_types[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
+						convert_size, (const char*)(in + sizeof(ISC_USHORT) + in_offsets[in::from])
+					);
+			}
+			catch (std::runtime_error const& e) {
+				ANY_THROW(e.what())
+			}
+
+			if (out_type[out::result] == SQL_TEXT)
+			{
+				if (out_length[out::result] > convert_size)
+					memset(
+						(char*)(out + out_offset[out::result]) + convert_size, ' ', out_length[out::result] - convert_size
+					);
+			}
+			else
+				*(ISC_USHORT*)(out + out_offset[out::result]) = convert_size;
+			
+			*(ISC_SHORT*)(out + out_null_offset[out::result]) = FB_FALSE;
+		}
+		else
+			*(ISC_SHORT*)(out + out_null_offset[out::result]) = FB_TRUE;
+	}
+
+FB_UDR_END_FUNCTION
+
+//-----------------------------------------------------------------------------
 // create function error_message
 //	returns varchar(512) character set utf8
 //	external name 'nano!udr$error_message'
@@ -513,20 +627,21 @@ FB_UDR_BEGIN_FUNCTION(udr$error_message)
 		}
 	}
 
-	FB_UDR_MESSAGE(
-		OutMessage,
-		(FB_VARCHAR(512 * 4), e_msg)
-	);
+		FB_UDR_MESSAGE(
+			OutMessage,
+			(FB_VARCHAR(512 * 4), e_msg)
+		);
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
 		NANOUDR_RESOURCES
 		out->e_msgNull = FB_FALSE;
 		std::string e_msg = att_resources->error_message();
-		FB_VARIYNG(out->e_msg, e_msg) 
+		FB_VARIYNG(out->e_msg, e_msg)
 		U8_VARIYNG(out, e_msg)
 	}
 
 FB_UDR_END_FUNCTION
+
 
 } // namespace nanoudr

@@ -162,7 +162,7 @@ BEGIN
   FUNCTION bind_blob(
       stmt TY$POINTER NOT NULL,
       parameter_index SMALLINT NOT NULL,
-      value_ BLOB CHARACTER SET NONE
+      value_ BLOB
     ) RETURNS TY$NANO_BLANK;
 
   FUNCTION bind_boolean(
@@ -198,6 +198,20 @@ BEGIN
       parameter_index SMALLINT NOT NULL,
       batch_size INTEGER NOT NULL DEFAULT 1 -- <> 1 call nulls all batch
     ) RETURNS TY$NANO_BLANK;
+
+  FUNCTION convert_varchar(
+      value_ VARCHAR(32765) CHARACTER SET NONE,
+      from_ VARCHAR(20) CHARACTER SET NONE NOT NULL,
+      to_ VARCHAR(20) CHARACTER SET NONE NOT NULL,
+      convert_size SMALLINT NOT NULL DEFAULT 0
+    ) RETURNS VARCHAR(32765) CHARACTER SET NONE;
+
+  FUNCTION convert_char(
+      value_ CHAR(32767) CHARACTER SET NONE,
+      from_ VARCHAR(20) CHARACTER SET NONE NOT NULL,
+      to_ VARCHAR(20) CHARACTER SET NONE NOT NULL,
+      convert_size SMALLINT NOT NULL DEFAULT 0
+    ) RETURNS CHAR(32767) CHARACTER SET NONE;
 
   FUNCTION purge_bindings(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK;
 
@@ -446,7 +460,7 @@ BEGIN
   FUNCTION bind_blob(
       stmt TY$POINTER NOT NULL,
       parameter_index SMALLINT NOT NULL,
-      value_ BLOB CHARACTER SET NONE
+      value_ BLOB
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
@@ -491,6 +505,24 @@ BEGIN
       batch_size INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind_null'
+    ENGINE UDR;
+
+  FUNCTION convert_varchar(
+      value_ VARCHAR(32765) CHARACTER SET NONE,
+      from_ VARCHAR(20) CHARACTER SET NONE NOT NULL,
+      to_ VARCHAR(20) CHARACTER SET NONE NOT NULL,
+      convert_size SMALLINT NOT NULL
+    ) RETURNS VARCHAR(32765) CHARACTER SET NONE
+    EXTERNAL NAME 'nano!udr$convert'
+    ENGINE UDR;
+
+  FUNCTION convert_char(
+      value_ CHAR(32767) CHARACTER SET NONE,
+      from_ VARCHAR(20) CHARACTER SET NONE NOT NULL,
+      to_ VARCHAR(20) CHARACTER SET NONE NOT NULL,
+      convert_size SMALLINT NOT NULL
+    ) RETURNS CHAR(32767) CHARACTER SET NONE
+    EXTERNAL NAME 'nano!udr$convert'
     ENGINE UDR;
 
   FUNCTION purge_bindings(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK

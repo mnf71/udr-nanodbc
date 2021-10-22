@@ -73,16 +73,16 @@ bool helper::native_bool(const FB_BOOLEAN value) const
 const ISC_USHORT helper::utf8_in(attachment_resources* att_resources, char* dest, const ISC_USHORT dest_size,
 	const char* utf8, const ISC_USHORT utf8_length)
 {
-	return utf8_converter(dest, dest_size, att_resources->locale(), utf8, utf8_length, "UTF-8");
+	return unicode_converter(dest, dest_size, att_resources->locale(), utf8, utf8_length, "UTF-8");
 }
 
 const ISC_USHORT helper::utf8_out(attachment_resources* att_resources, char* dest, const ISC_USHORT dest_size,
 	const char* locale, const ISC_USHORT locale_length)
 {
-	return utf8_converter(dest, dest_size, "UTF-8", locale, locale_length, att_resources->locale());
+	return unicode_converter(dest, dest_size, "UTF-8", locale, locale_length, att_resources->locale());
 }
 
-const ISC_USHORT helper::utf8_converter(char* dest, const ISC_USHORT dest_size, const char* to,
+const ISC_USHORT helper::unicode_converter(char* dest, const ISC_USHORT dest_size, const char* to,
 	const char* src, const ISC_USHORT src_length, const char* from)
 {
 	char* in = (char*)(src);
@@ -94,12 +94,20 @@ const ISC_USHORT helper::utf8_converter(char* dest, const ISC_USHORT dest_size, 
 	try
 	{
 		iconv_t ic = iconv_open(to, from);
-		iconv(ic, &in, &in_length, &out, &out_indicator); 
-		iconv_close(ic);
+		if (ic == (iconv_t)-1)
+			throw std::runtime_error("iconv: Unsuccesful conversion descriptor.");
+		else 
+		{
+			iconv(ic, &in, &in_length, &out, &out_indicator);
+			iconv_close(ic);
+		}
 	}
-	catch (...)
-	{
-		throw std::runtime_error("iconv: UTF8 character conversion error.");
+	catch (std::runtime_error const& e)
+	{	
+		if (!strlen(e.what()))
+			throw std::runtime_error("iconv: Character conversion error.");
+		else
+			throw std::runtime_error(e.what());
 	}
 	memset(dest, '\0', dest_size); // not null-term string, just buffer
 	memcpy(dest, converted, dest_size - out_indicator);

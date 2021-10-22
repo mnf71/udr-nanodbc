@@ -391,6 +391,9 @@ public:
 	const ISC_USHORT utf8_out(attachment_resources* att_resources, char* out, const ISC_USHORT out_length,
 		const char* locale, const ISC_USHORT locale_length);
 
+	const ISC_USHORT unicode_converter(char* dest, const ISC_USHORT dest_length, const char* to,
+		const char* src, const ISC_USHORT src_length, const char* from);
+
 	nanodbc::timestamp set_timestamp(const nanoudr::timestamp* tm);
 	nanodbc::date set_date(const nanoudr::date* d);
 	nanodbc::time set_time(const nanoudr::time* t);
@@ -399,16 +402,14 @@ public:
 	nanoudr::date get_date(const nanodbc::date* d);
 	nanoudr::time get_time(const nanodbc::time* t);
 
-	void read_blob(attachment_resources* att_resources, ISC_QUAD* blob, class std::vector<uint8_t>* stream);
+	void read_blob(attachment_resources* att_resources, ISC_QUAD* in, class std::vector<uint8_t>* out);
 	
-	void write_blob(attachment_resources* att_resources, class std::vector<uint8_t>* stream, ISC_QUAD* blob);
-	void write_blob(attachment_resources* att_resources, nanodbc::string* stream, ISC_QUAD* blob);
+	void write_blob(attachment_resources* att_resources, class std::vector<uint8_t>* in, ISC_QUAD* out);
+	void write_blob(attachment_resources* att_resources, nanodbc::string* in, ISC_QUAD* out);
 
 private:
-	const ISC_USHORT utf8_converter(char* dest, const ISC_USHORT dest_length, const char* to,
-		const char* src, const ISC_USHORT src_length, const char* from);
-	void write_blob(
-		attachment_resources* att_resources, const unsigned char* in, const std::size_t in_length, ISC_QUAD* out);
+	void write_blob(attachment_resources* att_resources, const unsigned char* in, const std::size_t in_length, 
+		ISC_QUAD* out);
 };
 
 extern helper udr_helper;
