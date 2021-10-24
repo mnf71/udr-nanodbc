@@ -7,7 +7,7 @@ project(nanodbc CXX)
 # CMake standard options
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 # nanodbc specific options
-option(NANODBC_DISABLE_ASYNC "Disable async features entirely" ON)
+option(NANODBC_DISABLE_ASYNC "Disable async features entirely" OFF)
 option(NANODBC_DISABLE_EXAMPLES "Do not build examples" ON)
 option(NANODBC_DISABLE_INSTALL "Do not generate install target" ON)
 option(NANODBC_DISABLE_LIBCXX "Do not use libc++, if available." ON)
