@@ -19,7 +19,7 @@ BEGIN
   
   BEGIN
     conn = nano$conn.connection(ora_conn_str);
-    WHEN EXCEPTION nano$nanodbc_err_message DO
+    WHEN EXCEPTION nano$nanodbc_error DO
     BEGIN
       e = 'ORA connect failed: ' || nano$udr.error_message();
       SUSPEND;
@@ -51,8 +51,8 @@ BEGIN
     
     nano$udr.finalize(); -- better use in trigger on disconnect
 
-    WHEN EXCEPTION nano$pointer_conn_invalid, EXCEPTION nano$pointer_stmt_invalid,
-         EXCEPTION nano$nanodbc_err_message
+    WHEN EXCEPTION nano$invalid_resource, EXCEPTION nano$nanodbc_error,
+         EXCEPTION nano$binding_error
     DO
     BEGIN
       e = 'Execute block failed: ' || nano$udr.error_message();
