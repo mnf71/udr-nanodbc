@@ -7,7 +7,7 @@ project(nanodbc CXX)
 # CMake standard options
 option(BUILD_SHARED_LIBS "Build shared library" OFF)
 # nanodbc specific options
-option(NANODBC_DISABLE_ASYNC "Disable async features entirely" ON)
+option(NANODBC_DISABLE_ASYNC "Disable async features entirely" OFF)
 option(NANODBC_DISABLE_EXAMPLES "Do not build examples" ON)
 option(NANODBC_DISABLE_INSTALL "Do not generate install target" ON)
 option(NANODBC_DISABLE_LIBCXX "Do not use libc++, if available." ON)
@@ -15,12 +15,12 @@ option(NANODBC_DISABLE_TESTS "Do not build tests" ON)
 option(NANODBC_ENABLE_COVERAGE "Enable test coverage reporting for GCC/clang" OFF)
 option(NANODBC_ENABLE_BOOST "Use Boost for Unicode string convertions (requires Boost.Locale)" OFF)
 option(NANODBC_ENABLE_UNICODE "Enable Unicode support" OFF)
-option(NANODBC_ENABLE_WORKAROUND_NODATA "Enable SQL_NO_DATA workaround (see Issue #33)" OFF)
+option(NANODBC_ENABLE_WORKAROUND_NODATA "Enable SQL_NO_DATA workaround (see Issue #33)" ON)
 
 ########################################
 ## nanodbc version
 ########################################
-file(STRINGS VERSION NANODBC_VERSION REGEX "[0-9]+\\.[0-9]+\\.[0-9]+")
+file(STRINGS VERSION.txt NANODBC_VERSION REGEX "[0-9]+\\.[0-9]+\\.[0-9]+")
 string(REGEX REPLACE "^([0-9]+)\\.[0-9]+\\.[0-9]+" "\\1" NANODBC_VERSION_MAJOR "${NANODBC_VERSION}")
 string(REGEX REPLACE "^[0-9]+\\.([0-9])+\\.[0-9]+" "\\1" NANODBC_VERSION_MINOR "${NANODBC_VERSION}")
 string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]+)" "\\1" NANODBC_VERSION_PATCH "${NANODBC_VERSION}")
