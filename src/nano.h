@@ -99,8 +99,8 @@ if (att_resources == nullptr)	\
 
 #else // Others
 
-#define UDR_THROW(...) __NARGS(0, ## __VA_ARGS__, NANOUDR_THROW_SPECIAL, NANOUDR_THROW_DEFAULT)
-#define __NARGS(_1, _2, THROW_NAME, ...) THROW_NAME
+#define NANOUDR_THROW(...) __NARGS(0, ## __VA_ARGS__, NANOUDR_THROW_SPECIAL, NANOUDR_THROW_DEFAULT, 0)
+#define __NARGS(_0, _1, _2, _3, N, ...) N
 
 #endif
 
