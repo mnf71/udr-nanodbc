@@ -147,7 +147,7 @@ public:
 	void prepare_parameters();
 	void clear_parameters();
 
-	void declare_parameter(const short idx, const short type, const unsigned long size, const short scale);
+	void describe_parameter(const short idx, const short type, const unsigned long size, const short scale);
 
 	attachment_resources* attachment() { return att_resources_; };
 	short scrollable() { return (short)(scrollable_); };

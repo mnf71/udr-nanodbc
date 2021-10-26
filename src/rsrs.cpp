@@ -378,7 +378,7 @@ FB_UDR_BEGIN_FUNCTION(udr$initialize)
 		}
 		catch (std::runtime_error const& e)
 		{
-			ANY_THROW(e.what())
+			NANOUDR_THROW(e.what())
 		}
 	}
 
@@ -409,7 +409,7 @@ FB_UDR_BEGIN_FUNCTION(udr$finalize)
 		}
 		catch (std::runtime_error const& e)
 		{
-			ANY_THROW(e.what())
+			NANOUDR_THROW(e.what())
 		}
 	}
 
@@ -430,7 +430,7 @@ FB_UDR_BEGIN_FUNCTION(udr$expunge)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		try
 		{
@@ -440,7 +440,7 @@ FB_UDR_BEGIN_FUNCTION(udr$expunge)
 		}
 		catch (std::runtime_error const& e)
 		{
-			ANY_THROW(e.what())
+			NANOUDR_THROW(e.what())
 		}
 	}
 
@@ -468,7 +468,7 @@ FB_UDR_BEGIN_FUNCTION(udr$locale)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->localeNull = FB_TRUE;
 		try
 		{
@@ -478,7 +478,7 @@ FB_UDR_BEGIN_FUNCTION(udr$locale)
 		}
 		catch (std::runtime_error const& e)
 		{
-			ANY_THROW(e.what())
+			NANOUDR_THROW(e.what())
 		}
 	}
 
@@ -552,22 +552,23 @@ FB_UDR_BEGIN_FUNCTION(udr$convert)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
+		*(ISC_SHORT*)(out + out_null_offset[out::result]) = FB_TRUE;
 		if (!*(ISC_SHORT*)(in + in_null_offsets[in::value]) ||
 			!(in_types[in::value] == SQL_TEXT || in_types[in::value] == SQL_VARYING) ||
 			!(out_type[out::result] == SQL_TEXT || out_type[out::result] == SQL_VARYING))
 		{
-			ISC_USHORT length =
-				(in_types[in::value] == SQL_TEXT ?
-					in_lengths[in::value] :	// полный размер переданного CHAR(N) с учетом пробелов 
-					*(ISC_USHORT*)(in + in_offsets[in::value]));
+			try {
+				ISC_USHORT length =
+					(in_types[in::value] == SQL_TEXT ?
+						in_lengths[in::value] :	// полный размер переданного CHAR(N) с учетом пробелов 
+						*(ISC_USHORT*)(in + in_offsets[in::value]));
 
-			ISC_USHORT convert_size = *(ISC_SHORT*)(in + in_offsets[in::convert_size]);
-			if (convert_size < 0) ANY_THROW("CONVERT_SIZE, expected zero or positive value.")
-			convert_size = (convert_size == 0 || convert_size > length) ? length : convert_size;
+				ISC_USHORT convert_size = *(ISC_SHORT*)(in + in_offsets[in::convert_size]);
+				if (convert_size < 0) 
+					throw std::runtime_error("CONVERT_SIZE, expected zero or positive value.");
+				convert_size = (convert_size == 0 || convert_size > length) ? length : convert_size;
 
-			try
-			{
 				convert_size =
 					udr_helper.unicode_converter(
 						(char*)(out + (out_type[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + out_offset[out::result]),
@@ -575,25 +576,24 @@ FB_UDR_BEGIN_FUNCTION(udr$convert)
 						(const char*)(in + (in_types[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
 						convert_size, (const char*)(in + sizeof(ISC_USHORT) + in_offsets[in::from])
 					);
-			}
-			catch (std::runtime_error const& e) {
-				ANY_THROW(e.what())
-			}
 
-			if (out_type[out::result] == SQL_TEXT)
-			{
-				if (out_length[out::result] > convert_size)
-					memset(
-						(char*)(out + out_offset[out::result]) + convert_size, ' ', out_length[out::result] - convert_size
-					);
-			}
-			else
-				*(ISC_USHORT*)(out + out_offset[out::result]) = convert_size;
+				if (out_type[out::result] == SQL_TEXT)
+				{
+					if (out_length[out::result] > convert_size)
+						memset(
+							(char*)(out + out_offset[out::result]) + convert_size, ' ', out_length[out::result] - convert_size
+						);
+				}
+				else
+					*(ISC_USHORT*)(out + out_offset[out::result]) = convert_size;
 			
-			*(ISC_SHORT*)(out + out_null_offset[out::result]) = FB_FALSE;
+				*(ISC_SHORT*)(out + out_null_offset[out::result]) = FB_FALSE;
+			}	
+			catch (std::runtime_error const& e) 
+			{
+				NANOUDR_THROW(e.what())
+			}
 		}
-		else
-			*(ISC_SHORT*)(out + out_null_offset[out::result]) = FB_TRUE;
 	}
 
 FB_UDR_END_FUNCTION
@@ -634,7 +634,7 @@ FB_UDR_BEGIN_FUNCTION(udr$error_message)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->e_msgNull = FB_FALSE;
 		std::string e_msg = att_resources->error_message();
 		FB_VARIYNG(out->e_msg, e_msg)

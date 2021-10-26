@@ -28,19 +28,22 @@
 namespace nanoudr
 {
 
-#define EXCEPTION_ARRAY_SIZE	100
+#define EXCEPTION_ARRAY_SIZE	10
 #define ERROR_MESSAGE_LENGTH	1024
 
-#define	RESOURCES_INDEFINED		"NANO$RESOURCES_INDEFINED" 
+#define	RESOURCES_UNDEFINED		"NANO$RESOURCES_UNDEFINED" 
+#define INVALID_RESOURCE		"NANO$INVALID_RESOURCE"
 
-#define NANOUDR_ERR_MESSAGE		"NANO$NANOUDR_ERR_MESSAGE"
-#define POINTER_CONN_INVALID	"NANO$POINTER_CONNECTION_INVALID"
-#define POINTER_TNX_INVALID		"NANO$POINTER_TRANSACTION_INVALID"
-#define POINTER_STMT_INVALID	"NANO$POINTER_STATEMENT_INVALID"
-#define POINTER_RSLT_INVALID	"NANO$POINTER_RESULT_INVALID"
-#define NANODBC_ERR_MESSAGE		"NANO$NANODBC_ERR_MESSAGE"
-#define	BINDING_ERR_MESSAGE		"NANO$BINDING_ERR_MESSAGE"
-#define	FETCHING_ERR_MESSAGE	"NANO$FETCHING_ERR_MESSAGE"
+#define NANOUDR_ERROR			"NANO$NANOUDR_ERROR"
+#define NANODBC_ERROR			"NANO$NANODBC_ERROR"
+
+#define INVALID_CONNECTION		INVALID_RESOURCE, "Invalid connection pointer."
+#define INVALID_TRANSACTION		INVALID_RESOURCE, "Invalid transaction pointer."
+#define INVALID_STATEMENT		INVALID_RESOURCE, "Invalid statement pointer."
+#define INVALID_RESULT			INVALID_RESOURCE, "Invalid result pointer."
+
+#define	BINDING_ERROR			"NANO$BINDING_ERROR"
+#define	FETCHING_ERROR			"NANO$FETCHING_ERROR"
 
 struct resources_context
 {
@@ -166,15 +169,12 @@ private:
 
 	// if number is zero then sended ANY_THROW 
 	exception att_exceptions[EXCEPTION_ARRAY_SIZE] = {
-		{RESOURCES_INDEFINED,	0, ""}, // used for class resources
-		{NANOUDR_ERR_MESSAGE,	0, ""},
-		{POINTER_CONN_INVALID,	0, "Pointer CONNECTION invalid."},
-		{POINTER_TNX_INVALID,	0, "Pointer TRANSACTION invalid."},
-		{POINTER_STMT_INVALID,	0, "Pointer STATEMENT invalid."},
-		{POINTER_RSLT_INVALID,	0, "Pointer RESULT invalid."} ,
-		{NANODBC_ERR_MESSAGE,	0, ""},
-		{BINDING_ERR_MESSAGE,	0, ""},
-		{FETCHING_ERR_MESSAGE,	0, ""}
+		{RESOURCES_UNDEFINED,		0, ""}, 
+		{INVALID_RESOURCE,			0, ""},
+		{NANOUDR_ERROR,				0, ""},
+		{NANODBC_ERROR,				0, ""},
+		{BINDING_ERROR,				0, ""},
+		{FETCHING_ERROR,			0, ""}
 	};
 
 	void make_exceptions(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
@@ -203,7 +203,7 @@ public:
 
 	attachment_resources* attachment(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
 
-	exception resource_exception = { RESOURCES_INDEFINED, 0, "Attachment resources indefined." };
+	exception resource_exception = { RESOURCES_UNDEFINED, 0, "Attachment resources undefined." };
 
 private:
 	attachment_mapping att_m;

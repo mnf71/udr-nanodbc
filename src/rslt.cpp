@@ -5,7 +5,7 @@
  *  License. You may obtain a copy of the License at
  *  http://www.ibphoenix.com/main.nfs?a=ibphoenix&page=ibp_idpl.
  *
- *  Software distributed under the License is distributed AS IS,
+ *  Software distributed under the License is distributed AS IS,r
  *  WITHOUT WARRANTY OF ANY KIND, either express or implied.
  *  See the License for the specific language governing rights
  *  and limitations under the License.
@@ -74,7 +74,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$valid)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->valid = udr_helper.fb_bool(
 			in->rsltNull ? false :
 				att_resources->results.valid(udr_helper.native_ptr<result>(in->rslt.str))
@@ -106,7 +106,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$release)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->rsltNull = FB_TRUE;
 		if (!in->rsltNull)
 		{
@@ -123,7 +123,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$release)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -150,7 +150,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->connNull = FB_TRUE;
 		nanoudr::result * rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -167,7 +167,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$connection)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_RSLT_INVALID)
+			NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -194,7 +194,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$rowset_size)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->sizeNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -210,7 +210,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$rowset_size)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_RSLT_INVALID)
+			NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -237,7 +237,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$affected_rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->affectedNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -253,7 +253,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$affected_rows)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -280,7 +280,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$has_affected_rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->has_affectedNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -296,7 +296,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$has_affected_rows)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -323,7 +323,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->rowsNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -339,7 +339,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$rows)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -366,7 +366,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$columns)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->columnsNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -382,7 +382,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$columns)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -409,7 +409,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$first)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -425,7 +425,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$first)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -452,7 +452,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$last)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -468,7 +468,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$last)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -495,7 +495,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$next)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -511,7 +511,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$next)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -538,7 +538,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$prior)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -554,7 +554,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$prior)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -583,7 +583,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$move)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -599,7 +599,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$move)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -628,7 +628,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$skip)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -644,7 +644,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$skip)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -671,7 +671,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$position)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->positionNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -687,7 +687,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$position)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -714,7 +714,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$at_end)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->at_endNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -730,7 +730,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$at_end)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -781,7 +781,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$unbind)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -807,7 +807,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$unbind)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -883,7 +883,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		ISC_SHORT& null_flag = *(ISC_SHORT*)(out + value_null_offset[out::value]);
 		*(ISC_SHORT*)(out + value_null_offset[out::value]) = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
@@ -918,7 +918,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 											value.c_str(), length);
 								}
 								catch (std::runtime_error const& e) {
-									FETCHING_THROW(e.what())
+									NANOUDR_THROW(FETCHING_ERROR, e.what())
 								}
 							else
 								memcpy(
@@ -946,7 +946,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 											value.c_str(), length);
 								}
 								catch (std::runtime_error const& e) {
-									FETCHING_THROW(e.what())
+									NANOUDR_THROW(FETCHING_ERROR, e.what())
 								}
 							else
 							{
@@ -1008,7 +1008,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 									udr_helper.write_blob(att_resources, &value, (ISC_QUAD*)(out + value_offset[out::value]));
 								}
 								catch (std::runtime_error const& e) {
-									FETCHING_THROW(e.what())
+									NANOUDR_THROW(FETCHING_ERROR, e.what())
 								}
 							}
 							else // SQL_C_[W]CHAR... char datatype return BLOB Subtype TEXT
@@ -1018,7 +1018,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 								try {
 									udr_helper.write_blob(att_resources, &value, (ISC_QUAD*)(out + value_offset[out::value]));
 								} catch (std::runtime_error const& e) {
-									FETCHING_THROW(e.what())
+									NANOUDR_THROW(FETCHING_ERROR, e.what())
 								}
 							}
 							null_flag = FB_FALSE;
@@ -1026,12 +1026,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						}
 						case SQL_ARRAY: // array
 						{
-							FETCHING_THROW("Fetching SQL_ARRAY not supported.")
+							NANOUDR_THROW(FETCHING_ERROR, "Fetching SQL_ARRAY not supported.")
 							break;
 						}
 						case SQL_QUAD: // blob_id 
 						{
-							FETCHING_THROW("Fetching SQL_QUAD not supported.")
+							NANOUDR_THROW(FETCHING_ERROR, "Fetching SQL_QUAD not supported.")
 							break;
 						}
 						case SQL_TYPE_TIME: // time
@@ -1080,7 +1080,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 						}
 						default:
 						{
-							FETCHING_THROW("Fetching unknow Firebird SQL datatype.")
+							NANOUDR_THROW(FETCHING_ERROR, "Fetching unknow Firebird SQL datatype.")
 							break;
 						}
 					}
@@ -1092,7 +1092,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_RSLT_INVALID)
+			NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1143,7 +1143,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_null)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->is_nullNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1165,7 +1165,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_null)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1216,7 +1216,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_bound)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->is_boundNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1243,7 +1243,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_bound)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1292,7 +1292,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->indexNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1309,7 +1309,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1358,7 +1358,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->columnNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1376,7 +1376,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_name)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1427,7 +1427,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_size)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->sizeNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1449,7 +1449,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_size)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1500,7 +1500,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_decimal_digits)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->digitsNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1522,7 +1522,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_decimal_digits)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1573,7 +1573,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->datatypeNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1595,7 +1595,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1659,7 +1659,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->datatype_nameNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1684,7 +1684,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype_name)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1735,7 +1735,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_c_datatype)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->c_datatypeNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1757,7 +1757,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_c_datatype)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1784,7 +1784,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$next_result)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1800,7 +1800,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$next_result)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1827,7 +1827,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$has_data)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->has_dataNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1844,7 +1844,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$has_data)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_RSLT_INVALID)
+			 NANOUDR_THROW(INVALID_RESULT)
 	}
 
 FB_UDR_END_FUNCTION

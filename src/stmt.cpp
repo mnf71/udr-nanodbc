@@ -422,7 +422,7 @@ void statement::bind_parameters(long batch_operations)
 				}
 				case bind_type::UNKNOWN: default:
 				{
-					BINDING_THROW("Not supported NANODBC data type.")
+					throw std::runtime_error("Not supported NANODBC data type.");
 					break;
 				}
 			}
@@ -456,7 +456,7 @@ void statement::clear_parameters()
 	batchs_ = nullptr;
 }
 
-void statement::declare_parameter(
+void statement::describe_parameter(
 	const short idx, const short type, const unsigned long size, const short scale)
 {
 	desc_params_.idx.push_back(idx);
@@ -517,7 +517,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$statement)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->stmtNull = FB_TRUE;
 		try
 		{
@@ -541,7 +541,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$statement)
 						stmt = new nanoudr::statement(*att_resources, *conn);
 				}
 				else
-					NANOUDR_THROW(POINTER_CONN_INVALID)
+					NANOUDR_THROW(INVALID_CONNECTION)
 			}
 			else
 				stmt = new nanoudr::statement(*att_resources);
@@ -578,7 +578,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$valid)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->valid = udr_helper.fb_bool(
 			in->stmtNull ? false :
 				att_resources->statements.valid(udr_helper.native_ptr<statement>(in->stmt.str))
@@ -610,7 +610,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$release)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->stmtNull = FB_TRUE;
 		if (!in->stmtNull)
 		{
@@ -627,7 +627,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$release)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 		
 FB_UDR_END_FUNCTION
@@ -654,7 +654,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$connected)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->connectedNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -670,7 +670,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$connected)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -697,7 +697,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->connNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -714,7 +714,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$connection)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -743,7 +743,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$open)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -759,7 +759,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$open)
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANOUDR_THROW(POINTER_CONN_INVALID)
+					NANOUDR_THROW(INVALID_CONNECTION)
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -767,7 +767,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$open)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -794,7 +794,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$close)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -811,7 +811,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$close)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -838,7 +838,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$cancel)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -855,7 +855,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$cancel)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -882,7 +882,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$closed)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->closedNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -898,7 +898,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$closed)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -953,7 +953,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare_direct)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -975,7 +975,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare_direct)
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANOUDR_THROW(POINTER_CONN_INVALID)
+					NANOUDR_THROW(INVALID_CONNECTION)
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -983,7 +983,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare_direct)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1036,7 +1036,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1059,7 +1059,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1088,7 +1088,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$scrollable)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->scrollableNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1114,7 +1114,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$scrollable)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1143,7 +1143,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$timeout)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1161,7 +1161,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$timeout)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1218,7 +1218,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$execute_direct)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->rsltNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1241,7 +1241,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$execute_direct)
 					out->rsltNull = FB_FALSE;
 				}
 				else
-					NANOUDR_THROW(POINTER_CONN_INVALID)
+					NANOUDR_THROW(INVALID_CONNECTION)
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -1249,7 +1249,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$execute_direct)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1304,7 +1304,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$just_execute_direct)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1321,7 +1321,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$just_execute_direct)
 					out->blankNull = FB_FALSE;
 				}
 				else
-					NANOUDR_THROW(POINTER_CONN_INVALID)
+					NANOUDR_THROW(INVALID_CONNECTION)
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -1329,7 +1329,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$just_execute_direct)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1360,7 +1360,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$execute)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->rsltNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1378,7 +1378,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$execute)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1409,7 +1409,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$just_execute)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1427,7 +1427,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$just_execute)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1482,7 +1482,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$procedure_columns)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->rsltNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1506,7 +1506,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$procedure_columns)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1533,7 +1533,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$affected_rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->affectedNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1549,7 +1549,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$affected_rows)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1576,7 +1576,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$columns)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->columnsNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1592,7 +1592,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$columns)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1619,7 +1619,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$parameters)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->parametersNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1635,7 +1635,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$parameters)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1664,7 +1664,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$parameter_size)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->sizeNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1681,7 +1681,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$parameter_size)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1743,7 +1743,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>((char*)(in + in_offsets[in::stmt]));
 		if (!*(ISC_SHORT*)(in + in_null_offsets[in::stmt]) && att_resources->statements.valid(stmt))
@@ -1773,23 +1773,18 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 								if (in_count > in::param_size && !*(ISC_SHORT*)(in + in_null_offsets[in::param_size]))
 								{
 									param_size = *(ISC_SHORT*)(in + in_offsets[in::param_size]);
-									if (param_size < 0)
-										BINDING_THROW("PARAM_SIZE, expected zero or positive value.")
+									if (param_size < 0) 
+										throw std::runtime_error("PARAM_SIZE, expected zero or positive value.");
 								}
 								param_size = 
 									param_size == 0 || param_size > length ? length : param_size;
 								char* param = new char[param_size + 1]; // null-term string
 								if (u8_string)
-									try {
-										param_size =
-											udr_helper.utf8_in(
-												att_resources, param, param_size,
-												(const char*)(in + (in_types[in::value] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
-												length);
-									}
-									catch (std::runtime_error const& e) {
-										BINDING_THROW(e.what())
-									}
+									param_size =
+										udr_helper.utf8_in(
+											att_resources, param, param_size,
+											(const char*)(in + (in_types[in::value] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
+											length);
 								else
 									memcpy(
 										param,
@@ -1843,23 +1838,19 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 							else
 							{
 								std::vector<std::uint8_t> param;
-								try {
-									udr_helper.read_blob(att_resources, (ISC_QUAD*)(in + in_offsets[in::value]), &param);
-								} catch (std::runtime_error const& e) {
-									BINDING_THROW(e.what())
-								}
+								udr_helper.read_blob(att_resources, (ISC_QUAD*)(in + in_offsets[in::value]), &param);
 								batchs->push(parameter_index, std::move(param), &null_flag);
 							}
 							break;
 						}
 						case SQL_ARRAY: // array
 						{
-							BINDING_THROW("Binding SQL_ARRAY not supported.")
+							throw std::runtime_error("Binding SQL_ARRAY not supported.");
 							break;
 						}
 						case SQL_QUAD: // blob_id 
 						{
-							BINDING_THROW("Binding SQL_QUAD not supported.")
+							throw std::runtime_error("Binding SQL_QUAD not supported.");
 							break;
 						}
 						case SQL_TYPE_TIME: // time
@@ -1914,12 +1905,12 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 						}
 						case SQL_NULL: // null
 						{
-							BINDING_THROW("Binding SQL_NULL not supported.")
+							throw std::runtime_error("Binding SQL_NULL not supported.");
 							break;
 						}
 						default:
 						{
-							BINDING_THROW("Binding unknow Firebird SQL datatype.")
+							throw std::runtime_error("Binding unknow Firebird SQL datatype.");
 							break;
 						}
 					}
@@ -1929,11 +1920,11 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANODBC_THROW(e.what())
+				NANOUDR_THROW(BINDING_ERROR, e.what())
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -1964,41 +1955,47 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind_null)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
-			try
-			{
-				if (in->batch_size == 1)
+			if (in->batch_size == 1)
+				try
+				{
 					stmt->batchs()->push(in->parameter_index, (unsigned short)(0), true);
-				else
+				}
+				catch (std::runtime_error const& e)
+				{
+					NANOUDR_THROW(BINDING_ERROR, e.what())
+				}
+			else
+				try
+				{ 
 					stmt->bind_null(in->parameter_index, in->batch_size); // call nulls all batch
-				out->blank = BLANK;
-				out->blankNull = FB_FALSE;
-			}
-			catch (std::runtime_error const& e)
-			{
-				if (in->batch_size == 1) ANY_THROW(e.what()) 
-				else NANODBC_THROW(e.what())
-			}
+				}
+				catch (std::runtime_error const& e)
+				{
+					NANODBC_THROW(e.what())
+				}
+			out->blank = BLANK;
+			out->blankNull = FB_FALSE;
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
-// create function purge_bindings (
+// create function clear_bindings (
 //	 stmt ty$pointer not null
 //	) returns ty$nano_blank
-//	external name 'nano!stmt$purge_bindings'
+//	external name 'nano!stmt$clear_bindings'
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt$purge_bindings)
+FB_UDR_BEGIN_FUNCTION(stmt$clear_bindings)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -2012,7 +2009,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$purge_bindings)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -2025,29 +2022,29 @@ FB_UDR_BEGIN_FUNCTION(stmt$purge_bindings)
 			}
 			catch (std::runtime_error const& e)
 			{
-				ANY_THROW(e.what())
+				NANOUDR_THROW(BINDING_ERROR, e.what())
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
 
 
 //-----------------------------------------------------------------------------
-// create function declare_parameter (
+// create function describe_parameter (
 //	 stmt ty$pointer not null,
 // 	 idx smallint not null,
 // 	 type_ smallint not null,
 // 	 size_ integer not null,
 // 	 scale_ smallint not null default 0
 //	) returns ty$nano_blank
-//	external name 'nano!stmt$declare_parameter
+//	external name 'nano!stmt$describe_parameter
 //	engine udr; 
 //
 
-FB_UDR_BEGIN_FUNCTION(stmt$declare_parameter)
+FB_UDR_BEGIN_FUNCTION(stmt$describe_parameter)
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -2065,24 +2062,24 @@ FB_UDR_BEGIN_FUNCTION(stmt$declare_parameter)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
 		{
 			try
 			{
-				stmt->declare_parameter(in->idx, in->type, in->size, in->scale);
+				stmt->describe_parameter(in->idx, in->type, in->size, in->scale);
 				out->blank = BLANK;
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANODBC_THROW(e.what())
+				NANOUDR_THROW(BINDING_ERROR, e.what())
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -2109,7 +2106,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$describe_parameters)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -2128,7 +2125,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$describe_parameters)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION
@@ -2155,7 +2152,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$reset_parameters)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = udr_helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -2173,7 +2170,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$reset_parameters)
 			}
 		}
 		else
-				NANOUDR_THROW(POINTER_STMT_INVALID)
+			NANOUDR_THROW(INVALID_STATEMENT)
 	}
 
 FB_UDR_END_FUNCTION

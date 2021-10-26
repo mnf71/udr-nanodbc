@@ -213,11 +213,11 @@ BEGIN
       convert_size SMALLINT NOT NULL DEFAULT 0
     ) RETURNS CHAR(32767) CHARACTER SET NONE;
 
-  FUNCTION purge_bindings(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK;
+  FUNCTION clear_bindings(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK;
 
   ------------------------------------------------------------------------------
 
-  FUNCTION declare_parameter(
+  FUNCTION describe_parameter(
       stmt TY$POINTER NOT NULL,
       idx SMALLINT NOT NULL,
       type_ SMALLINT NOT NULL,
@@ -525,20 +525,20 @@ BEGIN
     EXTERNAL NAME 'nano!udr$convert'
     ENGINE UDR;
 
-  FUNCTION purge_bindings(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt$purge_bindings'
+  FUNCTION clear_bindings(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!stmt$clear_bindings'
     ENGINE UDR;
 
   ------------------------------------------------------------------------------
 
-  FUNCTION declare_parameter(
+  FUNCTION describe_parameter(
       stmt TY$POINTER NOT NULL,
       idx SMALLINT NOT NULL,
       type_ SMALLINT NOT NULL,
       size_ INTEGER NOT NULL,
       scale_ SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt$declare_parameter'
+    EXTERNAL NAME 'nano!stmt$describe_parameter'
     ENGINE UDR;
 
   FUNCTION describe_parameters(stmt TY$POINTER NOT NULL) RETURNS TY$NANO_BLANK

@@ -73,7 +73,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$transaction)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->tnxNull = FB_TRUE;
 		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -90,7 +90,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$transaction)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_CONN_INVALID)
+			NANOUDR_THROW(INVALID_CONNECTION)
 	}
 
 FB_UDR_END_FUNCTION
@@ -117,7 +117,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$valid)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->valid = udr_helper.fb_bool(
 			in->tnxNull ? false :
 				att_resources->transactions.valid(udr_helper.native_ptr<transaction>(in->tnx.str))
@@ -149,7 +149,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$release)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->tnxNull = FB_TRUE;
 		if (!in->tnxNull)
 		{
@@ -166,7 +166,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$release)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_TNX_INVALID)
+			 NANOUDR_THROW(INVALID_TRANSACTION)
 	}
 
 FB_UDR_END_FUNCTION
@@ -193,7 +193,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->connNull = FB_TRUE;
 		nanoudr::transaction* tnx = udr_helper.native_ptr<transaction>(in->tnx.str);
 		if (!in->tnxNull && att_resources->transactions.valid(tnx))
@@ -210,7 +210,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$connection)
 			}
 		}
 		else
-			NANOUDR_THROW(POINTER_TNX_INVALID)
+			NANOUDR_THROW(INVALID_TRANSACTION)
 	}
 
 FB_UDR_END_FUNCTION
@@ -237,7 +237,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$commit)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::transaction* tnx = udr_helper.native_ptr<transaction>(in->tnx.str);
 		if (!in->tnxNull && att_resources->transactions.valid(tnx))
@@ -254,7 +254,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$commit)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_TNX_INVALID)
+			NANOUDR_THROW(INVALID_TRANSACTION)
 	}
 
 FB_UDR_END_FUNCTION
@@ -281,7 +281,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$rollback)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		NANOUDR_RESOURCES
+		ATTACHMENT_RESOURCES
 		out->blank = BLANK;
 		nanoudr::transaction* tnx = udr_helper.native_ptr<transaction>(in->tnx.str);
 		if (!in->tnxNull && att_resources->transactions.valid(tnx))
@@ -298,7 +298,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$rollback)
 			}
 		}
 		else
-			 NANOUDR_THROW(POINTER_TNX_INVALID)
+			NANOUDR_THROW(INVALID_TRANSACTION)
 	}
 
 FB_UDR_END_FUNCTION
