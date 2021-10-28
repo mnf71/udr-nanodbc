@@ -139,7 +139,6 @@ if (NANOUDR_HIDING_VISIBILITY)
         "
         __attribute__((visibility(\"default\"))) int _v0() { return 0; }
         __attribute__((visibility(\"hidden\")))  int _v1() { return 1; }
-        
 		int main(int argc, char* argv[]) { _v0(); _v1(); return 0; }
         "
         visibility_support
@@ -326,10 +325,6 @@ file(GLOB files ${CMAKE_SOURCE_DIR}/src/*)
 
 add_library(nano SHARED ${files}) 
 
-set_target_properties(nano 
-	PROPERTIES 
-		LINK_FLAGS "/DEF:\"${CMAKE_SOURCE_DIR}/firebird/defs/udr_plugin.def\"") 
-
 if(CMAKE_BUILD_TYPE MATCHES Debug)
 	if(UNIX)
 		message(STATUS "Debug build use default directories")
@@ -349,6 +344,10 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
 			RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/x86_64-win64
 	)	
 endif()
+
+set_target_properties(nano 
+	PROPERTIES 
+		LINK_FLAGS "/DEF:\"${CMAKE_SOURCE_DIR}/firebird/defs/udr_plugin.def\"") 
 
 target_link_libraries(nano PUBLIC ${ODBC_LIBRARIES} nanodbc firebird iconv)
 
