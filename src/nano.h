@@ -1,4 +1,4 @@
-﻿ /*
+ /*
   *  The contents of this file are subject to the Initial
   *  Developer's Public License Version 1.0 (the "License");
   *  you may not use this file except in compliance with the
@@ -88,21 +88,12 @@ if (att_resources == nullptr)	\
 //-----------------------------------------------------------------------------
 //
 
-#ifdef _MSC_VER // Microsoft compilers
-
 #define EXPAND(x) x
 #define __NARGS(_1, _2, _3, N, ...) N
-#define __NARGS_EXPAND(...) EXPAND(__NARGS(__VA_ARGS__, NANOUDR_THROW_SPECIAL, NANOUDR_THROW_DEFAULT, 0))
+#define __NARGS_EXPAND(...) EXPAND(__NARGS(__VA_ARGS__, NANOUDR_THROW_SPECIAL, NANOUDR_THROW_DEFAULT, ERROR))
 
 #define AUGMENTER(...) unused, __VA_ARGS__
 #define NANOUDR_THROW(...) __NARGS_EXPAND(AUGMENTER(__VA_ARGS__))(__VA_ARGS__)
-
-#else // Others
-
-#define NANOUDR_THROW(...) __NARGS(0, ## __VA_ARGS__, NANOUDR_THROW_SPECIAL, NANOUDR_THROW_DEFAULT, 0)
-#define __NARGS(_0, _1, _2, _3, N, ...) N
-
-#endif
 
 #define	NANOUDR_THROW_DEFAULT(exception_message)	\
 {	\

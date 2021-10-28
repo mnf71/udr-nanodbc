@@ -12,6 +12,10 @@ project (NANOUDR)
 
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
 
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE Release)
+endif()
+
 ###############################################################################
 # CMake standard options
 ############
@@ -25,7 +29,7 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 option(NANOUDR_ENABLE_LTO "Enable link time optimization" OFF) 
 option(NANOUDR_ENABLE_ASAN "Enable address sanitizer on GCC v4.8+/Clang v 3.1+" OFF)
 option(NANOUDR_HIDING_VISIBILITY "Enable hiding private symbol using ELF visibility" ON) 
-option(NANOUDR_DISABLE_LIBCXX "Do not use libc++, if available" OFF)
+option(NANOUDR_DISABLE_LIBCXX "Do not use libc++, if available" ON)
 # in the future maybe
 # option(NANOUDR_ENABLE_UNICODE "Enable Unicode support" OFF)
 # ------
@@ -230,7 +234,10 @@ endif()
 # NANODBC libraries to link
 ############
 
-find_path(NANODBC_INCLUDE_DIR nanodbc.h	/usr/include ${CMAKE_SOURCE_DIR}/nanodbc/include)
+find_path(NANODBC_INCLUDE_DIR nanodbc.h	
+	/usr/include 
+	${CMAKE_SOURCE_DIR}/nanodbc/include
+)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
 	find_library(NANODBC_LIB nanodbc 
@@ -245,7 +252,7 @@ elseif(CMAKE_BUILD_TYPE MATCHES Release)
 endif()
 
 if(NOT NANODBC_INCLUDE_DIR OR NOT NANODBC_LIB)
-	message(FATAL_ERROR "Location of nanodbc library could not be determined")
+	message(FATAL_ERROR "Location of nanodbc library could not found")
 endif()
 
 add_library(nanodbc SHARED IMPORTED)
@@ -278,7 +285,7 @@ find_library(FIREBIRD_LIB
 )
 	
 if(NOT FIREBIRD_INCLUDE_DIR OR NOT FIREBIRD_LIB)
-	message(FATAL_ERROR "Location of Firebird library could not be determined")
+	message(FATAL_ERROR "Location of Firebird library could not found")
 endif()
 
 add_library(firebird SHARED IMPORTED)
@@ -307,7 +314,7 @@ find_library(ICONV_LIB iconv libiconv
 )
 
 if(NOT ICONV_INCLUDE_DIR OR NOT ICONV_LIB)
-	message(FATAL_ERROR "Location of iConv library could not be determined")
+	message(FATAL_ERROR "Location of iConv library could not found")
 endif()
 
 add_library(iconv SHARED IMPORTED)

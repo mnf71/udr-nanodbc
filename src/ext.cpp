@@ -76,7 +76,7 @@ void connection::isolation_level(const isolation_state isolation_usage)
 	if (isolation_usage == isolation_state::TXN_DEFAULT)
 		return;
 #if (ODBCVER >= 0x0300)
-	RETCODE rc;
+	RETCODE rc = 0;
 	if (isolation_ != isolation_usage)
 	{
 		NANODBC_CALL_RC(
@@ -107,7 +107,7 @@ void statement::scrollable(const scroll_state scrollable_usage)
 	if (scrollable_usage == scroll_state::STMT_DEFAULT)
 		return;
 #if (ODBCVER >= 0x0300)
-	RETCODE rc;
+	RETCODE rc = 0;
 	if (scrollable_ != scrollable_usage)
 	{
 		NANODBC_CALL_RC(

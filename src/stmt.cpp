@@ -134,7 +134,7 @@ bool* params_batchs::nulls(const short parameter_index)
 
 void params_batchs::clear()
 {
-	for (std::size_t parameter_index = 0; parameter_index < count_; ++parameter_index)
+	for (short parameter_index = 0; parameter_index < count_; ++parameter_index)
 	{
 		batch* b = &batchs[parameter_index];
 		std::visit([](auto&& arg) { arg.clear(); }, b->values);
@@ -172,13 +172,13 @@ statement::statement(class attachment_resources& att_resources, class nanoudr::c
 statement::statement(
 	class attachment_resources& att_resources, class nanoudr::connection& conn, const nanodbc::string& query, 
 	const scroll_state scrollable_usage, long timeout)
-	: scrollable_(scroll_state::STMT_DEFAULT)
-	, nanodbc::statement(conn)
+	: nanodbc::statement(conn)
 {
 	att_resources_ = &att_resources;
 	att_resources_->statements.retain(this);
 	conn_ = &conn;
 
+	scrollable_ = scroll_state::STMT_DEFAULT;
 	scrollable(scrollable_usage);
 	nanodbc::statement::prepare(query, timeout);
 	prepare_parameters();

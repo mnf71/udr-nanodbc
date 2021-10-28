@@ -80,10 +80,10 @@ void attachment_resources::make_exceptions(FB_UDR_STATUS_TYPE* status, FB_UDR_CO
 
 	enum sql_rslt : short { name = 0, number, message };
 
-	char* sql_stmt = "	\
-SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
-       ex.rdb$exception_number as number, ex.rdb$message as message	\
-  FROM rdb$exceptions ex	\
+	const char* sql_stmt = "\
+SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,\
+       ex.rdb$exception_number as number, ex.rdb$message as message\
+  FROM rdb$exceptions ex\
   WHERE TRIM(ex.rdb$exception_name) STARTING WITH 'NANO$'";
 
 	try
@@ -311,7 +311,7 @@ attachment_resources* resources::attachment(FB_UDR_STATUS_TYPE* status, FB_UDR_C
 
 ISC_UINT64 resources::attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
-	ISC_UINT64 àttachment_id = 0;
+	ISC_UINT64 attachment_id = 0;
 
 	try
 	{
@@ -327,7 +327,7 @@ ISC_UINT64 resources::attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_T
 			const ISC_USHORT l =
 				(ISC_USHORT)(isc_vax_integer((const ISC_SCHAR*)(p), 2));
 			p += 2;
-			àttachment_id = isc_portable_integer(p, l);
+			attachment_id = isc_portable_integer(p, l);
 		}
 		else
 			throw;
@@ -337,7 +337,7 @@ ISC_UINT64 resources::attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_T
 		throw std::runtime_error("Get info for attachment ID failed.");
 	}
 
-	return àttachment_id;
+	return attachment_id;
 }
 
 //-----------------------------------------------------------------------------

@@ -152,13 +152,13 @@ public:
 	attachment_resources* attachment() { return att_resources_; };
 	short scrollable() { return (short)(scrollable_); };
 	
-	struct descr_parameters
+	typedef struct
 	{
 		std::vector<short> idx;
 		std::vector<short> type;
 		std::vector<unsigned long> size;
 		std::vector<short> scale;
-	};
+	} descr_parameters;
 
 	descr_parameters* describe() { return &desc_params_; }
 	params_batchs* batchs() { return batchs_; }
