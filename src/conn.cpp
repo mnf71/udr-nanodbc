@@ -456,7 +456,6 @@ FB_UDR_BEGIN_FUNCTION(conn$connect)
 			U8_VARIYNG(in, attr)
 			U8_VARIYNG(in, user)
 			U8_VARIYNG(in, pass)
-			nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
 			try
 			{
 				if (in->userNull && in->passNull)

@@ -914,7 +914,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 								{
 									length = 
 										udr_helper.utf8_out(att_resources,
-											(char*)(out + value_offset[out::value]), value_length[out::value],
+											(char*)(out + value_offset[out::value]), static_cast<short>(value_length[out::value]),
 											value.c_str(), length);
 								}
 								catch (std::runtime_error const& e) {
@@ -922,7 +922,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 								}
 							else
 								memcpy(
-									(char*)(out + value_offset[out::value]), value.c_str(), std::min<ISC_USHORT>(value_length[out::value], length)
+									(char*)(out + value_offset[out::value]), value.c_str(), 
+									std::min<ISC_USHORT>(static_cast<short>(value_length[out::value]), length)
 								);
 							if (value_length[out::value] > length)
 								memset(
@@ -942,7 +943,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 								try {
 									*(ISC_USHORT*)(out + value_offset[out::value]) =
 										udr_helper.utf8_out(att_resources,
-											(char*)(out + sizeof(ISC_USHORT) + value_offset[out::value]), value_length[out::value],
+											(char*)(out + sizeof(ISC_USHORT) + value_offset[out::value]), 
+											static_cast<short>(value_length[out::value]),
 											value.c_str(), length);
 								}
 								catch (std::runtime_error const& e) {
@@ -950,7 +952,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 								}
 							else
 							{
-								length = std::min<ISC_USHORT>(value_length[out::value], length);
+								length = std::min<ISC_USHORT>(static_cast<short>(value_length[out::value]), length);
 								memcpy((char*)(out + sizeof(ISC_USHORT) + value_offset[out::value]), value.c_str(), length);
 								*(ISC_USHORT*)(out + value_offset[out::value]) = length;
 							}

@@ -5,7 +5,6 @@
       "generator": "Ninja",
       "configurationType": "Debug",
       "inheritEnvironments": [ "msvc_x64_x64" ],
-      "buildRoot": "C:/Program Files/Firebird/Firebird_3_0/plugins/udr",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "",
       "buildCommandArgs": "",
@@ -16,17 +15,9 @@
       "generator": "Ninja",
       "configurationType": "Release",
       "inheritEnvironments": [ "msvc_x64_x64" ],
-      "buildRoot": "C:/Program Files/Firebird/Firebird_3_0/plugins/udr",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "",
-      "ctestCommandArgs": "",
-      "variables": [
-        {
-          "name": "CMAKE_CXX_FLAGS_RELEASE",
-          "value": "/MD /O2 /Ob2 /DNDEBUG",
-          "type": "STRING"
-        }
-      ]
+      "ctestCommandArgs": ""
     }
   ]
 }

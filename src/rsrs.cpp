@@ -96,11 +96,11 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,	\
 		AutoArrayDelete<unsigned char> buffer;
 
 		nanoudr::exception udr_exception = { "\0", 0, "\0" };
-		for (int i = 0; i < EXCEPTION_ARRAY_SIZE; ++i)
+		for (short i = 0; i < EXCEPTION_ARRAY_SIZE; ++i)
 			assign_exception(&udr_exception, i);
 
 		buffer.reset(new unsigned char[meta->getMessageLength(status)]);
-		for (int i = 0; curs->fetchNext(status, buffer) == IStatus::RESULT_OK && i < EXCEPTION_ARRAY_SIZE; ++i)
+		for (short i = 0; curs->fetchNext(status, buffer) == IStatus::RESULT_OK && i < EXCEPTION_ARRAY_SIZE; ++i)
 		{
 			memcpy( // this SQL_VARYING, see sql_stmt
 				udr_exception.name,
@@ -559,10 +559,11 @@ FB_UDR_BEGIN_FUNCTION(udr$convert)
 			!(out_type[out::result] == SQL_TEXT || out_type[out::result] == SQL_VARYING))
 		{
 			try {
-				ISC_USHORT length =
-					(in_types[in::value] == SQL_TEXT ?
-						in_lengths[in::value] :	// полный размер переданного CHAR(N) с учетом пробелов 
-						*(ISC_USHORT*)(in + in_offsets[in::value]));
+				ISC_USHORT length = 
+					static_cast<ISC_USHORT> (
+						(in_types[in::value] == SQL_TEXT ?
+							in_lengths[in::value] :	// полный размер переданного CHAR(N) с учетом пробелов 
+							*(ISC_USHORT*)(in + in_offsets[in::value])));
 
 				ISC_USHORT convert_size = *(ISC_SHORT*)(in + in_offsets[in::convert_size]);
 				if (convert_size < 0) 
@@ -572,7 +573,7 @@ FB_UDR_BEGIN_FUNCTION(udr$convert)
 				convert_size =
 					udr_helper.unicode_converter(
 						(char*)(out + (out_type[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + out_offset[out::result]),
-						out_length[out::result], (const char*)(in + sizeof(ISC_USHORT) + in_offsets[in::to]),
+						static_cast<short>(out_length[out::result]), (const char*)(in + sizeof(ISC_USHORT) + in_offsets[in::to]),
 						(const char*)(in + (in_types[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
 						convert_size, (const char*)(in + sizeof(ISC_USHORT) + in_offsets[in::from])
 					);

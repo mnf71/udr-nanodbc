@@ -259,9 +259,6 @@ void statement::bind_parameters(long batch_operations)
 {
 	if (batchs_)
 	{
-		attachment_resources* att_resources = att_resources_;
-		FB_UDR_STATUS_TYPE* status = att_resources_->context()->status;
-		FB_UDR_CONTEXT_TYPE* context = att_resources_->context()->context;
 		bool batch_operation = !(batch_operations == 1);
 		for (short parameter_index = 0; parameter_index < batchs_->count(); ++parameter_index)
 		{
@@ -1765,10 +1762,11 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 							else
 							{
 								bool u8_string = (in_char_sets[in::value] == fb_char_set::CS_UTF8);
-								ISC_USHORT length =
-									(in_types[in::value] == SQL_TEXT ?
-										in_lengths[in::value] :	// полный размер переданного CHAR(N) с учетом пробелов 
-										*(ISC_USHORT*)(in + in_offsets[in::value])); 
+								ISC_USHORT length = 
+									static_cast<ISC_USHORT>(
+										(in_types[in::value] == SQL_TEXT ?
+											in_lengths[in::value] :	// полный размер переданного CHAR(N) с учетом пробелов 
+											*(ISC_USHORT*)(in + in_offsets[in::value])));
 								ISC_USHORT param_size = 0;
 								if (in_count > in::param_size && !*(ISC_SHORT*)(in + in_null_offsets[in::param_size]))
 								{
@@ -1867,7 +1865,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 								memcpy(&fb, (ISC_TIME*)(in + in_offsets[in::value]), sizeof(FbTime));
 								struct nanoudr::time t;
 								fb.decode(utl, &t.hour, &t.min, &t.sec, &t.fract);
-								nanodbc::time param = udr_helper.set_time(&t);
+								param = udr_helper.set_time(&t);
 							}
 							batchs->push(parameter_index, (nanodbc::time)(param), null_flag);
 							break;
@@ -1886,7 +1884,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 								memcpy(&fb, (ISC_DATE*)(in + in_offsets[in::value]), sizeof(FbDate));
 								struct nanoudr::date d;
 								fb.decode(utl, &d.year, &d.month, &d.day);
-								nanodbc::date param = udr_helper.set_date(&d);
+								param = udr_helper.set_date(&d);
 							}
 							batchs->push(parameter_index, (nanodbc::date)(param), null_flag);
 							break;
