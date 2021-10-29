@@ -29,17 +29,17 @@
 #include <ibase.h>
 #include <UdrCppEngine.h>
 
-#include <nanodbc.h> 
+#include <nanodbc.h>
 
 using namespace Firebird;
 
 #include <string.h>
 
-#include "conn.h" 
-#include "tnx.h" 
-#include "stmt.h" 
-#include "rslt.h" 
-#include "rsrs.h" 
+#include "conn.h"
+#include "tnx.h"
+#include "stmt.h"
+#include "rslt.h"
+#include "rsrs.h"
 
 namespace nanoudr
 {
@@ -49,8 +49,8 @@ namespace nanoudr
 
 #define POINTER_SIZE	8	
 #define	NANO_POINTER	FB_CHAR(POINTER_SIZE)	// domain types
-#define	NANO_BLANK		FB_INTEGER	// domain types
-#define	BLANK			-1	// void function emulation
+#define	NANO_BLANK	FB_INTEGER	// domain types
+#define	BLANK		-1	// void function emulation
 
 #define FB_SEGMENT_SIZE	32768	// BLOB segment size
 
@@ -88,12 +88,22 @@ if (att_resources == nullptr)	\
 //-----------------------------------------------------------------------------
 //
 
-#define EXPAND(x) x
-#define __NARGS(_1, _2, _3, N, ...) N
-#define __NARGS_EXPAND(...) EXPAND(__NARGS(__VA_ARGS__, NANOUDR_THROW_SPECIAL, NANOUDR_THROW_DEFAULT, ERROR))
+#ifdef _MSC_VER // Microsoft compilers
 
-#define AUGMENTER(...) unused, __VA_ARGS__
-#define NANOUDR_THROW(...) __NARGS_EXPAND(AUGMENTER(__VA_ARGS__))(__VA_ARGS__)
+#	define EXPAND(x) x
+#	define __NARGS(_1, _2, _3, N, ...) N
+#	define __NARGS_EXPAND(...) EXPAND(__NARGS(__VA_ARGS__, NANOUDR_THROW_SPECIAL, NANOUDR_THROW_DEFAULT, ERROR))
+
+#	define AUGMENTER(...) unused, __VA_ARGS__
+#	define NANOUDR_THROW(...) __NARGS_EXPAND(AUGMENTER(__VA_ARGS__))(__VA_ARGS__)
+
+#else // Non-Microsoft compilers
+
+#	define __NARGS(_0, _1, _2, N, ...) N
+#	define __NARGS_EXPAND(...) __NARGS(0, ## __VA_ARGS__, NANOUDR_THROW_SPECIAL, NANOUDR_THROW_DEFAULT, ERROR)
+#	define NANOUDR_THROW(...) __NARGS_EXPAND(__VA_ARGS__)(__VA_ARGS__)
+
+#endif
 
 #define	NANOUDR_THROW_DEFAULT(exception_message)	\
 {	\
@@ -139,7 +149,7 @@ if (att_resources == nullptr)	\
 
 #define	NANOUDR_THROW_SPECIAL(...)	\
 {	\
-	const char* special_exception[] = {__VA_ARGS__};	\
+	const char* special_exception[] = { __VA_ARGS__ };	\
 	const char* exception_message = special_exception[1];	\
 	const char* exception_name = special_exception[0];	\
 	if (att_resources == nullptr)	\
