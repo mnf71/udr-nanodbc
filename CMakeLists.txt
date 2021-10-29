@@ -32,7 +32,7 @@ option(NANOUDR_HIDING_VISIBILITY "Enable hiding private symbol using ELF visibil
 option(NANOUDR_DISABLE_LIBCXX "Do not use libc++, if available" ON)
 # in the future maybe
 # option(NANOUDR_ENABLE_UNICODE "Enable Unicode support" OFF)
-# ------
+# --------
 
 ###############################################################################
 # Version
