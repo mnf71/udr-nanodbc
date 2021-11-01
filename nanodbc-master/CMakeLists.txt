@@ -5,9 +5,9 @@ project(nanodbc CXX)
 #       If no initial value is provided, OFF is used.
 
 # CMake standard options
-option(BUILD_SHARED_LIBS "Build shared library" OFF)
+option(BUILD_SHARED_LIBS "Build shared library" ON)
 # nanodbc specific options
-option(NANODBC_DISABLE_ASYNC "Disable async features entirely" ON)
+option(NANODBC_DISABLE_ASYNC "Disable async features entirely" OFF)
 option(NANODBC_DISABLE_EXAMPLES "Do not build examples" ON)
 option(NANODBC_DISABLE_INSTALL "Do not generate install target" ON)
 option(NANODBC_DISABLE_LIBCXX "Do not use libc++, if available." ON)
@@ -36,6 +36,7 @@ message(STATUS "nanodbc compile: C++${CMAKE_CXX_STANDARD}")
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wnarrowing -Werror")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s")
   include(CheckCXXCompilerFlag)
 
   if (NANODBC_ENABLE_COVERAGE)

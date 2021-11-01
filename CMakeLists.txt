@@ -28,7 +28,6 @@ option(BUILD_SHARED_LIBS "Build shared library" ON)
 
 option(NANOUDR_ENABLE_LTO "Enable link time optimization" OFF)
 option(NANOUDR_ENABLE_ASAN "Enable address sanitizer on GCC v4.8+/Clang v 3.1+" OFF)
-option(NANOUDR_HIDING_VISIBILITY "Enable hiding private symbol using ELF visibility" ON)
 option(NANOUDR_DISABLE_LIBCXX "Do not use libc++, if available" ON)
 # in the future maybe
 # option(NANOUDR_ENABLE_UNICODE "Enable Unicode support" OFF)
@@ -40,7 +39,7 @@ option(NANOUDR_DISABLE_LIBCXX "Do not use libc++, if available" ON)
 
 find_path(UDR_VERSION VERSION.txt ${CMAKE_SOURCE_DIR})
 if(UDR_VERSION)
-	file(STRINGS VERSION.udr NANOUDR_VERSION REGEX "[0-9]+\\.[0-9]+\\.[0-9]+")
+	file(STRINGS VERSION.txt NANOUDR_VERSION REGEX "[0-9]+\\.[0-9]+\\.[0-9]+")
 	string(REGEX REPLACE "^([0-9]+)\\.[0-9]+\\.[0-9]+" "\\1" NANOUDR_VERSION_MAJOR "${NANOUDR_VERSION}")
 	string(REGEX REPLACE "^[0-9]+\\.([0-9])+\\.[0-9]+" "\\1" NANOUDR_VERSION_MINOR "${NANOUDR_VERSION}")
 	string(REGEX REPLACE "^[0-9]+\\.[0-9]+\\.([0-9]+)" "\\1" NANOUDR_VERSION_PATCH "${NANOUDR_VERSION}")
@@ -58,6 +57,7 @@ message(STATUS "nanoudr compile: C++${CMAKE_CXX_STANDARD}")
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_COMPILER_IS_GNUCXX)
   	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wnarrowing -Werror")
+	set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 	include(CheckCXXCompilerFlag)
 	if(NOT NANOUDR_DISABLE_LIBCXX)
 		check_cxx_compiler_flag("-stdlib=libc++" CXX_SUPPORTS_STDLIB)
@@ -85,6 +85,12 @@ elseif(MSVC)
 	if(MSVC_VERSION LESS 1900)
 		message(FATAL_ERROR "nanoudr build: Build requires C++17-compliant compiler")
 	endif()
+endif()
+
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+	message(STATUS "nanoudr build: compiler flags - ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_DEBUG}")
+elseif(CMAKE_BUILD_TYPE MATCHES Release)
+	message(STATUS "nanoudr build: compiler flags - ${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
 
 ###############################################################################
@@ -133,27 +139,6 @@ if (NANOUDR_ENABLE_LTO)
 		else()
 			message(STATUS "nanoudr build: IPO/LTO conflicts with ASAN and not enabled")
 		endif()
-    endif()
-endif()
-
-###############################################################################
-# Check whether visibility is supported
-############
-
-if (NANOUDR_HIDING_VISIBILITY)
-    include(CheckCSourceCompiles)
-    check_c_source_compiles(
-        "
-        __attribute__((visibility(\"default\"))) int _v0() { return 0; }
-        __attribute__((visibility(\"hidden\")))  int _v1() { return 1; }
-		int main(int argc, char* argv[]) { _v0(); _v1(); return 0; }
-        "
-        visibility_support
-    )
-    if (visibility_support)
-        message(STATUS "nanoudr build: GCC/Clang visibility enabled")
-        set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-        cmake_policy(SET CMP0063 NEW)
     endif()
 endif()
 
@@ -229,8 +214,10 @@ if(UNIX)
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} ${ODBC_LINK_FLAGS}")
 elseif(MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
 	set(ODBC_LIBRARIES odbc32.lib odbccp32.lib Ws2_32.lib)
-elseif(MINGW)
-	set(ODBC_LIBRARIES odbc32 odbccp32)
+# in the future maybe
+#elseif(MINGW)
+#	set(ODBC_LIBRARIES odbc32 odbccp32)
+# ------
 endif()
 
 message(STATUS "nanoudr link: odbc - ${ODBC_LIBRARIES}")
@@ -244,7 +231,7 @@ find_path(NANODBC_INCLUDE_DIR nanodbc.h
 )
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
-	if(WIN32)
+	if(MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
 		find_library(NANODBC_LIB nanodbc
 			${CMAKE_SOURCE_DIR}/nanodbc/lib/debug
 		)
@@ -259,7 +246,12 @@ if(NOT NANODBC_INCLUDE_DIR OR NOT NANODBC_LIB)
 	message(FATAL_ERROR "nanoudr build: Location of nanodbc library could not found")
 endif()
 
-add_library(nanodbc STATIC IMPORTED)
+if(UNIX)
+	add_library(nanodbc SHARED IMPORTED)
+elseif(MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+	add_library(nanodbc STATIC IMPORTED)
+endif()
+
 set_target_properties(nanodbc
 	PROPERTIES
 		IMPORTED_LOCATION ${NANODBC_LIB}
@@ -315,8 +307,8 @@ message(STATUS "nanoudr link: firebird - ${FIREBIRD_LIB}")
 # iConv libraries to link
 ############
 
-if(WIN32)
-	set(ICONV_LIB_PREFIX "lib")
+if(MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Intel") 
+	set(ICONV_LIB_PREFIX "lib") 
 endif()
 
 find_path(ICONV_INCLUDE_DIR iconv.h
@@ -359,16 +351,20 @@ file(GLOB files ${CMAKE_SOURCE_DIR}/src/*)
 
 add_library(nano SHARED ${files})
 
-set(def_file "udr_plugin") 
+set(DEF_FILE "udr_plugin") 
 if(UNIX) 
-	set_target_properties(nanodbc PROPERTIES COMPILE_FLAGS "${ODBC_CFLAGS}")
-else(WIN32)
-	set(def_file ${def_file}.def) 
-	set_target_properties(nano PROPERTIES LINK_FLAGS "/DEF:\"${CMAKE_SOURCE_DIR}/firebird/defs/${def_file}\"")
-endif()
-
-if(CMAKE_BUILD_TYPE MATCHES Debug)
-	if(WIN32)
+	set(DEF_FILE ${DEF_FILE}.vers)
+	set(WL_OPTION "--version-script")
+	set_target_properties(nano
+		PROPERTIES
+			COMPILE_FLAGS "${ODBC_CFLAGS}"
+			LINK_FLAGS -Wl,${WL_OPTION},${CMAKE_SOURCE_DIR}/build/defs/${DEF_FILE}
+			LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/x86_64-linux
+	)
+elseif(MSVC OR CMAKE_CXX_COMPILER_ID MATCHES "Intel")
+	set(DEF_FILE ${DEF_FILE}.def) 
+	set_target_properties(nano PROPERTIES LINK_FLAGS "/DEF:\"${CMAKE_SOURCE_DIR}/build/defs/${DEF_FILE}\"")
+	if(MSVC AND CMAKE_BUILD_TYPE MATCHES Debug)
 		find_path(FIREBIRD_PLUGINS udr_engine.dll
 			$ENV{ProgramFiles}/Firebird/*/plugins
 		)
@@ -376,13 +372,12 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
 			PROPERTIES
 				RUNTIME_OUTPUT_DIRECTORY ${FIREBIRD_PLUGINS}/udr
 		)
+	elseif(CMAKE_BUILD_TYPE MATCHES Release)
+		set_target_properties(nano
+			PROPERTIES
+				RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/x86_64-win64
+		)
 	endif()
-elseif(CMAKE_BUILD_TYPE MATCHES Release)
-	set_target_properties(nano
-		PROPERTIES
-			LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/x86_64-linux
-			RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/x86_64-win64
-	)
 endif()
 
 if(BUILD_SHARED_LIBS AND NANOUDR_VERSION)
