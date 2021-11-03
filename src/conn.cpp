@@ -121,7 +121,7 @@ FB_UDR_BEGIN_FUNCTION(conn$connection)
 			nanoudr::connection* conn;
 			if (in->userNull && in->passNull)
 			{
-				if (!in->attrNull) 
+				if (!in->attrNull)
 					conn = new nanoudr::connection(*att_resources, NANODBC_TEXT(in->attr.str), in->timeout);
 				else
 					conn = new nanoudr::connection(*att_resources);
@@ -130,7 +130,7 @@ FB_UDR_BEGIN_FUNCTION(conn$connection)
 				conn =
 					new nanoudr::connection(*att_resources, NANODBC_TEXT(in->attr.str), NANODBC_TEXT(in->user.str),
 						NANODBC_TEXT(in->pass.str), in->timeout);
-			udr_helper.fb_ptr(out->conn.str, (int64_t)conn);
+			udr_helper.fb_ptr(out->conn.str, conn);
 			out->connNull = FB_FALSE;
 		}
 		catch (std::runtime_error const& e)
@@ -206,7 +206,7 @@ FB_UDR_BEGIN_FUNCTION(conn$release)
 			}
 			catch (std::runtime_error const& e)
 			{
-				udr_helper.fb_ptr(out->conn.str, (int64_t)conn);
+				udr_helper.fb_ptr(out->conn.str, conn);
 				out->connNull = FB_FALSE;
 				NANODBC_THROW(e.what())
 			}
@@ -380,7 +380,7 @@ FB_UDR_BEGIN_FUNCTION(conn$isolation_level)
 		{
 			try
 			{
-				if (!in->levelNull)	conn->isolation_level((isolation_state)(in->level));
+				if (!in->levelNull)	conn->isolation_level(static_cast<isolation_state>(in->level));
 				out->isolation_level = conn->isolation_level();
 				out->isolation_levelNull = FB_FALSE;
 			}
@@ -593,7 +593,7 @@ FB_UDR_BEGIN_FUNCTION(conn$transactions)
 		{
 			try
 			{
-				out->transactions = (ISC_LONG)(conn->transactions());
+				out->transactions = static_cast<ISC_LONG>(conn->transactions());
 				out->transactionsNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)

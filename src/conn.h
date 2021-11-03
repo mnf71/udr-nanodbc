@@ -51,7 +51,7 @@ public:
 	void isolation_level(const isolation_state isolation_usage);
 
 	attachment_resources* attachment() { return att_resources_; };
-	short isolation_level() { return (short)(isolation_); };
+	short isolation_level() { return static_cast<short>(isolation_); };
 
 private:
 	attachment_resources* att_resources_;

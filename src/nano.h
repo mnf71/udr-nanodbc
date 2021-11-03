@@ -49,6 +49,7 @@ namespace nanoudr
 
 #define POINTER_SIZE	8	
 #define	NANO_POINTER	FB_CHAR(POINTER_SIZE)	// domain types
+
 #define	NANO_BLANK	FB_INTEGER	// domain types
 #define	BLANK		-1	// void function emulation
 
@@ -66,9 +67,9 @@ if (att_resources == nullptr)	\
 	{	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
-			isc_exception_name, isc_arg_string, (ISC_STATUS)(udr_resources.resource_exception.name),	\
+			isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(udr_resources.resource_exception.name),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.resource_exception.message),	\
+			isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(udr_resources.resource_exception.message),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
@@ -78,7 +79,9 @@ if (att_resources == nullptr)	\
 			isc_arg_gds,	\
 			isc_except, isc_arg_number, exception_number,	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)(udr_resources.resource_exception.message),	\
+			isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(udr_resources.resource_exception.name),	\
+			isc_arg_gds,	\
+			isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(udr_resources.resource_exception.message),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
@@ -111,9 +114,9 @@ if (att_resources == nullptr)	\
 	{	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
-			isc_exception_name, isc_arg_string, (ISC_STATUS)(NANOUDR_ERROR),	\
+			isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(NANOUDR_ERROR),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+			isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>((exception_message)),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
@@ -125,9 +128,9 @@ if (att_resources == nullptr)	\
 		{	\
 			ISC_STATUS_ARRAY vector = { \
 				isc_arg_gds,	\
-				isc_exception_name, isc_arg_string, (ISC_STATUS)(NANOUDR_ERROR),	\
+				isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(NANOUDR_ERROR),	\
 				isc_arg_gds,	\
-				isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+				isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>((exception_message)),	\
 				isc_arg_end };	\
 			status->setErrors(vector);	\
 		}	\
@@ -137,9 +140,9 @@ if (att_resources == nullptr)	\
 				isc_arg_gds,	\
 				isc_except, isc_arg_number, exception_number,	\
 				isc_arg_gds,	\
-				isc_exception_name, isc_arg_string, (ISC_STATUS)(NANOUDR_ERROR),	\
+				isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(NANOUDR_ERROR),	\
 				isc_arg_gds,	\
-				isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+				isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>((exception_message)),	\
 				isc_arg_end };	\
 			status->setErrors(vector);	\
 		}	\
@@ -156,9 +159,9 @@ if (att_resources == nullptr)	\
 	{	\
 		ISC_STATUS_ARRAY vector = { \
 			isc_arg_gds,	\
-			isc_exception_name, isc_arg_string, (ISC_STATUS)(exception_name),	\
+			isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(exception_name),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+			isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>((exception_message)),	\
 			isc_arg_end };	\
 			status->setErrors(vector);	\
 			}	\
@@ -170,9 +173,9 @@ if (att_resources == nullptr)	\
 		{	\
 			ISC_STATUS vector[] = { \
 				isc_arg_gds,	\
-				isc_exception_name, isc_arg_string, (ISC_STATUS)(exception_name),	\
+				isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(exception_name),	\
 				isc_arg_gds,	\
-				isc_random, isc_arg_string, (ISC_STATUS)(exception_message),	\
+				isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(exception_message),	\
 				isc_arg_end };	\
 			status->setErrors(vector);	\
 		}	\
@@ -182,9 +185,9 @@ if (att_resources == nullptr)	\
 				isc_arg_gds,	\
 				isc_except, isc_arg_number, exception_number,	\
 				isc_arg_gds,	\
-				isc_exception_name, isc_arg_string, (ISC_STATUS)(exception_name),	\
+				isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(exception_name),	\
 				isc_arg_gds,	\
-				isc_random, isc_arg_string, (ISC_STATUS)(exception_message),	\
+				isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(exception_message),	\
 				isc_arg_end };	\
 			status->setErrors(vector);	\
 		}	\
@@ -200,9 +203,9 @@ if (att_resources == nullptr)	\
 	{	\
 		ISC_STATUS_ARRAY vector = {	\
 			isc_arg_gds,	\
-			isc_exception_name, isc_arg_string, (ISC_STATUS)(NANODBC_ERROR),	\
+			isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(NANODBC_ERROR),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+			isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>((exception_message)),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
@@ -212,9 +215,9 @@ if (att_resources == nullptr)	\
 			isc_arg_gds,	\
 			isc_except, isc_arg_number, exception_number,	\
 			isc_arg_gds,	\
-			isc_exception_name, isc_arg_string, (ISC_STATUS)(NANODBC_ERROR),	\
+			isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(NANODBC_ERROR),	\
 			isc_arg_gds,	\
-			isc_random, isc_arg_string, (ISC_STATUS)((exception_message)),	\
+			isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>((exception_message)),	\
 			isc_arg_end};	\
 		status->setErrors(vector);	\
 	}	\
@@ -226,17 +229,17 @@ if (att_resources == nullptr)	\
 
 #define FB_VARIYNG(fb_varchar, string)	\
 {	\
-	(fb_varchar).length = (ISC_USHORT)sizeof((fb_varchar).str);	\
-	ISC_USHORT string_length = (ISC_USHORT)(string).length();	\
-	memcpy((fb_varchar).str, (string).c_str(), std::min<ISC_USHORT>((fb_varchar).length, string_length));	\
+	(fb_varchar).length = static_cast<ISC_USHORT>(sizeof((fb_varchar).str));	\
+	ISC_USHORT string_length = static_cast<ISC_USHORT>((string).length());	\
+	memcpy((fb_varchar).str, (string).c_str(), std::min((fb_varchar).length, string_length));	\
 	if ((fb_varchar).length > string_length) (fb_varchar).length = string_length;	\
 }	/* FB_VARIYNG */
 
 #define FB_STRING(fb_char, string)	\
 {	\
-	ISC_USHORT fb_char_length = (ISC_USHORT)sizeof((fb_char).str);	\
-	ISC_USHORT string_length = (ISC_USHORT)(string).length();	\
-	memcpy((fb_char).str, (string).c_str(), std::min<ISC_USHORT>(fb_char_length, string_length));	\
+	ISC_USHORT fb_char_length = static_cast<ISC_USHORT>(sizeof((fb_char).str));	\
+	ISC_USHORT string_length = static_cast<ISC_USHORT>((string).length());	\
+	memcpy((fb_char).str, (string).c_str(), std::min(fb_char_length, string_length));	\
 	if (fb_char_length > string_length)	\
 		memset((fb_char).str + string_length, ' ', fb_char_length - string_length);	\
 }	/* FB_STRING */
@@ -367,8 +370,8 @@ struct timestamp
 class helper
 {
 public:
-	void fb_ptr(char* nano_pointer, const int64_t ptr);
-	template <class T> T* native_ptr(const char* nano_pointer) const;
+	template <class T> void fb_ptr(char* fb_pointer, const T* native_pointer);
+	template <class T> T* native_ptr(const char* fb_pointer) const;
 
 	FB_BOOLEAN fb_bool(bool value) const;
 	bool native_bool(const ISC_UCHAR value) const;

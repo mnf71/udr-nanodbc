@@ -99,7 +99,7 @@ FB_UDR_BEGIN_FUNCTION(func$execute_conn)
 					nanodbc::result odbc =
 					nanodbc::execute(*conn, NANODBC_TEXT(in->query.str), in->batch_operations, in->timeout);
 				nanoudr::result* rslt = new nanoudr::result(*att_resources, *conn, std::move(odbc));
-				udr_helper.fb_ptr(out->rslt.str, (int64_t)rslt);
+				udr_helper.fb_ptr(out->rslt.str, rslt);
 				out->rsltNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -218,7 +218,7 @@ FB_UDR_BEGIN_FUNCTION(func$execute_stmt)
 			{
 				nanodbc::result odbc = nanodbc::execute(*stmt, in->batch_operations);
 				nanoudr::result* rslt = new nanoudr::result(*att_resources, *stmt->connection(), std::move(odbc));
-				udr_helper.fb_ptr(out->rslt.str, (int64_t)rslt);
+				udr_helper.fb_ptr(out->rslt.str, rslt);
 				out->rsltNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -311,7 +311,7 @@ FB_UDR_BEGIN_FUNCTION(func$transact_stmt)
 			{
 				nanodbc::result odbc = nanodbc::transact(*stmt, in->batch_operations);
 				nanoudr::result* rslt = new nanoudr::result(*att_resources, *stmt->connection(), std::move(odbc));
-				udr_helper.fb_ptr(out->rslt.str, (int64_t)rslt);
+				udr_helper.fb_ptr(out->rslt.str, rslt);
 				out->rsltNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)

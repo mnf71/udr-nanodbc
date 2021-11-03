@@ -30,16 +30,23 @@ namespace nanoudr
 
 helper udr_helper;
 
-void helper::fb_ptr(char* nano_pointer, const int64_t ptr)
+template <class T> void helper::fb_ptr(char* fb_pointer, const T* native_pointer)
 {
-	memcpy(nano_pointer, &ptr, POINTER_SIZE);
+	int64_t ptr = reinterpret_cast<const int64_t>(native_pointer);
+	memcpy(fb_pointer, &(ptr), POINTER_SIZE);
 }
 
-template <class T> T* helper::native_ptr(const char* nano_pointer) const
+// The following are the only supported instantiations of pointer.
+template void  helper::fb_ptr(char*, const nanoudr::connection*);
+template void  helper::fb_ptr(char*, const nanoudr::transaction*);
+template void  helper::fb_ptr(char*, const nanoudr::statement*);
+template void helper::fb_ptr(char*, const nanoudr::result*);
+
+template <class T> T* helper::native_ptr(const char* fb_pointer) const
 {
 	int64_t ptr = 0x0;
-	memcpy(&ptr, nano_pointer, POINTER_SIZE);
-	return (T*)(ptr);
+	memcpy(&ptr, fb_pointer, POINTER_SIZE);
+	return reinterpret_cast<T*>(ptr);
 }
 
 // The following are the only supported instantiations of pointer.
@@ -85,10 +92,9 @@ const ISC_USHORT helper::utf8_out(attachment_resources* att_resources, char* des
 const ISC_USHORT helper::unicode_converter(char* dest, const ISC_USHORT dest_size, const char* to,
 	const char* src, const ISC_USHORT src_length, const char* from)
 {
-	char* in = (char*)(src);
+	char* in = const_cast<char*>(src);
 	size_t in_length = src_length; // strlen() src
-	char* converted = new char[(size_t)(dest_size) + 1];
-	memset(converted, '\0', (size_t)(dest_size) + 1);
+	char* converted = new char[dest_size];
 	char* out = converted;
 	size_t out_indicator = dest_size; // sizeof() dest
 	try
@@ -109,11 +115,12 @@ const ISC_USHORT helper::unicode_converter(char* dest, const ISC_USHORT dest_siz
 		else
 			throw std::runtime_error(e.what());
 	}
-	memset(dest, '\0', dest_size); // not null-term string, just buffer
-	memcpy(dest, converted, dest_size - out_indicator);
+	ISC_USHORT converted_size = dest_size - static_cast<ISC_USHORT>(out_indicator);
+	if (dest_size > converted_size) dest[converted_size] = '\0'; // null-term if oversize
+	memcpy(dest, converted, converted_size);
 	delete[] converted;
 
-	return (dest_size - (ISC_USHORT)(out_indicator));
+	return converted_size;
 }
 
 //-----------------------------------------------------------------------------
@@ -215,12 +222,12 @@ void helper::read_blob(attachment_resources* att_resources, ISC_QUAD* in, class 
 
 void helper::write_blob(attachment_resources* att_resources, class std::vector<uint8_t>* in, ISC_QUAD* out)
 {
-	write_blob(att_resources, reinterpret_cast<unsigned char*>(in->data()), in->size(), out);
+	write_blob(att_resources, reinterpret_cast<const unsigned char*>(in->data()), in->size(), out);
 }
 
 void helper::write_blob(attachment_resources* att_resources, nanodbc::string* in, ISC_QUAD* out)
 {
-	write_blob(att_resources, (unsigned char*)(in->c_str()), in->length(), out);
+	write_blob(att_resources, reinterpret_cast<const unsigned char*>(in->c_str()), in->length(), out);
 }
 
 void helper::write_blob(
@@ -235,8 +242,8 @@ void helper::write_blob(
 	AutoRelease<ITransaction> tra;
 	AutoRelease<IBlob> blob;
 
-	unsigned char* stream = (unsigned char*)(in);
-	std::size_t stream_size = (std::size_t)(in_length);
+	unsigned char* stream = const_cast<unsigned char*>(in);
+	std::size_t stream_size = in_length;
 	try
 	{
 		unsigned write = 0;
@@ -245,7 +252,7 @@ void helper::write_blob(
 		blob.reset(att->createBlob(status, tra, out, 0, NULL));
 		while (stream_size > 0)
 		{
-			write = stream_size < FB_SEGMENT_SIZE ? (unsigned)(stream_size) : FB_SEGMENT_SIZE;
+			write = stream_size < FB_SEGMENT_SIZE ? static_cast<unsigned>(stream_size) : FB_SEGMENT_SIZE;
 			blob->putSegment(status, write, stream);
 			stream_size = stream_size - write;
 			stream += write;

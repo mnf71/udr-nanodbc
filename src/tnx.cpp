@@ -81,7 +81,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$transaction)
 			try
 			{
 				nanoudr::transaction* tnx =	new nanoudr::transaction(*att_resources, *conn);
-				udr_helper.fb_ptr(out->tnx.str, (int64_t)tnx);
+				udr_helper.fb_ptr(out->tnx.str, tnx);
 				out->tnxNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -160,7 +160,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$release)
 			}
 			catch (std::runtime_error const& e)
 			{
-				udr_helper.fb_ptr(out->tnx.str, (int64_t)tnx);
+				udr_helper.fb_ptr(out->tnx.str, tnx);
 				out->tnxNull = FB_FALSE;
 				NANODBC_THROW(e.what())
 			}
@@ -201,7 +201,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$connection)
 			try
 			{
 				const nanoudr::connection* conn = tnx->connection();
-				udr_helper.fb_ptr(out->conn.str, (int64_t)conn);
+				udr_helper.fb_ptr(out->conn.str, conn);
 				out->connNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)

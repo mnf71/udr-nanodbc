@@ -150,7 +150,7 @@ public:
 	void describe_parameter(const short idx, const short type, const unsigned long size, const short scale);
 
 	attachment_resources* attachment() { return att_resources_; };
-	short scrollable() { return (short)(scrollable_); };
+	short scrollable() { return static_cast<short>(scrollable_); };
 	
 	typedef struct
 	{

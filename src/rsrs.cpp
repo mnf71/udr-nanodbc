@@ -93,27 +93,28 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,\
 		stmt.reset(att->prepare(status, tra, 0, sql_stmt, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
 		meta.reset(stmt->getOutputMetadata(status));
 		curs.reset(stmt->openCursor(status, tra, NULL, NULL, meta, 0));
-		AutoArrayDelete<unsigned char> buffer;
 
-		nanoudr::exception udr_exception = { "\0", 0, "\0" };
+		AutoArrayDelete<char> buffer;
+		buffer.reset(new char[meta->getMessageLength(status)]);
+		nanoudr::exception udr_exception;
 		for (short i = 0; i < EXCEPTION_ARRAY_SIZE; ++i)
-			assign_exception(&udr_exception, i);
-
-		buffer.reset(new unsigned char[meta->getMessageLength(status)]);
-		for (short i = 0; curs->fetchNext(status, buffer) == IStatus::RESULT_OK && i < EXCEPTION_ARRAY_SIZE; ++i)
 		{
-			memcpy( // this SQL_VARYING, see sql_stmt
-				udr_exception.name,
-				(buffer + 2 + meta->getOffset(status, sql_rslt::name)),
-				meta->getLength(status, sql_rslt::name) - 2);
-			udr_exception.number = *(ISC_LONG*)(buffer + meta->getOffset(status, sql_rslt::number));
-			memcpy( // SQL_VARYING
-				udr_exception.message,
-				(buffer + 2 + meta->getOffset(status, sql_rslt::message)),
-				meta->getLength(status, sql_rslt::message) - 2);
+			memset(&udr_exception, '\0', sizeof(nanoudr::exception));
+			if(!curs->isEof(status) && curs->fetchNext(status, buffer) == IStatus::RESULT_OK)
+			{
+				memcpy( // this SQL_VARYING, see sql_stmt
+					udr_exception.name,
+					(buffer + 2 + meta->getOffset(status, sql_rslt::name)),
+					meta->getLength(status, sql_rslt::name) - 2);
+				udr_exception.number = *(reinterpret_cast<ISC_LONG*>(buffer + meta->getOffset(status, sql_rslt::number)));
+				memcpy( // SQL_VARYING
+					udr_exception.message,
+					(buffer + 2 + meta->getOffset(status, sql_rslt::message)),
+					meta->getLength(status, sql_rslt::message) - 2);
+			}
 			assign_exception(&udr_exception, i);
 		}
-		curs->close(status);
+		curs->close(status); 
 	}
 	catch (...)
 	{
@@ -128,7 +129,7 @@ resources udr_resources;
 
 void attachment_resources::attachment_connections::retain(const nanoudr::connection* conn)
 {
-	conn_v.push_back((nanoudr::connection*)(conn));
+	conn_v.push_back(const_cast<nanoudr::connection*>(conn));
 }
 
 void attachment_resources::attachment_connections::expunge(const nanoudr::connection* conn)
@@ -169,7 +170,7 @@ std::vector<nanoudr::connection*>& attachment_resources::attachment_connections:
 
 void attachment_resources::connection_transactions::retain(const nanoudr::transaction* tnx)
 {
-	tnx_v.push_back((nanoudr::transaction*)(tnx));
+	tnx_v.push_back(const_cast<nanoudr::transaction*>(tnx));
 }
 
 void attachment_resources::connection_transactions::release(const nanoudr::transaction* tnx)
@@ -193,7 +194,7 @@ std::vector<nanoudr::transaction*>& attachment_resources::connection_transaction
 
 void attachment_resources::connection_statements::retain(const nanoudr::statement* stmt)
 {
-	stmt_v.push_back((nanoudr::statement*)(stmt));
+	stmt_v.push_back(const_cast<nanoudr::statement*>(stmt));
 }
 
 void attachment_resources::connection_statements::release(const nanoudr::statement* stmt)
@@ -217,7 +218,7 @@ std::vector<nanoudr::statement*>& attachment_resources::connection_statements::s
 
 void attachment_resources::connection_results::retain(const nanoudr::result* rslt)
 {
-	rslt_v.push_back((nanoudr::result*)(rslt));
+	rslt_v.push_back(const_cast<nanoudr::result*>(rslt));
 }
 
 void attachment_resources::connection_results::release(const nanoudr::result* rslt)
@@ -325,7 +326,7 @@ ISC_UINT64 resources::attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_T
 		if (*p++ == isc_info_attachment_id)
 		{
 			const ISC_USHORT l =
-				(ISC_USHORT)(isc_vax_integer((const ISC_SCHAR*)(p), 2));
+				static_cast<ISC_USHORT>(isc_vax_integer(reinterpret_cast<const ISC_SCHAR*>(p), 2));
 			p += 2;
 			attachment_id = isc_portable_integer(p, l);
 		}
@@ -553,8 +554,8 @@ FB_UDR_BEGIN_FUNCTION(udr$convert)
 	FB_UDR_EXECUTE_FUNCTION
 	{
 		ATTACHMENT_RESOURCES
-		*(ISC_SHORT*)(out + out_null_offset[out::result]) = FB_TRUE;
-		if (!*(ISC_SHORT*)(in + in_null_offsets[in::value]) ||
+		*(reinterpret_cast<ISC_SHORT*>(out + out_null_offset[out::result])) = FB_TRUE;
+		if (!*(reinterpret_cast<ISC_SHORT*>(in + in_null_offsets[in::value])) ||
 			!(in_types[in::value] == SQL_TEXT || in_types[in::value] == SQL_VARYING) ||
 			!(out_type[out::result] == SQL_TEXT || out_type[out::result] == SQL_VARYING))
 		{
@@ -563,32 +564,34 @@ FB_UDR_BEGIN_FUNCTION(udr$convert)
 					static_cast<ISC_USHORT> (
 						(in_types[in::value] == SQL_TEXT ?
 							in_lengths[in::value] :	// полный размер переданного CHAR(N) с учетом пробелов 
-							*(ISC_USHORT*)(in + in_offsets[in::value])));
+							*(reinterpret_cast<ISC_USHORT*>(in + in_offsets[in::value]))
+						)
+					);
 
-				ISC_USHORT convert_size = *(ISC_SHORT*)(in + in_offsets[in::convert_size]);
+				ISC_USHORT convert_size = *(reinterpret_cast<ISC_SHORT*>(in + in_offsets[in::convert_size]));
 				if (convert_size < 0) 
 					throw std::runtime_error("CONVERT_SIZE, expected zero or positive value.");
 				convert_size = (convert_size == 0 || convert_size > length) ? length : convert_size;
 
 				convert_size =
 					udr_helper.unicode_converter(
-						(char*)(out + (out_type[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + out_offset[out::result]),
-						static_cast<short>(out_length[out::result]), (const char*)(in + sizeof(ISC_USHORT) + in_offsets[in::to]),
-						(const char*)(in + (in_types[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
-						convert_size, (const char*)(in + sizeof(ISC_USHORT) + in_offsets[in::from])
+						reinterpret_cast<char*>(out + (out_type[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + out_offset[out::result]),
+						static_cast<ISC_USHORT>(out_length[out::result]), reinterpret_cast<const char*>(in + sizeof(ISC_USHORT) + in_offsets[in::to]),
+						reinterpret_cast<const char*>(in + (in_types[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
+						convert_size, reinterpret_cast<const char*>(in + sizeof(ISC_USHORT) + in_offsets[in::from])
 					);
 
 				if (out_type[out::result] == SQL_TEXT)
 				{
 					if (out_length[out::result] > convert_size)
 						memset(
-							(char*)(out + out_offset[out::result]) + convert_size, ' ', out_length[out::result] - convert_size
+							reinterpret_cast<char*>(out + out_offset[out::result]) + convert_size, ' ', out_length[out::result] - convert_size
 						);
 				}
 				else
-					*(ISC_USHORT*)(out + out_offset[out::result]) = convert_size;
+					*(reinterpret_cast<ISC_USHORT*>(out + out_offset[out::result])) = convert_size;
 			
-				*(ISC_SHORT*)(out + out_null_offset[out::result]) = FB_FALSE;
+				*(reinterpret_cast<ISC_SHORT*>(out + out_null_offset[out::result])) = FB_FALSE;
 			}	
 			catch (std::runtime_error const& e) 
 			{
