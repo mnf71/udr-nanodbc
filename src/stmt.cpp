@@ -190,6 +190,11 @@ statement::~statement()
 	att_resources_->statements.release(this);
 }
 
+nanoudr::connection* statement::connection()
+{
+	return conn_;
+}
+
 void statement::open(class nanoudr::connection& conn)
 {
 	nanoudr::statement::close();
@@ -197,16 +202,12 @@ void statement::open(class nanoudr::connection& conn)
 	conn_ = &conn;
 }
 
-nanoudr::connection* statement::connection()
-{
-	return conn_;
-}
-
 void statement::close()
 {
 	clear_parameters();
 	scrollable_ = scroll_state::STMT_DEFAULT;
-	nanodbc::statement::close();
+	if (static_cast<nanodbc::statement*>(this)->open())
+		nanodbc::statement::close();
 }
 
 void statement::prepare(
@@ -227,12 +228,20 @@ void statement::prepare(const nanodbc::string& query, const scroll_state scrolla
 nanoudr::result* statement::execute_direct(
 	class nanoudr::connection& conn, const nanodbc::string& query, const scroll_state scrollable_usage, long batch_operations, long timeout)
 {
-	// ------ 
-	// function emulation to avoid forked nanodbc 
-	// 
-	nanoudr::statement::open(conn);
-	nanoudr::statement::prepare(query, scrollable_usage, timeout);
-	return nanoudr::statement::execute(batch_operations);
+	nanodbc::result rslt;
+	if (scrollable_usage == scroll_state::STMT_DEFAULT) 
+	{
+		nanoudr::statement::close();
+		rslt = nanodbc::statement::execute_direct(conn, query, batch_operations, timeout);
+		conn_ = &conn;
+	}
+	else // function call emulation to avoid forked nanodbc 
+	{
+		nanoudr::statement::open(conn); 
+		nanoudr::statement::prepare(query, scrollable_usage, timeout);
+		rslt = nanodbc::statement::execute(batch_operations, timeout);
+	}
+	return new nanoudr::result(*this->attachment(), *this->connection(), std::move(rslt));
 }
 
 void statement::just_execute_direct(
@@ -886,7 +895,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$closed)
 		{
 			try
 			{
-				out->closed = udr_helper.fb_bool(!((nanodbc::statement*)stmt)->open());
+				out->closed = udr_helper.fb_bool(!static_cast<nanodbc::statement*>(stmt)->open());
 				out->closedNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)

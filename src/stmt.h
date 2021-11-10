@@ -126,10 +126,10 @@ public:
 		const scroll_state scrollable_usage = scroll_state::STMT_DEFAULT, long timeout = 0);
 	~statement() noexcept;
 
+	nanoudr::connection* connection();
 	void scrollable(const scroll_state scrollable_usage);
 
 	void open(class nanoudr::connection& conn);
-	nanoudr::connection* connection();
 	void close();
 
 	void prepare(class nanoudr::connection& conn, const nanodbc::string& query, const scroll_state scrollable_usage, long timeout = 0);
