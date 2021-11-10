@@ -239,7 +239,7 @@ nanoudr::result* statement::execute_direct(
 	{
 		nanoudr::statement::open(conn); 
 		nanoudr::statement::prepare(query, scrollable_usage, timeout);
-		rslt = nanodbc::statement::execute(batch_operations, timeout);
+		rslt = nanodbc::statement::execute(batch_operations);
 	}
 	return new nanoudr::result(*this->attachment(), *this->connection(), std::move(rslt));
 }
