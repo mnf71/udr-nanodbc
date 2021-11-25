@@ -2,8 +2,6 @@
 
 Firebird user defined routine based on a small C++ wrapper for the native C ODBC API https://github.com/nanodbc/nanodbc
 
-Thanks to Denis Simonov for detailed documentation https://github.com/sim1984/udr-nanodbc-doc
-
 Idea:
 
 ```sql
@@ -73,4 +71,6 @@ BEGIN
   SUSPEND;
 END
 ```
+
+Thanks to Denis Simonov for detailed documentation https://github.com/sim1984/udr-nanodbc-doc
 
