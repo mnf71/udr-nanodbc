@@ -647,5 +647,4 @@ FB_UDR_BEGIN_FUNCTION(udr$error_message)
 
 FB_UDR_END_FUNCTION
 
-
 } // namespace nanoudr
