@@ -72,3 +72,5 @@ BEGIN
 END
 ```
 
+Thanks to Denis Simonov for detailed documentation https://github.com/sim1984/udr-nanodbc-doc
+
