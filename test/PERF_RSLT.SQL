@@ -28,7 +28,7 @@ PLAN (PERF_PUMP NATURAL)
 
 ------ Performance info ------
 Prepare time = 32ms
-Execute time = 8m 6s 234ms
+Execute time = 7m 23s 234ms
 Avg fetch time = 4 675,33 ms
 Current memory = 106 718 400
 Max memory = 401 555 808
@@ -39,3 +39,21 @@ Fetches from cache = 15 053 379
 */
 
 SELECT * FROM perf_pump_cursor
+
+/*
+Plan
+PLAN (PERF_PUMP_CURSOR NATURAL)
+
+1000000 record(s) was(were) inserted into PERF_DEST
+
+------ Performance info ------
+Prepare time = 32ms
+Execute time = 37s 187ms
+Avg fetch time = 357,57 ms
+Current memory = 75 703 344
+Max memory = 401 555 808
+Memory buffers = 4 096
+Reads from disk to cache = 77 520
+Writes from cache to disk = 77 064
+Fetches from cache = 11 635 665
+*/
