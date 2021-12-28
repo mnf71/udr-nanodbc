@@ -356,6 +356,10 @@ struct date
 	unsigned year; unsigned month; unsigned day;
 };
 
+// Default standart size of fraction it's 9 number  
+// It's 9 = ISC_TIME_SECONDS_PRECISION * STD_TIME_SECONDS_PRECISION
+#define STD_TIME_SECONDS_PRECISION	100000L
+
 struct time
 {
 	unsigned hour; unsigned min; unsigned sec; unsigned fract;

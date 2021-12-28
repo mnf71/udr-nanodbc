@@ -131,7 +131,7 @@ nanodbc::timestamp helper::set_timestamp(const nanoudr::timestamp* tm)
 	return nanodbc::timestamp({
 		static_cast<int16_t>(tm->d.year), static_cast<int16_t>(tm->d.month), static_cast<int16_t>(tm->d.day),
 		static_cast<int16_t>(tm->t.hour), static_cast<int16_t>(tm->t.min), static_cast<int16_t>(tm->t.sec),
-		static_cast<int16_t>(tm->t.fract)
+		static_cast<int32_t>(tm->t.fract * STD_TIME_SECONDS_PRECISION)
 	});
 }
 
@@ -154,7 +154,7 @@ nanoudr::timestamp helper::get_timestamp(const nanodbc::timestamp* tm)
 	return nanoudr::timestamp({
 		static_cast<unsigned>(tm->year), static_cast<unsigned>(tm->month), static_cast<unsigned>(tm->day),
 		static_cast<unsigned>(tm->hour), static_cast<unsigned>(tm->min), static_cast<unsigned>(tm->sec),
-		static_cast<unsigned>(tm->fract)
+		static_cast<unsigned>(tm->fract / STD_TIME_SECONDS_PRECISION)
 	});
 }
 
