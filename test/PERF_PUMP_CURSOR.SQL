@@ -17,7 +17,6 @@ SELECT -- FIRST
   DECLARE records INTEGER DEFAULT 0;
   DECLARE i INTEGER;
 BEGIN
-  nano$udr.initialize();
 
   status = 'stamp: ' || CAST('now' AS TIMESTAMP) || ' started...';
   SUSPEND;
