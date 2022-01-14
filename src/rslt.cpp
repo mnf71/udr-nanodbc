@@ -1101,6 +1101,96 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 
 FB_UDR_END_FUNCTION
 
+
+//-----------------------------------------------------------------------------
+// create function pump (
+//	 rslt ty$pointer not null, 
+//	 query varchar(8191) character set utf8 not null,
+//   transaction_pack integer not null default 0
+//	) returns ty$nano_blank
+//	external name 'nano!rslt$pump'
+//	engine udr; 
+//
+
+FB_UDR_BEGIN_FUNCTION(rslt$pump)
+
+	unsigned in_count;
+
+	enum in : short {
+		rslt = 0, query, transaction_pack
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	AutoRelease<IAttachment> att;
+	AutoRelease<ITransaction> tra;
+	AutoRelease<IStatement> pump;
+
+	FB_UDR_CONSTRUCTOR
+	{
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+
+		in_count = in_metadata->getCount(status);
+		in_char_sets.reset(new unsigned[in_count]);
+		for (unsigned i = 0; i < in_count; ++i)
+		{
+			in_char_sets[i] = in_metadata->getCharSet(status, i);
+		}
+
+	}
+
+	FB_UDR_MESSAGE(
+		InMessage,
+		(NANO_POINTER, rslt)
+		(FB_VARCHAR(8191 * 4), query)
+		(FB_INTEGER, transaction_pack)
+	);
+
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(NANO_BLANK, blank)
+	);
+
+	FB_UDR_EXECUTE_FUNCTION
+	{
+		ATTACHMENT_RESOURCES
+		out->blankNull = FB_TRUE;
+		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		if (!in->rsltNull && att_resources->results.valid(rslt))
+		{
+			try
+			{
+				if (!in->queryNull)
+				{
+					U8_VARIYNG(in, query)
+
+					att.reset(context->getAttachment(status));
+					if (!in->transaction_packNull && in->transaction_pack > 0)
+					{
+					}
+					else
+						tra.reset(context->getTransaction(status));
+					//pump.reset(att->prepare(status, tra, 0, in->query.str, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
+
+				}
+				else
+					NANOUDR_THROW("Dynamic SQL Error, detected null command.")
+
+				out->blank = BLANK;
+				out->blankNull = FB_FALSE;
+			}
+			catch (std::runtime_error const& e)
+			{
+				NANODBC_THROW(e.what())
+			}
+
+		}
+		else
+			NANOUDR_THROW(INVALID_RESULT)
+	}
+
+FB_UDR_END_FUNCTION
+
 //-----------------------------------------------------------------------------
 // create function is_null (
 //	 rslt ty$pointer not null, 
