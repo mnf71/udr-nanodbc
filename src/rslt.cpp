@@ -1123,8 +1123,14 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 	AutoArrayDelete<unsigned> in_char_sets;
 
 	AutoRelease<IAttachment> att;
+	AutoDispose<IXpbBuilder> tpb;
 	AutoRelease<ITransaction> tra;
-	AutoRelease<IStatement> pump;
+	AutoRelease<IStatement> stmt;
+	AutoRelease<IMessageMetadata> meta;
+
+	IUtil* utl = master->getUtilInterface();
+
+	bool transaction_packed;
 
 	FB_UDR_CONSTRUCTOR
 	{
@@ -1136,7 +1142,6 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 		{
 			in_char_sets[i] = in_metadata->getCharSet(status, i);
 		}
-
 	}
 
 	FB_UDR_MESSAGE(
@@ -1160,30 +1165,57 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 		{
 			try
 			{
-				if (!in->queryNull)
+				if (in->queryNull || !std::strcmp(in->query.str, ""))
+					throw std::runtime_error("SQL statement null or empty.");
+				else
 				{
 					U8_VARIYNG(in, query)
-
-					att.reset(context->getAttachment(status));
-					if (!in->transaction_packNull && in->transaction_pack > 0)
+					transaction_packed = 
+						(!in->transaction_packNull && in->transaction_pack > 0) ? true : false;
+					try
 					{
+						att.reset(context->getAttachment(status));
+						if (!transaction_packed)
+							tra.reset(context->getTransaction(status));
+						else
+						{
+							tpb.reset(utl->getXpbBuilder(status, IXpbBuilder::TPB, NULL, 0));
+							tpb->insertTag(status, isc_tpb_read_committed);
+							tpb->insertTag(status, isc_tpb_rec_version);
+							tpb->insertTag(status, isc_tpb_nowait);
+							tpb->insertTag(status, isc_tpb_write);
+							tra.reset(att->startTransaction(status, tpb->getBufferLength(status), tpb->getBuffer(status)));
+						}
+						stmt.reset(att->prepare(status, tra, 0, in->query.str, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
+						meta.reset(stmt->getInputMetadata(status));
+						
+						ISC_LONG pack_index = 0;
+						for (; rslt->next(); pack_index++)
+						{
+							if (transaction_packed && pack_index == in->transaction_pack)
+							{
+								tra->commit(status); 
+								tra.reset(att->startTransaction(status, tpb->getBufferLength(status), tpb->getBuffer(status)));
+								stmt.reset(att->prepare(status, tra, 0, in->query.str, SQL_DIALECT_CURRENT, 0));
+								pack_index = 0;
+							}
+						}
+						if (transaction_packed && pack_index > 0) tra->commit(status);
 					}
-					else
-						tra.reset(context->getTransaction(status));
-					//pump.reset(att->prepare(status, tra, 0, in->query.str, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
-
+					catch (const FbException& e)
+					{
+						char what[256];
+						utl->formatStatus(what, sizeof(what), e.getStatus());
+						throw std::runtime_error(what);
+					}
 				}
-				else
-					NANOUDR_THROW("Dynamic SQL Error, detected null command.")
-
 				out->blank = BLANK;
 				out->blankNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANODBC_THROW(e.what())
+				NANOUDR_THROW(e.what())
 			}
-
 		}
 		else
 			NANOUDR_THROW(INVALID_RESULT)
