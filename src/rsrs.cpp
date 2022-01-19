@@ -47,7 +47,7 @@ void attachment_resources::context(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TY
 {
 	attachment_context.status = status;
 	attachment_context.context = context;
-	attachment_context.autonomous_transaction = nullptr;
+	attachment_context.current_transaction = nullptr;
 };
 
 const char* attachment_resources::locale(const char* set_locale)
@@ -62,10 +62,13 @@ const char* attachment_resources::error_message(const char* last_error_message)
 	return att_error_message.c_str();
 }
 
-ITransaction* attachment_resources::autonomous_transaction(ITransaction* set_transaction)
+ITransaction* attachment_resources::current_transaction(ITransaction* set_transaction)
 {
-	if (set_transaction) attachment_context.autonomous_transaction = set_transaction;
-	return attachment_context.autonomous_transaction;
+	if (set_transaction) attachment_context.current_transaction = set_transaction;
+	return
+		!attachment_context.current_transaction ?
+			attachment_context.context->getTransaction(attachment_context.status) :
+			attachment_context.current_transaction;
 }
 
 void attachment_resources::make_resources()

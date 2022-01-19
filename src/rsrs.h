@@ -49,7 +49,7 @@ struct resources_context
 {
 	FB_UDR_STATUS_TYPE* status;
 	FB_UDR_CONTEXT_TYPE* context;
-	ITransaction* autonomous_transaction;
+	ITransaction* current_transaction;
 };
 
 struct exception
@@ -95,7 +95,7 @@ public:
 	const char* locale(const char* set_locale = NULL);
 	const char* error_message(const char* last_error_message = NULL);
 	
-	ITransaction* autonomous_transaction(ITransaction* set_transaction = nullptr);
+	ITransaction* current_transaction(ITransaction* set_transaction = nullptr);
 
 	void make_resources();
 

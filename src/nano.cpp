@@ -181,7 +181,6 @@ void helper::read_blob(attachment_resources* att_resources, ISC_QUAD* in, class 
 	FB_UDR_CONTEXT_TYPE* context = att_context->context;
 
 	AutoRelease<IAttachment> att;
-	AutoRelease<ITransaction> tra;
 	AutoRelease<IBlob> blob;
 
 	AutoArrayDelete<unsigned char> buffer;
@@ -190,13 +189,7 @@ void helper::read_blob(attachment_resources* att_resources, ISC_QUAD* in, class 
 	{
 		unsigned read = 0;
 		att.reset(context->getAttachment(status));
-		if (att_context->autonomous_transaction)
-			blob.reset(att->openBlob(status, att_context->autonomous_transaction, in, 0, NULL));
-		else
-		{
-			tra.reset(context->getTransaction(status));
-			blob.reset(att->openBlob(status, tra, in, 0, NULL));
-		}
+		blob.reset(att->openBlob(status, att_resources->current_transaction(), in, 0, NULL));
 		buffer.reset(new unsigned char[FB_SEGMENT_SIZE]);
 		for (bool eof = false; !eof; )
 		{
@@ -244,7 +237,6 @@ void helper::write_blob(
 	FB_UDR_CONTEXT_TYPE* context = att_context->context;
 
 	AutoRelease<IAttachment> att;
-	AutoRelease<ITransaction> tra;
 	AutoRelease<IBlob> blob;
 
 	unsigned char* stream = const_cast<unsigned char*>(in);
@@ -253,13 +245,7 @@ void helper::write_blob(
 	{
 		unsigned write = 0;
 		att.reset(context->getAttachment(status));
-		if (att_context->autonomous_transaction)
-			blob.reset(att->createBlob(status, att_context->autonomous_transaction, out, 0, NULL));
-		else
-		{
-			tra.reset(context->getTransaction(status));
-			blob.reset(att->createBlob(status, tra, out, 0, NULL));
-		}
+		blob.reset(att->createBlob(status, att_resources->current_transaction(), out, 0, NULL));
 		while (stream_size > 0)
 		{
 			write = stream_size < FB_SEGMENT_SIZE ? static_cast<unsigned>(stream_size) : FB_SEGMENT_SIZE;

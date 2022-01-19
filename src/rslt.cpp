@@ -1194,7 +1194,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 							tpb->insertTag(status, isc_tpb_nowait);
 							tpb->insertTag(status, isc_tpb_write);
 							tra.reset(att->startTransaction(status, tpb->getBufferLength(status), tpb->getBuffer(status)));
-							att_resources->autonomous_transaction(tra);
+							att_resources->current_transaction(tra);
 						}
 						pump_stmt.reset(att->prepare(status, tra, 0, in->query.str, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
 						pump_meta.reset(pump_stmt->getInputMetadata(status));
@@ -1248,7 +1248,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 						if (transaction_packed) 
 						{
 							tra->commit(status); // commit transaction (will close interface)
-							att_resources->autonomous_transaction(nullptr);
+							att_resources->current_transaction(nullptr);
+							tra = nullptr;
 						}
 					}
 					catch (const FbException& e)
