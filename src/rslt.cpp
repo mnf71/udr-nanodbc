@@ -1245,8 +1245,11 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 							out->pumped_records += 1;
 						}
 						pump_stmt->free(status);
-						if (transaction_packed)	tra->commit(status); // commit transaction (will close interface)
-						att_resources->autonomous_transaction(nullptr);
+						if (transaction_packed) 
+						{
+							tra->commit(status); // commit transaction (will close interface)
+							att_resources->autonomous_transaction(nullptr);
+						}
 					}
 					catch (const FbException& e)
 					{

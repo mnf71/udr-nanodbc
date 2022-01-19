@@ -62,9 +62,9 @@ const char* attachment_resources::error_message(const char* last_error_message)
 	return att_error_message.c_str();
 }
 
-ITransaction* attachment_resources::autonomous_transaction(ITransaction* transaction)
+ITransaction* attachment_resources::autonomous_transaction(ITransaction* set_transaction)
 {
-	if (transaction) attachment_context.autonomous_transaction = transaction;
+	if (set_transaction) attachment_context.autonomous_transaction = set_transaction;
 	return attachment_context.autonomous_transaction;
 }
 

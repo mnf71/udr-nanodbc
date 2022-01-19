@@ -95,7 +95,7 @@ public:
 	const char* locale(const char* set_locale = NULL);
 	const char* error_message(const char* last_error_message = NULL);
 	
-	ITransaction* autonomous_transaction(ITransaction* transaction = nullptr);
+	ITransaction* autonomous_transaction(ITransaction* set_transaction = nullptr);
 
 	void make_resources();
 
