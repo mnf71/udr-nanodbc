@@ -52,6 +52,181 @@ nanoudr::connection* result::connection()
 	return conn_;
 }
 
+void result::get_value
+(
+	short column, 
+	unsigned char* message, 
+	unsigned message_type, unsigned message_length, unsigned message_char_set, unsigned message_offset,	unsigned message_null_offset,
+	IUtil* utl
+)
+{
+	ISC_SHORT& null_flag = *(reinterpret_cast<ISC_SHORT*>(message + message_null_offset));
+	if (is_null(column)) null_flag = FB_TRUE;
+	else
+	{
+		switch (message_type)
+		{
+			case SQL_TEXT: // char
+			{
+				nanodbc::string value;
+				get_ref<nanodbc::string>(column, value);
+				ISC_USHORT length = static_cast<ISC_USHORT>(value.length());
+
+				if (message_char_set == fb_char_set::CS_UTF8)
+					length =
+						udr_helper.utf8_out(att_resources_, 
+							reinterpret_cast<char*>(message + message_offset), static_cast<ISC_USHORT>(message_length), 
+							value.c_str(), length);
+				else
+					memcpy(reinterpret_cast<char*>(message + message_offset), value.c_str(), std::min(static_cast<ISC_USHORT>(message_length), length));
+				
+				if (message_length > length)
+					memset(reinterpret_cast<char*>(message + message_offset) + length, ' ', message_length - length);
+
+				null_flag = FB_FALSE;
+				break;
+			}
+			case SQL_VARYING: // varchar
+			{
+				nanodbc::string value;
+				get_ref<nanodbc::string>(column, value);
+				ISC_USHORT length = static_cast<ISC_USHORT>(value.length());
+
+				if (message_char_set == fb_char_set::CS_UTF8)
+					*(reinterpret_cast<ISC_USHORT*>(message + message_offset)) =
+						udr_helper.utf8_out(att_resources_, 
+							reinterpret_cast<char*>(message + sizeof(ISC_USHORT) + message_offset), static_cast<ISC_USHORT>(message_length), 
+							value.c_str(), length);
+				else
+				{
+					length = std::min(static_cast<ISC_USHORT>(message_length), length);
+					memcpy(reinterpret_cast<char*>(message + sizeof(ISC_USHORT) + message_offset), value.c_str(), length);
+					*(reinterpret_cast<ISC_USHORT*>(message + message_offset)) = length;
+				}
+
+				null_flag = FB_FALSE;
+				break;
+			}
+			case SQL_SHORT: // smallint
+			{
+				*(reinterpret_cast<ISC_SHORT*>(message + message_offset)) = get<ISC_SHORT>(column);
+				null_flag = FB_FALSE;
+				break;
+			}
+			case SQL_LONG: // integer 
+			{
+				*(reinterpret_cast<ISC_LONG*>(message + message_offset)) = get<ISC_LONG>(column);
+				null_flag = FB_FALSE;
+				break;
+			}
+			case SQL_FLOAT: // float
+			{
+				*(reinterpret_cast<float*>(message + message_offset)) = get<float>(column);
+				null_flag = FB_FALSE;
+				break;
+			}
+			case SQL_DOUBLE: // double precision 
+			case SQL_D_FLOAT:
+			{
+				*(reinterpret_cast<double*>(message + message_offset)) = get<double>(column);
+				null_flag = FB_FALSE;
+				break;
+			}
+			case SQL_TIMESTAMP: // timestamp
+			{
+				nanodbc::timestamp value;
+				get_ref<nanodbc::timestamp>(column, value);
+				nanoudr::timestamp ts = udr_helper.get_timestamp(&value);
+
+				Firebird::FbTimestamp fb;
+				fb.date.encode(utl, ts.d.year, ts.d.month, ts.d.day);
+				fb.time.encode(utl, ts.t.hour, ts.t.min, ts.t.sec, ts.t.fract);
+				// This class has memory layout identical to ISC_TIMESTAMP
+				memcpy(reinterpret_cast<ISC_TIMESTAMP*>(message + message_offset), &fb, sizeof(FbTimestamp));
+
+				null_flag = FB_FALSE;
+				break;
+			}
+			case SQL_BLOB: // blob
+			{
+				if (column_c_datatype(column) == -2) // SQL_C_BINARY...
+				{
+					std::vector<std::uint8_t> value;
+					get_ref<std::vector<std::uint8_t>>(column, value);
+					udr_helper.write_blob(att_resources_, &value, reinterpret_cast<ISC_QUAD*>(message + message_offset));
+				}
+				else // SQL_C_[W]CHAR... char datatype return BLOB Subtype TEXT
+				{
+					nanodbc::string value;
+					get_ref<nanodbc::string>(column, value);
+					udr_helper.write_blob(att_resources_, &value, reinterpret_cast<ISC_QUAD*>(message + message_offset));
+				}
+				null_flag = FB_FALSE;
+				break;
+			}
+			case SQL_ARRAY: // array
+			{
+				throw std::runtime_error("Fetching SQL_ARRAY not supported.");
+				break;
+			}
+			case SQL_QUAD: // blob_id 
+			{
+				throw std::runtime_error("Fetching SQL_QUAD not supported.");
+				break;
+			}
+			case SQL_TYPE_TIME: // time
+			{
+				nanodbc::time value;
+				get_ref<nanodbc::time>(column, value);
+				nanoudr::time t = udr_helper.get_time(&value);
+
+				Firebird::FbTime fb;
+				fb.encode(utl, t.hour, t.min, t.sec, t.fract);
+				// This class has memory layout identical to ISC_TIME
+				memcpy(reinterpret_cast<ISC_TIME*>(message + message_offset), &fb, sizeof(FbTime));
+
+				null_flag = FB_FALSE;
+				break;
+			}
+			case SQL_TYPE_DATE: // date
+			{
+				nanodbc::date value;
+				get<nanodbc::date>(column, value);
+				nanoudr::date d = udr_helper.get_date(&value);
+
+				Firebird::FbDate fb;
+				fb.encode(utl, d.year, d.month, d.day);
+				// This class has memory layout identical to ISC_TIME
+				memcpy(reinterpret_cast<ISC_DATE*>(message + message_offset), &fb, sizeof(FbDate));
+
+				null_flag = FB_FALSE;
+				break;
+			}
+			case SQL_INT64: // bigint
+			{
+				*(reinterpret_cast<ISC_INT64*>(message + message_offset)) = get<ISC_INT64>(column);
+				break;
+			}
+			case SQL_BOOLEAN: // boolean
+			{
+				bool value = get<unsigned short>(column) ? true : false;
+				*(reinterpret_cast<FB_BOOLEAN*>(message + message_offset)) = udr_helper.fb_bool(value);
+				null_flag = FB_FALSE;
+				break;
+			}
+			case SQL_NULL: // null, nothing
+			{
+				break;
+			}
+			default:
+			{
+				throw std::runtime_error("Fetching unknow Firebird SQL datatype.");
+				break;
+			}
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
 // create function valid (
 //	 rslt ty$pointer not null, 
@@ -884,7 +1059,6 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 	FB_UDR_EXECUTE_FUNCTION
 	{
 		ATTACHMENT_RESOURCES
-		ISC_SHORT& null_flag = *(reinterpret_cast<ISC_SHORT*>(out + value_null_offset[out::value]));
 		*(reinterpret_cast<ISC_SHORT*>(out + value_null_offset[out::value])) = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -897,197 +1071,21 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 				if (isdigit(in->column.str[0]))
 					column_position = static_cast<short>(atoi(in->column.str)); else
 					column_position = rslt->column(NANODBC_TEXT(in->column.str));
-
-				if (rslt->is_null(column_position)) null_flag = FB_TRUE;
-				else 
+				try 
 				{
-					switch (value_type[out::value])
-					{
-						case SQL_TEXT: // char
-						{
-							nanodbc::string value;
-							rslt->get_ref<nanodbc::string>(column_position, value);
-							ISC_USHORT length = static_cast<ISC_USHORT>(value.length());
-
-							if (value_char_set[out::value] == fb_char_set::CS_UTF8)
-								try
-								{
-									length = 
-										udr_helper.utf8_out(att_resources, reinterpret_cast<char*>(out + value_offset[out::value]), 
-											static_cast<ISC_USHORT>(value_length[out::value]), value.c_str(), length);
-								}
-								catch (std::runtime_error const& e) {
-									NANOUDR_THROW(FETCHING_ERROR, e.what())
-								}
-							else
-								memcpy(
-									reinterpret_cast<char*>(out + value_offset[out::value]), value.c_str(),
-									std::min(static_cast<ISC_USHORT>(value_length[out::value]), length)
-								);
-							if (value_length[out::value] > length)
-								memset(
-									reinterpret_cast<char*>(out + value_offset[out::value]) + length, ' ', 
-									value_length[out::value] - length
-								);
-
-							null_flag = FB_FALSE;
-							break;
-						}
-						case SQL_VARYING: // varchar
-						{
-							nanodbc::string value;
-							rslt->get_ref<nanodbc::string>(column_position, value);
-							ISC_USHORT length = static_cast<ISC_USHORT>(value.length());
-
-							if (value_char_set[out::value] == fb_char_set::CS_UTF8)
-								try {
-									*(reinterpret_cast<ISC_USHORT*>(out + value_offset[out::value])) =
-										udr_helper.utf8_out(
-											att_resources, reinterpret_cast<char*>(out + sizeof(ISC_USHORT) + value_offset[out::value]),
-											static_cast<ISC_USHORT>(value_length[out::value]), value.c_str(), length);
-								}
-								catch (std::runtime_error const& e) {
-									NANOUDR_THROW(FETCHING_ERROR, e.what())
-								}
-							else
-							{
-								length = std::min(static_cast<ISC_USHORT>(value_length[out::value]), length);
-								memcpy(
-									reinterpret_cast<char*>(out + sizeof(ISC_USHORT) + value_offset[out::value]), 
-									value.c_str(), length
-								);
-								*(reinterpret_cast<ISC_USHORT*>(out + value_offset[out::value])) = length;
-							}
-
-							null_flag = FB_FALSE;
-							break;
-						}
-						case SQL_SHORT: // smallint
-						{
-							*(reinterpret_cast<ISC_SHORT*>(out + value_offset[out::value])) = rslt->get<ISC_SHORT>(column_position);
-							null_flag = FB_FALSE;
-							break;
-						}
-						case SQL_LONG: // integer 
-						{
-							*(reinterpret_cast<ISC_LONG*>(out + value_offset[out::value])) = rslt->get<ISC_LONG>(column_position);
-							null_flag = FB_FALSE;
-							break;
-						}
-						case SQL_FLOAT: // float
-						{
-							*(reinterpret_cast<float*>(out + value_offset[out::value])) = rslt->get<float>(column_position);
-							null_flag = FB_FALSE;
-							break;
-						}
-						case SQL_DOUBLE: // double precision 
-						case SQL_D_FLOAT: 
-						{
-							*(reinterpret_cast<double*>(out + value_offset[out::value])) = rslt->get<double>(column_position);
-							null_flag = FB_FALSE;
-							break;
-						}
-						case SQL_TIMESTAMP: // timestamp
-						{
-							nanodbc::timestamp value;
-							rslt->get_ref<nanodbc::timestamp>(column_position, value);
-							nanoudr::timestamp ts = udr_helper.get_timestamp(&value);
-
-							Firebird::FbTimestamp fb;
-							fb.date.encode(utl, ts.d.year, ts.d.month, ts.d.day);
-							fb.time.encode(utl, ts.t.hour, ts.t.min, ts.t.sec, ts.t.fract);
-							// This class has memory layout identical to ISC_TIMESTAMP
-							memcpy(reinterpret_cast<ISC_TIMESTAMP*>(out + value_offset[out::value]), &fb, sizeof(FbTimestamp));
-
-							null_flag = FB_FALSE;
-							break;
-						}
-						case SQL_BLOB: // blob
-						{
-							if (rslt->column_c_datatype(column_position) == -2) // SQL_C_BINARY...
-							{
-								std::vector<std::uint8_t> value;
-								rslt->get_ref<std::vector<std::uint8_t>>(column_position, value);
-								try {
-									udr_helper.write_blob(att_resources, &value, reinterpret_cast<ISC_QUAD*>(out + value_offset[out::value]));
-								}
-								catch (std::runtime_error const& e) {
-									NANOUDR_THROW(FETCHING_ERROR, e.what())
-								}
-							}
-							else // SQL_C_[W]CHAR... char datatype return BLOB Subtype TEXT
-							{
-								nanodbc::string value;
-								rslt->get_ref<nanodbc::string>(column_position, value);
-								try {
-									udr_helper.write_blob(att_resources, &value, reinterpret_cast<ISC_QUAD*>(out + value_offset[out::value]));
-								} catch (std::runtime_error const& e) {
-									NANOUDR_THROW(FETCHING_ERROR, e.what())
-								}
-							}
-							null_flag = FB_FALSE;
-							break;
-						}
-						case SQL_ARRAY: // array
-						{
-							NANOUDR_THROW(FETCHING_ERROR, "Fetching SQL_ARRAY not supported.")
-							break;
-						}
-						case SQL_QUAD: // blob_id 
-						{
-							NANOUDR_THROW(FETCHING_ERROR, "Fetching SQL_QUAD not supported.")
-							break;
-						}
-						case SQL_TYPE_TIME: // time
-						{
-							nanodbc::time value; 
-							rslt->get_ref<nanodbc::time>(column_position, value);
-							nanoudr::time t = udr_helper.get_time(&value);
-
-							Firebird::FbTime fb;
-							fb.encode(utl, t.hour, t.min, t.sec, t.fract);
-							// This class has memory layout identical to ISC_TIME
-							memcpy(reinterpret_cast<ISC_TIME*>(out + value_offset[out::value]), &fb, sizeof(FbTime));
-
-							null_flag = FB_FALSE;
-							break;
-						}
-						case SQL_TYPE_DATE: // date
-						{
-							nanodbc::date value;
-							rslt->get<nanodbc::date>(column_position, value); 
-							nanoudr::date d = udr_helper.get_date(&value);
-
-							Firebird::FbDate fb;
-							fb.encode(utl, d.year, d.month, d.day);
-							// This class has memory layout identical to ISC_TIME
-							memcpy(reinterpret_cast<ISC_DATE*>(out + value_offset[out::value]), &fb, sizeof(FbDate));
-
-							null_flag = FB_FALSE;
-							break;
-						}
-						case SQL_INT64: // bigint
-						{
-							*(reinterpret_cast<ISC_INT64*>(out + value_offset[out::value])) = rslt->get<ISC_INT64>(column_position);
-							break;
-						}
-						case SQL_BOOLEAN: // boolean
-						{
-							bool value = rslt->get<unsigned short>(column_position) ? true : false;
-							*(reinterpret_cast<FB_BOOLEAN*>(out + value_offset[out::value])) = udr_helper.fb_bool(value);
-							null_flag = FB_FALSE;
-							break;
-						}
-						case SQL_NULL: // null, nothing
-						{
-							break;
-						}
-						default:
-						{
-							NANOUDR_THROW(FETCHING_ERROR, "Fetching unknow Firebird SQL datatype.")
-							break;
-						}
-					}
+					rslt->get_value(
+						column_position,
+						out, 
+						value_type[out::value], 
+						value_length ? value_length[out::value] : -1, 
+						value_char_set ? value_char_set[out::value] : fb_char_set::CS_NONE, 
+						value_offset[out::value],	
+						value_null_offset[out::value],
+						utl
+					);
+				}
+				catch (std::runtime_error const& e) {
+					NANOUDR_THROW(FETCHING_ERROR, e.what())
 				}
 			}
 			catch (std::runtime_error const& e)
@@ -1107,7 +1105,7 @@ FB_UDR_END_FUNCTION
 //	 rslt ty$pointer not null, 
 //	 query varchar(8191) character set utf8 not null,
 //   transaction_pack integer not null default 0
-//	) returns ty$nano_blank
+//	) returns integer
 //	external name 'nano!rslt$pump'
 //	engine udr; 
 //
@@ -1125,8 +1123,18 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 	AutoRelease<IAttachment> att;
 	AutoDispose<IXpbBuilder> tpb;
 	AutoRelease<ITransaction> tra;
-	AutoRelease<IStatement> stmt;
-	AutoRelease<IMessageMetadata> meta;
+	
+	AutoRelease<IStatement> pump_stmt;
+	AutoRelease<IMessageMetadata> pump_meta;
+	
+	unsigned pump_count;
+
+	AutoArrayDelete<unsigned> pump_type;
+	AutoArrayDelete<unsigned> pump_length;
+	AutoArrayDelete<unsigned> pump_char_set;
+	AutoArrayDelete<unsigned> pump_offset;
+	AutoArrayDelete<unsigned> pump_null_offset;
+	AutoArrayDelete<unsigned char> pump_buffer;
 
 	IUtil* utl = master->getUtilInterface();
 
@@ -1153,20 +1161,21 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(NANO_BLANK, blank)
+		(FB_INTEGER, pumped_records)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
 		ATTACHMENT_RESOURCES
-		out->blankNull = FB_TRUE;
+		out->pumped_records = 0;
+		out->pumped_recordsNull = FB_TRUE;
 		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
 				if (in->queryNull || !std::strcmp(in->query.str, ""))
-					throw std::runtime_error("SQL statement null or empty.");
+					throw std::runtime_error("Pump of statement null or empty.");
 				else
 				{
 					U8_VARIYNG(in, query)
@@ -1185,22 +1194,59 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 							tpb->insertTag(status, isc_tpb_nowait);
 							tpb->insertTag(status, isc_tpb_write);
 							tra.reset(att->startTransaction(status, tpb->getBufferLength(status), tpb->getBuffer(status)));
+							att_resources->autonomous_transaction(tra);
 						}
-						stmt.reset(att->prepare(status, tra, 0, in->query.str, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
-						meta.reset(stmt->getInputMetadata(status));
-						
-						ISC_LONG pack_index = 0;
-						for (; rslt->next(); pack_index++)
+						pump_stmt.reset(att->prepare(status, tra, 0, in->query.str, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
+						pump_meta.reset(pump_stmt->getInputMetadata(status));
+
+						pump_count = pump_meta->getCount(status);
+						if (pump_count != static_cast<unsigned>(rslt->columns())) throw std::runtime_error("Pump of read-write columns does not equal.");
+						pump_type.reset(new unsigned[pump_count]);
+						pump_length.reset(new unsigned[pump_count]);
+						pump_char_set.reset(new unsigned[pump_count]);
+						pump_offset.reset(new unsigned[pump_count]);
+						pump_null_offset.reset(new unsigned[pump_count]);
+						for (unsigned i = 0; i < pump_count; ++i)
 						{
+							pump_type[i] = pump_meta->getType(status, i);
+							pump_length[i] = pump_meta->getLength(status, i);
+							pump_char_set[i] = pump_meta->getCharSet(status, i);
+							pump_offset[i] = pump_meta->getOffset(status, i);
+							pump_null_offset[i] = pump_meta->getNullOffset(status, i);
+						}
+						pump_buffer.reset(new unsigned char[pump_meta->getMessageLength(status)]);
+
+						ISC_LONG pack_index = 0;
+						while (rslt->next())
+						{
+							pack_index += 1; 
+							for (short column = 0, columns = rslt->columns(); column < columns; ++column)
+							{
+								rslt->get_value(
+									column,
+									pump_buffer,
+									pump_type[column],
+									pump_length ? pump_length[column] : -1,
+									pump_char_set ? pump_char_set[column] : fb_char_set::CS_NONE,
+									pump_offset[column],
+									pump_null_offset[column],
+									utl
+								);
+							}
+							pump_stmt->execute(status, tra, pump_meta, pump_buffer, NULL, NULL);
+
+							// commit pack pamped records
 							if (transaction_packed && pack_index == in->transaction_pack)
 							{
-								tra->commit(status); 
-								tra.reset(att->startTransaction(status, tpb->getBufferLength(status), tpb->getBuffer(status)));
-								stmt.reset(att->prepare(status, tra, 0, in->query.str, SQL_DIALECT_CURRENT, 0));
+								tra->commitRetaining(status); // commit transaction retaining
 								pack_index = 0;
 							}
+
+							out->pumped_records += 1;
 						}
-						if (transaction_packed && pack_index > 0) tra->commit(status);
+						pump_stmt->free(status);
+						if (transaction_packed)	tra->commit(status); // commit transaction (will close interface)
+						att_resources->autonomous_transaction(nullptr);
 					}
 					catch (const FbException& e)
 					{
@@ -1209,8 +1255,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 						throw std::runtime_error(what);
 					}
 				}
-				out->blank = BLANK;
-				out->blankNull = FB_FALSE;
+				out->pumped_recordsNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
 			{
@@ -1976,4 +2021,5 @@ FB_UDR_BEGIN_FUNCTION(rslt$has_data)
 FB_UDR_END_FUNCTION
 
 } // namespace nanoudr::
+
 

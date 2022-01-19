@@ -50,6 +50,14 @@ public:
 
 	attachment_resources* attachment() { return att_resources_; };
 
+	void get_value
+	(
+		short column, 
+		unsigned char* message, // FB__UDR_COMMON_TYPE(name) ... typedef unsigned char Type; ...
+		unsigned message_type, unsigned message_length, unsigned message_char_set, unsigned message_offset, unsigned message_null_offset,
+		IUtil* utl
+	);
+
 private:
 	attachment_resources* att_resources_;
 	nanoudr::connection* conn_;

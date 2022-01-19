@@ -47,6 +47,7 @@ void attachment_resources::context(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TY
 {
 	attachment_context.status = status;
 	attachment_context.context = context;
+	attachment_context.autonomous_transaction = nullptr;
 };
 
 const char* attachment_resources::locale(const char* set_locale)
@@ -59,6 +60,12 @@ const char* attachment_resources::error_message(const char* last_error_message)
 {
 	if (last_error_message) att_error_message = last_error_message;
 	return att_error_message.c_str();
+}
+
+ITransaction* attachment_resources::autonomous_transaction(ITransaction* transaction)
+{
+	if (transaction) attachment_context.autonomous_transaction = transaction;
+	return attachment_context.autonomous_transaction;
 }
 
 void attachment_resources::make_resources()
@@ -94,8 +101,8 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,\
 		meta.reset(stmt->getOutputMetadata(status));
 		curs.reset(stmt->openCursor(status, tra, NULL, NULL, meta, 0));
 
-		AutoArrayDelete<char> buffer;
-		buffer.reset(new char[meta->getMessageLength(status)]);
+		AutoArrayDelete<unsigned char> buffer;
+		buffer.reset(new unsigned char[meta->getMessageLength(status)]);
 		nanoudr::exception udr_exception;
 		for (short i = 0; i < EXCEPTION_ARRAY_SIZE; ++i)
 		{
