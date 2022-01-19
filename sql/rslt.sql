@@ -146,13 +146,13 @@ BEGIN
     ) RETURNS TIMESTAMP;
 
   ------------------------------------------------------------------------------
-/*
+
   FUNCTION pump (
       rslt TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
       transaction_pack INTEGER NOT NULL DEFAULT 0 -- common transaction
-    ) RETURNS TY$NANO_BLANK;
-*/
+    ) RETURNS INTEGER;
+
   ------------------------------------------------------------------------------
 
   FUNCTION convert_varchar_s(
@@ -511,15 +511,15 @@ BEGIN
     ENGINE UDR;
 
   ------------------------------------------------------------------------------
-/*
+
   FUNCTION pump (
       rslt TY$POINTER NOT NULL,
       query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
       transaction_pack INTEGER NOT NULL
-    ) RETURNS TY$NANO_BLANK;
+    ) RETURNS INTEGER
     EXTERNAL NAME 'nano!rslt$pump'
     ENGINE UDR;
-*/
+
   ------------------------------------------------------------------------------
 
   FUNCTION convert_varchar_s(
