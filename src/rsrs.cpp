@@ -65,10 +65,10 @@ const char* attachment_resources::error_message(const char* last_error_message)
 ITransaction* attachment_resources::current_transaction(ITransaction* set_transaction)
 {
 	if (set_transaction) attachment_context.current_transaction = set_transaction;
-	return
+	return 
 		!attachment_context.current_transaction ?
 			attachment_context.context->getTransaction(attachment_context.status) :
-			attachment_context.current_transaction;
+			attachment_context.current_transaction;  
 }
 
 void attachment_resources::make_resources()

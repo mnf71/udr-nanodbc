@@ -28,7 +28,7 @@
 namespace nanoudr
 {
 
-#define EXCEPTION_ARRAY_SIZE	10
+#define EXCEPTION_ARRAY_SIZE	20
 #define ERROR_MESSAGE_LENGTH	1024
 
 #define	RESOURCES_UNDEFINED		"NANO$RESOURCES_UNDEFINED" 
@@ -44,6 +44,7 @@ namespace nanoudr
 
 #define	BINDING_ERROR			"NANO$BINDING_ERROR"
 #define	FETCHING_ERROR			"NANO$FETCHING_ERROR"
+#define	PUMPING_ERROR			"NANO$PUMPING_ERROR"
 
 struct resources_context
 {
@@ -177,7 +178,8 @@ private:
 		{NANOUDR_ERROR,				0, ""},
 		{NANODBC_ERROR,				0, ""},
 		{BINDING_ERROR,				0, ""},
-		{FETCHING_ERROR,			0, ""}
+		{FETCHING_ERROR,			0, ""},
+		{PUMPING_ERROR,				0, ""}
 	};
 
 	void make_exceptions(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);

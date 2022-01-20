@@ -57,3 +57,23 @@ Reads from disk to cache = 77 520
 Writes from cache to disk = 77 064
 Fetches from cache = 11 635 665
 */
+
+SELECT * FROM perf_pump_2
+
+/*
+Plan
+PLAN (PERF_PUMP_2 NATURAL)
+
+1000000 record(s) was(were) inserted into PERF_DEST
+
+------ Performance info ------
+Prepare time = 31ms
+Execute time = 4m 42s 344ms
+Avg fetch time = 56 468,80 ms
+Current memory = 72 151 056
+Max memory = 583 964 448
+Memory buffers = 4 096
+Reads from disk to cache = 75 596
+Writes from cache to disk = 76 476
+Fetches from cache = 13 598 170
+*/

@@ -1121,9 +1121,10 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 	AutoArrayDelete<unsigned> in_char_sets;
 
 	AutoRelease<IAttachment> att;
-	AutoDispose<IXpbBuilder> tpb;
 	AutoRelease<ITransaction> tra;
 	
+	AutoDispose<IXpbBuilder> tpb;
+
 	AutoRelease<IStatement> pump_stmt;
 	AutoRelease<IMessageMetadata> pump_meta;
 	
@@ -1174,8 +1175,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 		{
 			try
 			{
-				if (in->queryNull || !std::strcmp(in->query.str, ""))
-					throw std::runtime_error("Pump of statement null or empty.");
+				if (in->queryNull || !strcmp(in->query.str, ""))
+					throw std::runtime_error("Statement of pump null or empty.");
 				else
 				{
 					U8_VARIYNG(in, query)
@@ -1194,8 +1195,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 							tpb->insertTag(status, isc_tpb_nowait);
 							tpb->insertTag(status, isc_tpb_write);
 							tra.reset(att->startTransaction(status, tpb->getBufferLength(status), tpb->getBuffer(status)));
-							att_resources->current_transaction(tra);
 						}
+						att_resources->current_transaction(tra); // BLOB context of operation (needed erase after using)
 						pump_stmt.reset(att->prepare(status, tra, 0, in->query.str, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
 						pump_meta.reset(pump_stmt->getInputMetadata(status));
 
@@ -1245,11 +1246,11 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 							out->pumped_records += 1;
 						}
 						pump_stmt->free(status);
-						if (transaction_packed) 
+						att_resources->current_transaction(nullptr);
+						if (transaction_packed)
 						{
 							tra->commit(status); // commit transaction (will close interface)
-							att_resources->current_transaction(nullptr);
-							tra = nullptr;
+							tra.reset(); // clear closed interface
 						}
 					}
 					catch (const FbException& e)
@@ -1263,7 +1264,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 			}
 			catch (std::runtime_error const& e)
 			{
-				NANOUDR_THROW(e.what())
+				NANOUDR_THROW(PUMPING_ERROR, e.what())
 			}
 		}
 		else
