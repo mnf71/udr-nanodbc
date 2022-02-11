@@ -11,6 +11,6 @@ odbc_version.cpp:5:17: note: #pragma message: SQL_OV_ODBC3_80
 odbc_version.cpp:9:17: note: #pragma message: SQL_OV_ODBC3
  #pragma message "SQL_OV_ODBC3"
                  ^~~~~~~~~~~~~~
-[mnf@tks5 odbc]$ rpm -qa : grep unixodbc
+[mnf@tks5 odbc]$ rpm -qa | grep unixodbc
 grep-2.20-3.el7.x86_64
 
