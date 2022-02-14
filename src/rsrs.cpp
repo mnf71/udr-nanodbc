@@ -29,9 +29,22 @@
 namespace nanoudr
 {
 
+resources_pool pool;
+
 //-----------------------------------------------------------------------------
 //  Attachment resources
 //
+
+attachment_resources::attachment_resources(
+	FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context, const ISC_UINT64 attachment_id)
+	: attachment_id(attachment_id),	locale("cp1251")
+	
+{
+	snapshot = { status, context, nullptr };
+	// statement::statement() call without conn_ptr
+	connections.retain(nullptr);
+	pull_up_exceptions();
+}
 
 attachment_resources::~attachment_resources() noexcept
 {
@@ -43,44 +56,54 @@ void attachment_resources::expunge()
 	for (auto c : connections.conn()) delete (nanoudr::connection*)(c);
 }
 
-void attachment_resources::context(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
+const attachment_snapshot* attachment_resources::current_snapshot(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
-	attachment_context.status = status;
-	attachment_context.context = context;
-	attachment_context.current_transaction = nullptr;
-};
-
-const char* attachment_resources::locale(const char* set_locale)
-{
-	if (set_locale) att_locale = set_locale;
-	return att_locale.c_str();
+	if (status) snapshot.status = status;
+	if (context) snapshot.context = context;
+	snapshot.transaction = nullptr;
+	return &snapshot;
 }
 
-const char* attachment_resources::error_message(const char* last_error_message)
+const ITransaction* attachment_resources::current_transaction(ITransaction* set_transaction)
 {
-	if (last_error_message) att_error_message = last_error_message;
-	return att_error_message.c_str();
+	if (set_transaction) snapshot.transaction = set_transaction;
+	return !snapshot.transaction ?
+		snapshot.context->getTransaction(snapshot.status)
+		: snapshot.transaction;
 }
 
-ITransaction* attachment_resources::current_transaction(ITransaction* set_transaction)
+const char* attachment_resources::current_error_message(const char* set_error_message)
 {
-	if (set_transaction) attachment_context.current_transaction = set_transaction;
-	return 
-		!attachment_context.current_transaction ?
-			attachment_context.context->getTransaction(attachment_context.status) :
-			attachment_context.current_transaction;  
+	if (set_error_message) error_message = set_error_message;
+	return error_message.c_str();
 }
 
-void attachment_resources::make_resources()
+const char* attachment_resources::current_locale(const char* set_locale)
 {
-	FB_UDR_STATUS_TYPE* status = attachment_context.status;
-	FB_UDR_CONTEXT_TYPE* context = attachment_context.context;
-	
-	make_exceptions(status, context);
-	// ... other
+	if (set_locale) locale = set_locale;
+	return locale.c_str();
 }
 
-void attachment_resources::make_exceptions(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
+const ISC_LONG attachment_resources::exception_number(const char* exception_name) // simple find num
+{
+	for (auto x : exceptions)
+		if (strcmp(x.name, exception_name) == 0) return x.number;
+	return 0;
+}
+
+const char* attachment_resources::exception_message(const char* exception_name) // simple find msg
+{
+	for (auto& x : exceptions)
+		if (strcmp(x.name, exception_name) == 0) return x.message;
+	return nullptr;
+}
+
+void attachment_resources::pull_up_resources()
+{
+	pull_up_exceptions();
+}
+
+void attachment_resources::pull_up_exceptions()
 {
 	AutoRelease<IAttachment> att;
 	AutoRelease<ITransaction> tra;
@@ -98,44 +121,42 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,\
 
 	try
 	{
-		att.reset(context->getAttachment(status));
-		tra.reset(context->getTransaction(status));
-		stmt.reset(att->prepare(status, tra, 0, sql_stmt, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
-		meta.reset(stmt->getOutputMetadata(status));
-		curs.reset(stmt->openCursor(status, tra, NULL, NULL, meta, 0));
+		att.reset(snapshot.context->getAttachment(snapshot.status));
+		tra.reset(snapshot.context->getTransaction(snapshot.status));
+		stmt.reset(att->prepare(snapshot.status, tra, 0, sql_stmt, SQL_DIALECT_CURRENT, IStatement::PREPARE_PREFETCH_METADATA));
+		meta.reset(stmt->getOutputMetadata(snapshot.status));
+		curs.reset(stmt->openCursor(snapshot.status, tra, NULL, NULL, meta, 0));
 
 		AutoArrayDelete<unsigned char> buffer;
-		buffer.reset(new unsigned char[meta->getMessageLength(status)]);
-		nanoudr::exception udr_exception;
+		buffer.reset(new unsigned char[meta->getMessageLength(snapshot.status)]);
+		exception e_buffer;
 		for (short i = 0; i < EXCEPTION_ARRAY_SIZE; ++i)
 		{
-			memset(&udr_exception, '\0', sizeof(nanoudr::exception));
-			if(!curs->isEof(status) && curs->fetchNext(status, buffer) == IStatus::RESULT_OK)
+			memset(&e_buffer, '\0', sizeof(exception));
+			if (!curs->isEof(snapshot.status) && curs->fetchNext(snapshot.status, buffer) == IStatus::RESULT_OK)
 			{
 				memcpy( // this SQL_VARYING, see sql_stmt
-					udr_exception.name,
-					(buffer + 2 + meta->getOffset(status, sql_rslt::name)),
-					meta->getLength(status, sql_rslt::name) - 2);
-				udr_exception.number = *(reinterpret_cast<ISC_LONG*>(buffer + meta->getOffset(status, sql_rslt::number)));
+					e_buffer.name,
+					(buffer + 2 + meta->getOffset(snapshot.status, sql_rslt::name)),
+					meta->getLength(snapshot.status, sql_rslt::name) - 2);
+				e_buffer.number = *(reinterpret_cast<ISC_LONG*>(buffer + meta->getOffset(snapshot.status, sql_rslt::number)));
 				memcpy( // SQL_VARYING
-					udr_exception.message,
-					(buffer + 2 + meta->getOffset(status, sql_rslt::message)),
-					meta->getLength(status, sql_rslt::message) - 2);
+					e_buffer.message,
+					(buffer + 2 + meta->getOffset(snapshot.status, sql_rslt::message)),
+					meta->getLength(snapshot.status, sql_rslt::message) - 2);
 			}
-			assign_exception(&udr_exception, i);
+			memcpy(&exceptions[i], &e_buffer, sizeof(exception));
 		}
-		curs->close(status); 
+		curs->close(snapshot.status);
 	}
 	catch (...)
 	{
-		throw std::runtime_error("Make exceptions crashed.");
+		throw std::runtime_error("Pulling exceptions crashed.");
 	}
 }
 
 //-----------------------------------------------------------------------------
-//	
-
-resources udr_resources;
+//
 
 void attachment_resources::attachment_connections::retain(const nanoudr::connection* conn)
 {
@@ -248,79 +269,61 @@ std::vector<nanoudr::result*>& attachment_resources::connection_results::rslt()
 }
 
 //-----------------------------------------------------------------------------
+//  UDR resources 
 //
 
-const ISC_LONG attachment_resources::exception_number(const char* name) // simple find num
-{
-	for (auto x : att_exceptions) 
-		if (strcmp(x.name, name) == 0) return x.number;
-	return 0;
-}
-
-const char* attachment_resources::exception_message(const char* name) // simple find msg
-{
-	for (auto &x : att_exceptions)
-		if (strcmp(x.name, name) == 0) return x.message;
-	return nullptr;
-}
-
-void attachment_resources::assign_exception(exception* att_exception, const short pos)
-{
-	memcpy(&att_exceptions[pos], att_exception, sizeof(exception));
-}
-
-//-----------------------------------------------------------------------------
-//  Shared UDR resources
-//
-
-resources::resources()
+resources_pool::resources_pool()
 {
 }
 
-resources::~resources() noexcept
+resources_pool::~resources_pool() noexcept
 {
-	for (att_it = att_m.begin(); att_it != att_m.end(); ++att_it)
+	for (resources_it = resources_map.begin(); resources_it != resources_map.end(); ++resources_it)
 	{
-		delete (attachment_resources*)(att_it->second);
-		att_m.erase(att_it);
+		delete (attachment_resources*)(resources_it->second);
+		resources_map.erase(resources_it);
 	}
 }
 
-void resources::initialize(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
+ISC_UINT64 resources_pool::initialize_attachment(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
 	ISC_UINT64 att_id = attachment_id(status, context);
-	att_it = att_m.find(att_id);
-	if (att_it == att_m.end())
+	resources_it = resources_map.find(att_id);
+	if (resources_it == resources_map.end())
 	{
-		attachment_resources* att_resources = new attachment_resources(att_id);
-		att_m.insert(
-			std::pair<ISC_UINT64, nanoudr::attachment_resources*>(att_id, att_resources));
-		att_resources->context(status, context);
-		att_resources->make_resources();
+		attachment_resources* att_resources = new attachment_resources(status, context, att_id);
+		resources_map.insert(
+			std::pair<ISC_UINT64, attachment_resources*>(att_id, att_resources));
 	}
+	return att_id;
 }
 
-void resources::finalize(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
-{
-	ISC_UINT64 att_id = attachment_id(status, context);
-	att_it = att_m.find(att_id);
-	if (att_it != att_m.end())
-	{
-		delete (attachment_resources*)(att_it->second);
-		att_m.erase(att_it);
-	}
-}
-
-attachment_resources* resources::attachment(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
+attachment_resources* resources_pool::current_resources(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
 	attachment_resources* att_resources;
-	att_it = att_m.find(attachment_id(status, context));
-	att_resources = (att_it == att_m.end() ? nullptr : att_it->second);
-	if (att_resources != nullptr) att_resources->context(status, context); // assign current pointer
+	resources_it = resources_map.find(attachment_id(status, context));
+	att_resources = (resources_it == resources_map.end() ? nullptr : resources_it->second);
 	return att_resources;
 }
 
-ISC_UINT64 resources::attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
+attachment_resources* resources_pool::current_resources(const ISC_UINT64 attachment_id)
+{
+	attachment_resources* att_resources;
+	resources_it = resources_map.find(attachment_id);
+	att_resources = (resources_it == resources_map.end() ? nullptr : resources_it->second);
+	return att_resources;
+}
+
+void resources_pool::finalize_attachment(const ISC_UINT64 attachment_id)
+{
+	resources_it = resources_map.find(attachment_id);
+	if (resources_it != resources_map.end()) {
+		delete (attachment_resources*)(resources_it->second);
+		resources_map.erase(resources_it);
+	}
+}
+
+ISC_UINT64 resources_pool::attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context)
 {
 	ISC_UINT64 attachment_id = 0;
 
@@ -374,15 +377,15 @@ FB_UDR_BEGIN_FUNCTION(udr$initialize)
 		out->blankNull = FB_TRUE;
 		try
 		{
-			udr_resources.initialize(status, context);
-			att_resources = udr_resources.attachment(status, context);
-			if (udr_resources.resource_exception.number == 0)
+			ISC_INT64 att_id = pool.initialize_attachment(status, context);
+			att_resources = pool.current_resources(att_id);
+			if (pool.exceptions.number == 0)
 			{
-				udr_resources.resource_exception.number = 
-					att_resources->exception_number(udr_resources.resource_exception.name);
+				pool.exceptions.number =
+					att_resources->exception_number(pool.exceptions.name);
 				memcpy(
-					udr_resources.resource_exception.message, att_resources->exception_message(udr_resources.resource_exception.name),
-					sizeof(udr_resources.resource_exception.message));
+					pool.exceptions.message, att_resources->exception_message(pool.exceptions.name),
+					sizeof(pool.exceptions.message));
 			}
 			out->blank = BLANK;
 			out->blankNull = FB_FALSE;
@@ -414,7 +417,8 @@ FB_UDR_BEGIN_FUNCTION(udr$finalize)
 		out->blankNull = FB_TRUE;
 		try
 		{
-			udr_resources.finalize(status, context);
+			if ((att_resources = pool.current_resources(status, context)) != nullptr)
+				pool.finalize_attachment(att_resources->current_attachment_id());
 			out->blank = BLANK;
 			out->blankNull = FB_FALSE;
 		}
@@ -433,6 +437,13 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(udr$expunge)
+
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
 
 	FB_UDR_MESSAGE(
 		OutMessage,
@@ -467,6 +478,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(udr$locale)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(FB_VARCHAR(20), set_locale)
@@ -483,8 +501,8 @@ FB_UDR_BEGIN_FUNCTION(udr$locale)
 		out->localeNull = FB_TRUE;
 		try
 		{
-			if (!in->set_localeNull) att_resources->locale(in->set_locale.str);
-			FB_VARIYNG(out->locale, std::string(att_resources->locale()))
+			if (!in->set_localeNull) att_resources->current_locale(in->set_locale.str);
+			FB_VARIYNG(out->locale, std::string(att_resources->current_locale()))
 			out->localeNull = FB_FALSE;
 		}
 		catch (std::runtime_error const& e)
@@ -507,6 +525,8 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(udr$convert)
+
+	DECLARE_RESOURCE
 
 	unsigned in_count;
 
@@ -532,6 +552,8 @@ FB_UDR_BEGIN_FUNCTION(udr$convert)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
 
@@ -584,7 +606,7 @@ FB_UDR_BEGIN_FUNCTION(udr$convert)
 				convert_size = (convert_size == 0 || convert_size > length) ? length : convert_size;
 
 				convert_size =
-					udr_helper.unicode_converter(
+					helper.unicode_converter(
 						reinterpret_cast<char*>(out + (out_type[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + out_offset[out::result]),
 						static_cast<ISC_USHORT>(out_length[out::result]), reinterpret_cast<const char*>(in + sizeof(ISC_USHORT) + in_offsets[in::to]),
 						reinterpret_cast<const char*>(in + (in_types[out::result] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
@@ -621,6 +643,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(udr$error_message)
 
+	DECLARE_RESOURCE
+
 	unsigned out_count;
 
 	enum out : short {
@@ -631,6 +655,8 @@ FB_UDR_BEGIN_FUNCTION(udr$error_message)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
 
 		out_count = out_metadata->getCount(status);
@@ -641,16 +667,16 @@ FB_UDR_BEGIN_FUNCTION(udr$error_message)
 		}
 	}
 
-		FB_UDR_MESSAGE(
-			OutMessage,
-			(FB_VARCHAR(512 * 4), e_msg)
-		);
+	FB_UDR_MESSAGE(
+		OutMessage,
+		(FB_VARCHAR(512 * 4), e_msg)
+	);
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
 		ATTACHMENT_RESOURCES
 		out->e_msgNull = FB_FALSE;
-		std::string e_msg = att_resources->error_message();
+		std::string e_msg = att_resources->current_error_message();
 		FB_VARIYNG(out->e_msg, e_msg)
 		U8_VARIYNG(out, e_msg)
 	}

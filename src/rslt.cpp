@@ -74,7 +74,7 @@ void result::get_value
 
 				if (message_char_set == fb_char_set::CS_UTF8)
 					length =
-						udr_helper.utf8_out(att_resources_, 
+						helper.utf8_out(att_resources_, 
 							reinterpret_cast<char*>(message + message_offset), static_cast<ISC_USHORT>(message_length), 
 							value.c_str(), length);
 				else
@@ -94,7 +94,7 @@ void result::get_value
 
 				if (message_char_set == fb_char_set::CS_UTF8)
 					*(reinterpret_cast<ISC_USHORT*>(message + message_offset)) =
-						udr_helper.utf8_out(att_resources_, 
+						helper.utf8_out(att_resources_, 
 							reinterpret_cast<char*>(message + sizeof(ISC_USHORT) + message_offset), static_cast<ISC_USHORT>(message_length), 
 							value.c_str(), length);
 				else
@@ -136,7 +136,7 @@ void result::get_value
 			{
 				nanodbc::timestamp value;
 				get_ref<nanodbc::timestamp>(column, value);
-				nanoudr::timestamp ts = udr_helper.get_timestamp(&value);
+				nanoudr::timestamp ts = helper.get_timestamp(&value);
 
 				Firebird::FbTimestamp fb;
 				fb.date.encode(utl, ts.d.year, ts.d.month, ts.d.day);
@@ -153,13 +153,13 @@ void result::get_value
 				{
 					std::vector<std::uint8_t> value;
 					get_ref<std::vector<std::uint8_t>>(column, value);
-					udr_helper.write_blob(att_resources_, &value, reinterpret_cast<ISC_QUAD*>(message + message_offset));
+					helper.write_blob(att_resources_, &value, reinterpret_cast<ISC_QUAD*>(message + message_offset));
 				}
 				else // SQL_C_[W]CHAR... char datatype return BLOB Subtype TEXT
 				{
 					nanodbc::string value;
 					get_ref<nanodbc::string>(column, value);
-					udr_helper.write_blob(att_resources_, &value, reinterpret_cast<ISC_QUAD*>(message + message_offset));
+					helper.write_blob(att_resources_, &value, reinterpret_cast<ISC_QUAD*>(message + message_offset));
 				}
 				null_flag = FB_FALSE;
 				break;
@@ -178,7 +178,7 @@ void result::get_value
 			{
 				nanodbc::time value;
 				get_ref<nanodbc::time>(column, value);
-				nanoudr::time t = udr_helper.get_time(&value);
+				nanoudr::time t = helper.get_time(&value);
 
 				Firebird::FbTime fb;
 				fb.encode(utl, t.hour, t.min, t.sec, t.fract);
@@ -192,7 +192,7 @@ void result::get_value
 			{
 				nanodbc::date value;
 				get<nanodbc::date>(column, value);
-				nanoudr::date d = udr_helper.get_date(&value);
+				nanoudr::date d = helper.get_date(&value);
 
 				Firebird::FbDate fb;
 				fb.encode(utl, d.year, d.month, d.day);
@@ -210,7 +210,7 @@ void result::get_value
 			case SQL_BOOLEAN: // boolean
 			{
 				bool value = get<unsigned short>(column) ? true : false;
-				*(reinterpret_cast<FB_BOOLEAN*>(message + message_offset)) = udr_helper.fb_bool(value);
+				*(reinterpret_cast<FB_BOOLEAN*>(message + message_offset)) = helper.fb_bool(value);
 				null_flag = FB_FALSE;
 				break;
 			}
@@ -237,6 +237,13 @@ void result::get_value
 
 FB_UDR_BEGIN_FUNCTION(rslt$valid)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -250,9 +257,9 @@ FB_UDR_BEGIN_FUNCTION(rslt$valid)
 	FB_UDR_EXECUTE_FUNCTION
 	{
 		ATTACHMENT_RESOURCES
-		out->valid = udr_helper.fb_bool(
+		out->valid = helper.fb_bool(
 			in->rsltNull ? false :
-				att_resources->results.valid(udr_helper.native_ptr<result>(in->rslt.str))
+				att_resources->results.valid(helper.native_ptr<result>(in->rslt.str))
 			);
 		out->validNull = FB_FALSE;
 	}
@@ -268,6 +275,13 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(rslt$release)
+
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -285,14 +299,14 @@ FB_UDR_BEGIN_FUNCTION(rslt$release)
 		out->rsltNull = FB_TRUE;
 		if (!in->rsltNull)
 		{
-			nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+			nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 			try
 			{
-				delete (nanoudr::result*)(rslt);
+				if (att_resources->results.valid(rslt)) delete (nanoudr::result*)(rslt);
 			}
 			catch (std::runtime_error const& e)
 			{
-				udr_helper.fb_ptr(out->rslt.str, rslt);
+				helper.fb_ptr(out->rslt.str, rslt);
 				out->rsltNull = FB_FALSE;
 				NANODBC_THROW(e.what())
 			}
@@ -313,6 +327,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$connection)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -327,13 +348,13 @@ FB_UDR_BEGIN_FUNCTION(rslt$connection)
 	{
 		ATTACHMENT_RESOURCES
 		out->connNull = FB_TRUE;
-		nanoudr::result * rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result * rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
 				nanoudr::connection* conn = rslt->connection();
-				udr_helper.fb_ptr(out->conn.str, conn);
+				helper.fb_ptr(out->conn.str, conn);
 				out->connNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -356,6 +377,13 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(rslt$rowset_size)
+	
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -371,7 +399,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$rowset_size)
 	{
 		ATTACHMENT_RESOURCES
 		out->sizeNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -400,6 +428,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$affected_rows)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -414,7 +449,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$affected_rows)
 	{
 		ATTACHMENT_RESOURCES
 		out->affectedNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -443,6 +478,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$has_affected_rows)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -457,12 +499,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$has_affected_rows)
 	{
 		ATTACHMENT_RESOURCES
 		out->has_affectedNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
-				out->has_affected = udr_helper.fb_bool(rslt->has_affected_rows());
+				out->has_affected = helper.fb_bool(rslt->has_affected_rows());
 				out->has_affectedNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -485,6 +527,13 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(rslt$rows)
+	
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -500,7 +549,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$rows)
 	{
 		ATTACHMENT_RESOURCES
 		out->rowsNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -529,6 +578,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$columns)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -543,7 +599,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$columns)
 	{
 		ATTACHMENT_RESOURCES
 		out->columnsNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -572,6 +628,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$first)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -586,12 +649,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$first)
 	{
 		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
-				out->succes = udr_helper.fb_bool(rslt->first());
+				out->succes = helper.fb_bool(rslt->first());
 				out->succesNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -615,6 +678,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$last)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -629,12 +699,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$last)
 	{
 		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
-				out->succes = udr_helper.fb_bool(rslt->last());
+				out->succes = helper.fb_bool(rslt->last());
 				out->succesNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -658,6 +728,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$next)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -672,12 +749,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$next)
 	{
 		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
-				out->succes = udr_helper.fb_bool(rslt->next());
+				out->succes = helper.fb_bool(rslt->next());
 				out->succesNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -701,6 +778,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$prior)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -715,12 +799,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$prior)
 	{
 		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
-				out->succes = udr_helper.fb_bool(rslt->prior());
+				out->succes = helper.fb_bool(rslt->prior());
 				out->succesNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -745,6 +829,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$move)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -760,12 +851,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$move)
 	{
 		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
-				out->succes = udr_helper.fb_bool(rslt->move(in->row));
+				out->succes = helper.fb_bool(rslt->move(in->row));
 				out->succesNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -790,6 +881,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$skip)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -805,12 +903,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$skip)
 	{
 		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
-				out->succes = udr_helper.fb_bool(rslt->skip(in->rows));
+				out->succes = helper.fb_bool(rslt->skip(in->rows));
 				out->succesNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -834,6 +932,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$position)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -848,7 +953,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$position)
 	{
 		ATTACHMENT_RESOURCES
 		out->positionNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -877,6 +982,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$at_end)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -891,12 +1003,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$at_end)
 	{
 		ATTACHMENT_RESOURCES
 		out->at_endNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
-				out->at_end = udr_helper.fb_bool(rslt->at_end());
+				out->at_end = helper.fb_bool(rslt->at_end());
 				out->at_endNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -923,6 +1035,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$unbind)
 
+	DECLARE_RESOURCE
+
 	unsigned in_count;
 
 	enum in : short {
@@ -933,6 +1047,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$unbind)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		in_count = in_metadata->getCount(status);
@@ -958,7 +1074,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$unbind)
 	{
 		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1002,6 +1118,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$get)
 
+	DECLARE_RESOURCE
+
 	const unsigned in_count = 2; 
 
 	enum in : short {
@@ -1026,6 +1144,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
 
@@ -1060,7 +1180,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 	{
 		ATTACHMENT_RESOURCES
 		*(reinterpret_cast<ISC_SHORT*>(out + value_null_offset[out::value])) = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1112,6 +1232,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$pump)
 
+	DECLARE_RESOURCE
+
 	unsigned in_count;
 
 	enum in : short {
@@ -1143,6 +1265,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		in_count = in_metadata->getCount(status);
@@ -1170,7 +1294,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 		ATTACHMENT_RESOURCES
 		out->pumped_records = 0;
 		out->pumped_recordsNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1286,6 +1410,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$is_null)
 
+	DECLARE_RESOURCE
+
 	unsigned in_count;
 
 	enum in : short {
@@ -1296,6 +1422,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_null)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		in_count = in_metadata->getCount(status);
@@ -1321,7 +1449,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_null)
 	{
 		ATTACHMENT_RESOURCES
 		out->is_nullNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1329,10 +1457,10 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_null)
 				U8_VARIYNG(in, column)
 				if (!isdigit(in->column.str[0]))
 					out->is_null = 
-						udr_helper.fb_bool(rslt->is_null(NANODBC_TEXT(in->column.str)));
+						helper.fb_bool(rslt->is_null(NANODBC_TEXT(in->column.str)));
 				else
 					out->is_null = 
-						udr_helper.fb_bool(rslt->is_null(static_cast<short>(atoi(in->column.str))));
+						helper.fb_bool(rslt->is_null(static_cast<short>(atoi(in->column.str))));
 				out->is_nullNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1359,6 +1487,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$is_bound)
 
+	DECLARE_RESOURCE
+
 	unsigned in_count;
 
 	enum in : short {
@@ -1369,6 +1499,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_bound)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		in_count = in_metadata->getCount(status);
@@ -1394,7 +1526,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_bound)
 	{
 		ATTACHMENT_RESOURCES
 		out->is_boundNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1402,10 +1534,10 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_bound)
 				U8_VARIYNG(in, column)
 				if (!isdigit(in->column.str[0]))
 					out->is_bound =
-						udr_helper.fb_bool(rslt->is_bound(NANODBC_TEXT(in->column.str)));
+						helper.fb_bool(rslt->is_bound(NANODBC_TEXT(in->column.str)));
 				else
 					out->is_bound =
-						udr_helper.fb_bool(rslt->is_bound(static_cast<short>(atoi(in->column.str))));
+						helper.fb_bool(rslt->is_bound(static_cast<short>(atoi(in->column.str))));
 				out->is_boundNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1435,6 +1567,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$column)
 
+	DECLARE_RESOURCE
+
 	unsigned in_count;
 
 	enum in : short {
@@ -1445,6 +1579,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$column)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		in_count = in_metadata->getCount(status);
@@ -1470,7 +1606,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column)
 	{
 		ATTACHMENT_RESOURCES
 		out->indexNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1501,6 +1637,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$column_name)
 
+	DECLARE_RESOURCE
+
 	unsigned out_count;
 
 	enum out : short {
@@ -1511,6 +1649,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_name)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
 
 		out_count = out_metadata->getCount(status);
@@ -1536,7 +1676,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_name)
 	{
 		ATTACHMENT_RESOURCES
 		out->columnNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1570,6 +1710,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$column_size)
 
+	DECLARE_RESOURCE
+
 	unsigned in_count;
 
 	enum in : short {
@@ -1580,6 +1722,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_size)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		in_count = in_metadata->getCount(status);
@@ -1605,7 +1749,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_size)
 	{
 		ATTACHMENT_RESOURCES
 		out->sizeNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1643,6 +1787,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$column_decimal_digits)
 
+	DECLARE_RESOURCE
+
 	unsigned in_count;
 
 	enum in : short {
@@ -1653,6 +1799,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_decimal_digits)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		in_count = in_metadata->getCount(status);
@@ -1678,7 +1826,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_decimal_digits)
 	{
 		ATTACHMENT_RESOURCES
 		out->digitsNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1716,6 +1864,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$column_datatype)
 
+	DECLARE_RESOURCE	
+
 	unsigned in_count;
 
 	enum in : short {
@@ -1726,6 +1876,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		in_count = in_metadata->getCount(status);
@@ -1751,7 +1903,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype)
 	{
 		ATTACHMENT_RESOURCES
 		out->datatypeNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1789,6 +1941,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$column_datatype_name)
 
+	DECLARE_RESOURCE
+
 	unsigned in_count, out_count;
 
 	enum in : short {
@@ -1804,6 +1958,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype_name)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
 
@@ -1837,7 +1993,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype_name)
 	{
 		ATTACHMENT_RESOURCES
 		out->datatype_nameNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1878,6 +2034,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$column_c_datatype)
 
+	DECLARE_RESOURCE
+
 	unsigned in_count;
 
 	enum in : short {
@@ -1888,6 +2046,8 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_c_datatype)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		in_count = in_metadata->getCount(status);
@@ -1913,7 +2073,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_c_datatype)
 	{
 		ATTACHMENT_RESOURCES
 		out->c_datatypeNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
@@ -1948,6 +2108,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$next_result)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -1962,12 +2129,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$next_result)
 	{
 		ATTACHMENT_RESOURCES
 		out->succesNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
-				out->succes = udr_helper.fb_bool(rslt->next_result());
+				out->succes = helper.fb_bool(rslt->next_result());
 				out->succesNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -1991,6 +2158,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(rslt$has_data)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
@@ -2005,13 +2179,13 @@ FB_UDR_BEGIN_FUNCTION(rslt$has_data)
 	{
 		ATTACHMENT_RESOURCES
 		out->has_dataNull = FB_TRUE;
-		nanoudr::result* rslt = udr_helper.native_ptr<result>(in->rslt.str);
+		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
 		{
 			try
 			{
 				bool has_data = static_cast<nanodbc::result*>(rslt);
-				out->has_data = udr_helper.fb_bool(has_data);
+				out->has_data = helper.fb_bool(has_data);
 				out->has_dataNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)

@@ -80,25 +80,32 @@ struct exception
 //  Attachment resources
 //
 
+struct attachment_snapshot
+{
+	FB_UDR_STATUS_TYPE* status;
+	FB_UDR_CONTEXT_TYPE* context;
+	ITransaction* transaction;
+};
+
 class attachment_resources
 {
 public:
-	attachment_resources(ISC_UINT64 attachment_id) 
-		: attachment_id(attachment_id), att_locale("cp1251") {
-		connections.retain(nullptr); // service record for statement::statement();
-	};
-	~attachment_resources() noexcept;
 
-	const resources_context* context() { return &attachment_context; };
+	attachment_resources(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context, const ISC_UINT64 attachment_id);
+	~attachment_resources() noexcept;
 
 	void expunge();
 
-	const char* locale(const char* set_locale = NULL);
-	const char* error_message(const char* last_error_message = NULL);
-	
-	ITransaction* current_transaction(ITransaction* set_transaction = nullptr);
+	const ISC_UINT64 current_attachment_id() { return attachment_id; };
+	const attachment_snapshot* current_snapshot(FB_UDR_STATUS_TYPE* status = nullptr, FB_UDR_CONTEXT_TYPE* context = nullptr);
+	const ITransaction* current_transaction(ITransaction* set_transaction = nullptr);
+	const char* current_error_message(const char* set_error_message = NULL);
+	const char* current_locale(const char* set_locale = NULL);
 
-	void make_resources();
+	const ISC_LONG exception_number(const char* name);
+	const char* exception_message(const char* name);
+
+	void pull_up_resources();
 
 	struct attachment_connections
 	{
@@ -157,22 +164,18 @@ public:
 		attachment_resources* outer;
 	};
 
-	const ISC_LONG exception_number(const char* name);
-	const char* exception_message(const char* name);
-
 	attachment_connections connections = attachment_connections(this);
 	connection_transactions transactions = connection_transactions(this);
 	connection_statements statements = connection_statements(this);
 	connection_results results = connection_results(this);
 
 private:
-	ISC_UINT64 attachment_id;
-	resources_context attachment_context;
+	friend class resources_pool;
 
-	void context(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
+	ISC_UINT64 attachment_id;
 
 	// if number is zero then sended ANY_THROW 
-	exception att_exceptions[EXCEPTION_ARRAY_SIZE] = {
+	exception exceptions[EXCEPTION_ARRAY_SIZE] = {
 		{RESOURCES_UNDEFINED,		0, ""}, 
 		{INVALID_RESOURCE,			0, ""},
 		{NANOUDR_ERROR,				0, ""},
@@ -182,43 +185,42 @@ private:
 		{PUMPING_ERROR,				0, ""}
 	};
 
-	void make_exceptions(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
-	void assign_exception(exception* att_exception, const short pos);
+	attachment_snapshot snapshot;
+	std::string error_message;
+	std::string locale;
 
-	std::string att_error_message;
-	std::string att_locale;
-
-	friend class resources;
+	void pull_up_exceptions();
 };
 
 //-----------------------------------------------------------------------------
-//  Shared UDR resources
+//  UDR resources 
 //
 
-using attachment_mapping = std::map<ISC_UINT64, nanoudr::attachment_resources*>;
+using resources_mapping = std::map<ISC_UINT64, attachment_resources*>;
 
-class resources
+class resources_pool
 {
 public:
-	resources();
-	~resources() noexcept;
+	resources_pool();
+	~resources_pool() noexcept;
 
-	void initialize(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
-	void finalize(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
+	ISC_UINT64 initialize_attachment(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
+	attachment_resources* current_resources(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
+	attachment_resources* current_resources(const ISC_UINT64 attachment_id);
+	void finalize_attachment(const ISC_UINT64 attachment_id);
 
-	attachment_resources* attachment(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
-
-	exception resource_exception = { RESOURCES_UNDEFINED, 0, "Attachment resources undefined." };
+	exception exceptions = {
+		RESOURCES_UNDEFINED, 0, "Attachment resources undefined."
+	};
 
 private:
-	attachment_mapping att_m;
+	resources_mapping resources_map;
+	resources_mapping::iterator resources_it;
 
 	ISC_UINT64 attachment_id(FB_UDR_STATUS_TYPE* status, FB_UDR_CONTEXT_TYPE* context);
-
-	attachment_mapping::iterator att_it;
 };
 
-extern resources udr_resources;
+extern resources_pool pool;
 
 } // namespace nanoudr
 

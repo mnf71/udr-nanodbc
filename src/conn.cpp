@@ -75,6 +75,8 @@ connection::~connection()
 //
 
 FB_UDR_BEGIN_FUNCTION(conn$connection)
+	
+	DECLARE_RESOURCE
 
 	unsigned in_count;
 
@@ -86,6 +88,8 @@ FB_UDR_BEGIN_FUNCTION(conn$connection)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		in_count = in_metadata->getCount(status);
@@ -130,7 +134,7 @@ FB_UDR_BEGIN_FUNCTION(conn$connection)
 				conn =
 					new nanoudr::connection(*att_resources, NANODBC_TEXT(in->attr.str), NANODBC_TEXT(in->user.str),
 						NANODBC_TEXT(in->pass.str), in->timeout);
-			udr_helper.fb_ptr(out->conn.str, conn);
+			helper.fb_ptr(out->conn.str, conn);
 			out->connNull = FB_FALSE;
 		}
 		catch (std::runtime_error const& e)
@@ -151,6 +155,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$valid)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -164,9 +175,9 @@ FB_UDR_BEGIN_FUNCTION(conn$valid)
 	FB_UDR_EXECUTE_FUNCTION
 	{
 		ATTACHMENT_RESOURCES
-		out->valid = udr_helper.fb_bool(
+		out->valid = helper.fb_bool(
 			in->connNull ? false :
-				att_resources->connections.valid(udr_helper.native_ptr<connection>(in->conn.str))
+				att_resources->connections.valid(helper.native_ptr<connection>(in->conn.str))
 			);
 		out->validNull = FB_FALSE;
 	}
@@ -182,6 +193,13 @@ FB_UDR_END_FUNCTION
 //
 
 FB_UDR_BEGIN_FUNCTION(conn$release)
+
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
 
 	FB_UDR_MESSAGE(
 		InMessage,
@@ -199,14 +217,14 @@ FB_UDR_BEGIN_FUNCTION(conn$release)
 		out->connNull = FB_TRUE;
 		if (!in->connNull)
 		{
-			nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+			nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 			try
 			{
-				delete (nanoudr::connection*)(conn);
+				if (att_resources->connections.valid(conn)) delete (nanoudr::connection*)(conn);
 			}
 			catch (std::runtime_error const& e)
 			{
-				udr_helper.fb_ptr(out->conn.str, conn);
+				helper.fb_ptr(out->conn.str, conn);
 				out->connNull = FB_FALSE;
 				NANODBC_THROW(e.what())
 			}
@@ -227,6 +245,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$expunge)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -241,7 +266,7 @@ FB_UDR_BEGIN_FUNCTION(conn$expunge)
 	{
 		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -271,6 +296,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$allocate)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -285,7 +317,7 @@ FB_UDR_BEGIN_FUNCTION(conn$allocate)
 	{
 		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -315,6 +347,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$deallocate)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -329,7 +368,7 @@ FB_UDR_BEGIN_FUNCTION(conn$deallocate)
 	{
 		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -360,6 +399,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$isolation_level)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -375,7 +421,7 @@ FB_UDR_BEGIN_FUNCTION(conn$isolation_level)
 	{
 		ATTACHMENT_RESOURCES
 		out->isolation_levelNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -412,6 +458,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$connect)
 
+	DECLARE_RESOURCE
+
 	unsigned in_count;
 
 	enum in : short {
@@ -422,6 +470,8 @@ FB_UDR_BEGIN_FUNCTION(conn$connect)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
 
 		in_count = in_metadata->getCount(status);
@@ -450,7 +500,7 @@ FB_UDR_BEGIN_FUNCTION(conn$connect)
 	{
 		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			U8_VARIYNG(in, attr)
@@ -487,6 +537,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$connected)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -501,12 +558,12 @@ FB_UDR_BEGIN_FUNCTION(conn$connected)
 	{
 		ATTACHMENT_RESOURCES
 		out->connectedNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
 			{
-				out->connected = udr_helper.fb_bool(conn->connected());
+				out->connected = helper.fb_bool(conn->connected());
 				out->connectedNull = FB_FALSE;
 			}
 			catch (std::runtime_error const& e)
@@ -530,6 +587,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$disconnect)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -544,7 +608,7 @@ FB_UDR_BEGIN_FUNCTION(conn$disconnect)
 	{
 		ATTACHMENT_RESOURCES
 		out->blankNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -574,6 +638,13 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$transactions)
 
+	DECLARE_RESOURCE
+
+	FB_UDR_CONSTRUCTOR
+	{
+		INITIALIZE_RESORCES
+	}
+
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, conn)
@@ -588,7 +659,7 @@ FB_UDR_BEGIN_FUNCTION(conn$transactions)
 	{
 		ATTACHMENT_RESOURCES
 		out->transactionsNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -618,6 +689,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$get_info)
 
+	DECLARE_RESOURCE
+
 	unsigned out_count;
 
 	enum out : short {
@@ -628,6 +701,8 @@ FB_UDR_BEGIN_FUNCTION(conn$get_info)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
 
 		out_count = out_metadata->getCount(status);
@@ -653,7 +728,7 @@ FB_UDR_BEGIN_FUNCTION(conn$get_info)
 	{
 		ATTACHMENT_RESOURCES
 		out->infoNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -684,6 +759,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$dbms_name)
 
+	DECLARE_RESOURCE
+
 	unsigned out_count;
 
 	enum out : short {
@@ -694,6 +771,8 @@ FB_UDR_BEGIN_FUNCTION(conn$dbms_name)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
 
 		out_count = out_metadata->getCount(status);
@@ -718,7 +797,7 @@ FB_UDR_BEGIN_FUNCTION(conn$dbms_name)
 	{
 		ATTACHMENT_RESOURCES
 		out->dbms_nameNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -749,6 +828,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$dbms_version)
 	
+	DECLARE_RESOURCE
+
 	unsigned out_count;
 
 	enum out : short {
@@ -759,6 +840,8 @@ FB_UDR_BEGIN_FUNCTION(conn$dbms_version)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
 
 		out_count = out_metadata->getCount(status);
@@ -783,7 +866,7 @@ FB_UDR_BEGIN_FUNCTION(conn$dbms_version)
 	{
 		ATTACHMENT_RESOURCES
 		out->versionNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -814,6 +897,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$driver_name)
 
+	DECLARE_RESOURCE
+
 	unsigned out_count;
 
 	enum out : short {
@@ -824,6 +909,8 @@ FB_UDR_BEGIN_FUNCTION(conn$driver_name)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
 
 		out_count = out_metadata->getCount(status);
@@ -848,7 +935,7 @@ FB_UDR_BEGIN_FUNCTION(conn$driver_name)
 	{
 		ATTACHMENT_RESOURCES
 		out->drv_nameNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -879,6 +966,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$database_name)
 
+	DECLARE_RESOURCE
+
 	unsigned out_count;
 
 	enum out : short {
@@ -889,6 +978,8 @@ FB_UDR_BEGIN_FUNCTION(conn$database_name)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
 
 		out_count = out_metadata->getCount(status);
@@ -913,7 +1004,7 @@ FB_UDR_BEGIN_FUNCTION(conn$database_name)
 	{
 		ATTACHMENT_RESOURCES
 		out->db_nameNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try
@@ -944,6 +1035,8 @@ FB_UDR_END_FUNCTION
 
 FB_UDR_BEGIN_FUNCTION(conn$catalog_name)
 
+	DECLARE_RESOURCE
+
 	unsigned out_count;
 
 	enum out : short {
@@ -954,6 +1047,8 @@ FB_UDR_BEGIN_FUNCTION(conn$catalog_name)
 
 	FB_UDR_CONSTRUCTOR
 	{
+		INITIALIZE_RESORCES
+
 		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
 
 		out_count = out_metadata->getCount(status);
@@ -978,7 +1073,7 @@ FB_UDR_BEGIN_FUNCTION(conn$catalog_name)
 	{
 		ATTACHMENT_RESOURCES
 		out->ctlg_nameNull = FB_TRUE;
-		nanoudr::connection* conn = udr_helper.native_ptr<connection>(in->conn.str);
+		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
 		{
 			try

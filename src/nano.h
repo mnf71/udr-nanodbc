@@ -48,45 +48,92 @@ namespace nanoudr
 //
 
 #define POINTER_SIZE	8	
-#define	NANO_POINTER	FB_CHAR(POINTER_SIZE)	// domain types
+#define	NANO_POINTER	FB_CHAR(POINTER_SIZE) // domain types
 
-#define	NANO_BLANK	FB_INTEGER	// domain types
-#define	BLANK		-1	// void function emulation
+#define	NANO_BLANK		FB_INTEGER // domain types
+#define	BLANK			-1 // void function emulation
 
-#define FB_SEGMENT_SIZE	32768	// BLOB segment size
+#define FB_SEGMENT_SIZE	32768 // BLOB segment size
 
 //-----------------------------------------------------------------------------
 //
 
-#define	ATTACHMENT_RESOURCES	\
-attachment_resources* att_resources = udr_resources.attachment(status, context);	\
-if (att_resources == nullptr)	\
+#define	DECLARE_RESOURCE	\
+	const ISC_UINT64 att_id = 0;	\
+	attachment_resources* att_resources = nullptr;	\
+/* DECLARE_RESOURCE */ 
+
+#define	INITIALIZE_RESORCES	\
 {	\
-	ISC_LONG exception_number = udr_resources.resource_exception.number;	\
-	if (exception_number == 0)	\
-	{	\
-		ISC_STATUS_ARRAY vector = {	\
-			isc_arg_gds,	\
-			isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(udr_resources.resource_exception.name),	\
-			isc_arg_gds,	\
-			isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(udr_resources.resource_exception.message),	\
-			isc_arg_end};	\
-		status->setErrors(vector);	\
-	}	\
+	if((att_resources = pool.current_resources(status, context)) != nullptr)	\
+		const_cast<ISC_UINT64&>(att_id) = att_resources->current_attachment_id();	\
 	else	\
 	{	\
-		ISC_STATUS_ARRAY vector = {	\
-			isc_arg_gds,	\
-			isc_except, isc_arg_number, exception_number,	\
-			isc_arg_gds,	\
-			isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(udr_resources.resource_exception.name),	\
-			isc_arg_gds,	\
-			isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(udr_resources.resource_exception.message),	\
-			isc_arg_end};	\
-		status->setErrors(vector);	\
+		/* const_cast<ISC_UINT64&>(att_id) = pool.initialize_attachment(status, context); */	\
+		ISC_LONG exception_number = pool.exceptions.number;	\
+		if (exception_number == 0)	\
+		{	\
+			ISC_STATUS_ARRAY vector = { \
+				isc_arg_gds,	\
+				isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.name),	\
+				isc_arg_gds,	\
+				isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.message),	\
+				isc_arg_end };	\
+			status->setErrors(vector);	\
+		}	\
+		else	\
+		{	\
+			ISC_STATUS_ARRAY vector = { \
+				isc_arg_gds,	\
+				isc_except, isc_arg_number, exception_number,	\
+				isc_arg_gds,	\
+				isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.name),	\
+				isc_arg_gds,	\
+				isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.message),	\
+				isc_arg_end };	\
+			status->setErrors(vector);	\
+		}	\
+		return; \
 	}	\
-	return; \
-}	/* ATTACHMENT_RESOURCES */
+} /* INITIALIZE_RESORCES */ 
+
+#define ATTACHMENT_RESOURCES	\
+{	\
+	if ((att_resources = pool.current_resources(att_id)) == nullptr)	\
+	{	\
+		ISC_LONG exception_number = pool.exceptions.number;	\
+		if (exception_number == 0)	\
+		{	\
+			ISC_STATUS_ARRAY vector = { \
+				isc_arg_gds,	\
+				isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.name),	\
+				isc_arg_gds,	\
+				isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.message),	\
+				isc_arg_end };	\
+			status->setErrors(vector);	\
+		}	\
+		else	\
+		{	\
+			ISC_STATUS_ARRAY vector = { \
+				isc_arg_gds,	\
+				isc_except, isc_arg_number, exception_number,	\
+				isc_arg_gds,	\
+				isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.name),	\
+				isc_arg_gds,	\
+				isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.message),	\
+				isc_arg_end };	\
+			status->setErrors(vector);	\
+		}	\
+		return; \
+	}	\
+	att_resources->current_snapshot(status, context);	\
+	att_resources->current_transaction();	\
+}/* ATTACHMENT_RESOURCES */
+
+#define	FINALIZE_RESORCES	\
+{	\
+	pool.finalize_attachment(att_id);	\
+} /* FINALIZE_RESORCES */
 
 //-----------------------------------------------------------------------------
 //
@@ -123,7 +170,7 @@ if (att_resources == nullptr)	\
 	else	\
 	{	\
 		const ISC_LONG exception_number = att_resources->exception_number(NANOUDR_ERROR);	\
-		att_resources->error_message((exception_message));	\
+		att_resources->current_error_message((exception_message));	\
 		if (exception_number == 0)	\
 		{	\
 			ISC_STATUS_ARRAY vector = { \
@@ -168,7 +215,7 @@ if (att_resources == nullptr)	\
 	else	\
 	{	\
 		const ISC_LONG exception_number = att_resources->exception_number(exception_name);		\
-		att_resources->error_message(exception_message);	\
+		att_resources->current_error_message(exception_message);	\
 		if (exception_number == 0)	\
 		{	\
 			ISC_STATUS vector[] = { \
@@ -198,7 +245,7 @@ if (att_resources == nullptr)	\
 #define	NANODBC_THROW(exception_message)	\
 {	\
 	const ISC_LONG exception_number = att_resources->exception_number(NANODBC_ERROR);	\
-	att_resources->error_message((exception_message));	\
+	att_resources->current_error_message((exception_message));	\
 	if (exception_number == 0)	\
 	{	\
 		ISC_STATUS_ARRAY vector = {	\
@@ -328,7 +375,7 @@ enum fb_char_set
 	if (message##_char_sets[message::param] == fb_char_set::CS_UTF8)	\
 	{	\
 		try {	\
-			udr_helper.utf8_##message(	\
+			helper.utf8_##message(	\
 				att_resources, message->param.str, sizeof(message->param.str),	\
 				message->param.str, message->param.length);	\
 		} catch (std::runtime_error const& e) {	\
@@ -341,7 +388,7 @@ enum fb_char_set
 	{	\
 		size_t param_length = sizeof(message->param.str);	\
 		try {	\
-			udr_helper.utf8_##message(	\
+			helper.utf8_##message(	\
 				att_resources, message->param.str, param_length, message->param.str, param_length);	\
 		} catch (std::runtime_error const& e) {	\
 			NANOUDR_THROW(e.what())	\
@@ -371,7 +418,7 @@ struct timestamp
 	time t;
 };
 
-class helper
+class nano_helper
 {
 public:
 	template <class T> void fb_ptr(char* fb_pointer, const T* native_pointer);
@@ -406,7 +453,7 @@ private:
 		ISC_QUAD* out);
 };
 
-extern helper udr_helper;
+extern nano_helper helper;
 
 } // namespace nanoudr
 
