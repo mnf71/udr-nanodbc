@@ -205,6 +205,7 @@ void result::get_value
 			case SQL_INT64: // bigint
 			{
 				*(reinterpret_cast<ISC_INT64*>(message + message_offset)) = get<ISC_INT64>(column);
+				null_flag = FB_FALSE;
 				break;
 			}
 			case SQL_BOOLEAN: // boolean
