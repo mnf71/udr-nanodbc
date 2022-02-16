@@ -11,14 +11,16 @@ BEGIN
 
   FUNCTION execute_conn(
       conn TY$POINTER NOT NULL,
-      query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      /* -- none */ query VARCHAR(8191) CHARACTER SET NONE NOT NULL,
+      -- utf8 query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
       batch_operations INTEGER NOT NULL DEFAULT 1,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$POINTER;
 
   FUNCTION just_execute_conn(
       conn TY$POINTER NOT NULL,
-      query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      /* -- none */ query VARCHAR(8191) CHARACTER SET NONE NOT NULL,
+      -- utf8 query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
       batch_operations INTEGER NOT NULL DEFAULT 1,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
@@ -41,7 +43,8 @@ BEGIN
 
   FUNCTION prepare_stmt(
       stmt TY$POINTER NOT NULL,
-      query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      /* -- none */ query VARCHAR(8191) CHARACTER SET NONE NOT NULL,
+      -- utf8 query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
       timeout INTEGER NOT NULL DEFAULT 0
     ) RETURNS TY$NANO_BLANK;
 
@@ -53,7 +56,8 @@ BEGIN
 
   FUNCTION execute_conn(
       conn TY$POINTER NOT NULL,
-      query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      /* -- none */ query VARCHAR(8191) CHARACTER SET NONE NOT NULL,
+      -- utf8 query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
       batch_operations INTEGER NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$POINTER
@@ -62,7 +66,8 @@ BEGIN
 
   FUNCTION just_execute_conn(
       conn TY$POINTER NOT NULL,
-      query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      /* -- none */ query VARCHAR(8191) CHARACTER SET NONE NOT NULL,
+      -- utf8 query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
       batch_operations INTEGER NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
@@ -99,7 +104,8 @@ BEGIN
 
   FUNCTION prepare_stmt(
       stmt TY$POINTER NOT NULL,
-      query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
+      /* -- none */ query VARCHAR(8191) CHARACTER SET NONE NOT NULL,
+      -- utf8 query VARCHAR(8191) CHARACTER SET UTF8 NOT NULL,
       timeout INTEGER NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!func$prepare_stmt'

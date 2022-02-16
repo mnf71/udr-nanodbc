@@ -6,14 +6,14 @@ BEGIN
  
   FUNCTION transaction_(conn TY$POINTER NOT NULL) RETURNS TY$POINTER;
 
-  FUNCTION valid(tnx TY$POINTER NOT NULL) RETURNS BOOLEAN;
+  FUNCTION valid(tnx TY$POINTER) RETURNS BOOLEAN;
 
-  FUNCTION release_(tnx ty$pointer NOT NULL) RETURNS TY$POINTER;
+  FUNCTION release_(tnx TY$POINTER) RETURNS TY$POINTER;
 
   FUNCTION connection(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER;
 
-  FUNCTION commit_(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER; -- auto-release
-  FUNCTION rollback_(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER; -- auto-release
+  FUNCTION commit_(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER; -- will call release_ after commit
+  FUNCTION rollback_(tnx TY$POINTER NOT NULL) RETURNS TY$POINTER; -- will call release_ after rollback
 
 END^
 
@@ -25,11 +25,11 @@ BEGIN
     EXTERNAL NAME 'nano!tnx$transaction'
     ENGINE UDR;
 
-  FUNCTION valid(tnx TY$POINTER NOT NULL) RETURNS BOOLEAN
+  FUNCTION valid(tnx TY$POINTER) RETURNS BOOLEAN
     EXTERNAL NAME 'nano!tnx$valid'
     ENGINE UDR;
 
-  FUNCTION release_(tnx ty$pointer NOT NULL) RETURNS TY$POINTER
+  FUNCTION release_(tnx ty$pointer) RETURNS TY$POINTER
     EXTERNAL NAME 'nano!tnx$release'
     ENGINE UDR;
 
