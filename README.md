@@ -34,7 +34,7 @@ BEGIN
     stmt = nano$stmt.statement_(conn);
     nano$stmt.prepare_(stmt, 'INSERT INTO myTABLE (myFIELD_1, myFIELD_2, myFIELD_3... ) VALUES (?, ?, ?...);');
     nano$stmt.bind_integer(stmt, 0, 1000);
-    nano$stmt.bind_varchar(stmt, 1, '1000');
+    nano$stmt.bind_string(stmt, 1, '1000');
     nano$stmt.bind_timestamp(stmt, 2, 'now');
     /*
       other bind ...
