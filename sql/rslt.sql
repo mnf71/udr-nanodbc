@@ -60,7 +60,7 @@ BEGIN
      Optimal result size in execution time up to 1 Kb with 4 Kb and large worse.
   */
 
-  FUNCTION get_string( -- optimaly by execute time
+  FUNCTION get_string(
       /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
       -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
     ) RETURNS VARCHAR(32765) CHARACTER SET NONE;
