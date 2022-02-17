@@ -128,33 +128,37 @@ BEGIN
       stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ DOUBLE PRECISION
     ) RETURNS TY$NANO_BLANK;
 
+  /*
+     Optimal binding size execution time up to 1 Kb with 4 Kb and large worse.
+  */
+
   FUNCTION bind_string(
-      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(256) CHARACTER SET NONE,
-      param_size SMALLINT NOT NULL
-    ) RETURNS TY$NANO_BLANK;
-
-  FUNCTION bind_s_long(
-      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(1024) CHARACTER SET NONE,
-      param_size SMALLINT NOT NULL
-    ) RETURNS TY$NANO_BLANK;
-
-  FUNCTION bind_s_huge(
       stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(32765) CHARACTER SET NONE,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK;
 
+  FUNCTION bind_s_typical(
+      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(256) CHARACTER SET NONE,
+      param_size SMALLINT NOT NULL
+    ) RETURNS TY$NANO_BLANK;
+
+  FUNCTION bind_s_large(
+      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(1024) CHARACTER SET NONE,
+      param_size SMALLINT NOT NULL
+    ) RETURNS TY$NANO_BLANK;
+
   FUNCTION bind_u8_string(
+      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(8191) CHARACTER SET UTF8,
+      param_size SMALLINT NOT NULL
+    ) RETURNS TY$NANO_BLANK;
+
+  FUNCTION bind_u8_s_typical(
       stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(256) CHARACTER SET UTF8,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK;
 
-  FUNCTION bind_u8_s_long(
+  FUNCTION bind_u8_s_large(
       stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(1024) CHARACTER SET UTF8,
-      param_size SMALLINT NOT NULL
-    ) RETURNS TY$NANO_BLANK;
-
-  FUNCTION bind_u8_s_huge(
-      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(8191) CHARACTER SET UTF8,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK;
 
@@ -421,50 +425,46 @@ BEGIN
     ENGINE UDR;
 
   FUNCTION bind_string(
-      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(256) CHARACTER SET NONE,
-      param_size SMALLINT NOT NULL
-    ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt$bind'
-    ENGINE UDR;
-
-  FUNCTION bind_s_long(
-      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(1024) CHARACTER SET NONE,
-      param_size SMALLINT NOT NULL
-    ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt$bind'
-    ENGINE UDR;
-
-  FUNCTION bind_s_huge(
       stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(32765) CHARACTER SET NONE,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
+  FUNCTION bind_s_typical(
+      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(256) CHARACTER SET NONE,
+      param_size SMALLINT NOT NULL
+    ) RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!stmt$bind'
+    ENGINE UDR;
+
+  FUNCTION bind_s_large(
+      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(1024) CHARACTER SET NONE,
+      param_size SMALLINT NOT NULL
+    ) RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!stmt$bind'
+    ENGINE UDR;
+
   FUNCTION bind_u8_string(
-      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(256) CHARACTER SET UTF8,
-      param_size SMALLINT NOT NULL
-    ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt$bind'
-    ENGINE UDR;
-
-  FUNCTION bind_u8_s_long(
-      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(1024) CHARACTER SET UTF8,
-      param_size SMALLINT NOT NULL
-    ) RETURNS TY$NANO_BLANK
-    EXTERNAL NAME 'nano!stmt$bind'
-    ENGINE UDR;
-
-  FUNCTION bind_u8_s_huge(
       stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(8191) CHARACTER SET UTF8,
       param_size SMALLINT NOT NULL
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
 
-  /*
-     ...
-  */
+  FUNCTION bind_u8_s_typical(
+      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(256) CHARACTER SET UTF8,
+      param_size SMALLINT NOT NULL
+    ) RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!stmt$bind'
+    ENGINE UDR;
+
+  FUNCTION bind_u8_s_large(
+      stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ VARCHAR(1024) CHARACTER SET UTF8,
+      param_size SMALLINT NOT NULL
+    ) RETURNS TY$NANO_BLANK
+    EXTERNAL NAME 'nano!stmt$bind'
+    ENGINE UDR;
 
   FUNCTION bind_char_8(
       stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ CHAR(8) CHARACTER SET NONE,
@@ -479,10 +479,6 @@ BEGIN
     ) RETURNS TY$NANO_BLANK
     EXTERNAL NAME 'nano!stmt$bind'
     ENGINE UDR;
-
-  /*
-     ...
-  */
 
   FUNCTION bind_blob(
       stmt TY$POINTER NOT NULL, parameter_index SMALLINT NOT NULL, value_ BLOB SUB_TYPE BINARY

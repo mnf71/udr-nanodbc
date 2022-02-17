@@ -56,35 +56,39 @@ BEGIN
       -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
     ) RETURNS DOUBLE PRECISION;
 
-  FUNCTION get_string(
-      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
-      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
-    ) RETURNS VARCHAR(256) CHARACTER SET NONE;
+  /*
+     Optimal result size in execution time up to 1 Kb with 4 Kb and large worse.
+  */
 
-  FUNCTION get_s_long(
-      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
-      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
-    ) RETURNS VARCHAR(1024) CHARACTER SET NONE;
-
-  FUNCTION get_s_huge(
+  FUNCTION get_string( -- optimaly by execute time
       /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
       -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
     ) RETURNS VARCHAR(32765) CHARACTER SET NONE;
 
+  FUNCTION get_s_typical(
+      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
+      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS VARCHAR(256) CHARACTER SET NONE;
+
+  FUNCTION get_s_large(
+      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
+      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS VARCHAR(1024) CHARACTER SET NONE;
+
   FUNCTION get_u8_string(
+      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
+      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS VARCHAR(8191) CHARACTER SET UTF8;
+
+  FUNCTION get_u8_s_typical(
       /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
       -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
     ) RETURNS VARCHAR(256) CHARACTER SET UTF8;
 
-  FUNCTION get_u8_s_long(
+  FUNCTION get_u8_s_large(
       /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
       -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
     ) RETURNS VARCHAR(1024) CHARACTER SET UTF8;
-
-  FUNCTION get_u8_s_huge(
-      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
-      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
-    ) RETURNS VARCHAR(8191) CHARACTER SET UTF8;
 
   /*
      Two template a function show as use declaration char(n) at your discretion.
@@ -377,48 +381,44 @@ BEGIN
   FUNCTION get_string(
       /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
       -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS VARCHAR(32765) CHARACTER SET NONE
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+  FUNCTION get_s_typical(
+      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
+      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
     ) RETURNS VARCHAR(256) CHARACTER SET NONE
     EXTERNAL NAME 'nano!rslt$get'
     ENGINE UDR;
 
-  FUNCTION get_s_long(
+  FUNCTION get_s_large(
       /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
       -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
     ) RETURNS VARCHAR(1024) CHARACTER SET NONE
     EXTERNAL NAME 'nano!rslt$get'
     ENGINE UDR;
 
-  FUNCTION get_s_huge(
-      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
-      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
-    ) RETURNS VARCHAR(32765) CHARACTER SET NONE
-    EXTERNAL NAME 'nano!rslt$get'
-    ENGINE UDR;
-
   FUNCTION get_u8_string(
-      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
-      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
-    ) RETURNS VARCHAR(256) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!rslt$get'
-    ENGINE UDR;
-
-  FUNCTION get_u8_s_long(
-      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
-      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
-    ) RETURNS VARCHAR(1024) CHARACTER SET UTF8
-    EXTERNAL NAME 'nano!rslt$get'
-    ENGINE UDR;
-
-  FUNCTION get_u8_s_huge(
       /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
       -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
     ) RETURNS VARCHAR(8191) CHARACTER SET UTF8
     EXTERNAL NAME 'nano!rslt$get'
     ENGINE UDR;
 
-  /*
-     ...
-  */
+  FUNCTION get_u8_s_typical(
+      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
+      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS VARCHAR(256) CHARACTER SET UTF8
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
+
+  FUNCTION get_u8_s_large(
+      /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
+      -- utf8 rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+    ) RETURNS VARCHAR(1024) CHARACTER SET UTF8
+    EXTERNAL NAME 'nano!rslt$get'
+    ENGINE UDR;
 
   FUNCTION get_char_8 (
       /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
@@ -433,10 +433,6 @@ BEGIN
     ) RETURNS CHAR(2) CHARACTER SET UTF8
     EXTERNAL NAME 'nano!rslt$get'
     ENGINE UDR;
-
-  /*
-     ...
-  */
 
   FUNCTION get_blob(
       /* -- none */ rslt TY$POINTER NOT NULL, column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
