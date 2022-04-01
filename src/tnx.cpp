@@ -53,7 +53,7 @@ nanoudr::connection* transaction::connection()
 
 //-----------------------------------------------------------------------------
 // create function transaction_ (
-//	 conn ty$pointer not null 
+//	conn ty$pointer not null 
 //	) returns ty$pointer
 //	external name 'nano!tnx$transaction'
 //	engine udr; 
@@ -80,7 +80,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$transaction)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->tnxNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -104,7 +104,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function valid (
-//	 tnx ty$pointer not null, 
+//	tnx ty$pointer not null, 
 //	) returns boolean
 //	external name 'nano!tnx$valid'
 //	engine udr; 
@@ -131,7 +131,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$valid)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->valid = helper.fb_bool(
 			in->tnxNull ? false :
 				att_resources->transactions.valid(helper.native_ptr<transaction>(in->tnx.str))
@@ -143,10 +143,10 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function release_ (
-//	 tnx ty$pointer not null, 
-// ) returns ty$pointer
-// external name 'nano!tnx$release'
-// engine udr; 
+//	tnx ty$pointer not null, 
+//	) returns ty$pointer
+//	external name 'nano!tnx$release'
+//	engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(tnx$release)
@@ -170,7 +170,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$release)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->tnxNull = FB_TRUE;
 		if (!in->tnxNull)
 		{
@@ -194,7 +194,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function connection (
-//	 tnx ty$pointer not null 
+//	tnx ty$pointer not null 
 //	) returns ty$pointer
 //	external name 'nano!tnx$connection'
 //	engine udr; 
@@ -221,7 +221,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->connNull = FB_TRUE;
 		nanoudr::transaction* tnx = helper.native_ptr<transaction>(in->tnx.str);
 		if (!in->tnxNull && att_resources->transactions.valid(tnx))
@@ -245,7 +245,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function commit_ (
-//	 tnx ty$pointer not null 
+//	tnx ty$pointer not null 
 //	) returns ty$pointer
 //	external name 'nano!tnx$commit'
 //	engine udr; 
@@ -272,7 +272,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$commit)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->tnxNull = FB_TRUE;
 		nanoudr::transaction* tnx = helper.native_ptr<transaction>(in->tnx.str);
 		if (!in->tnxNull && att_resources->transactions.valid(tnx))
@@ -297,7 +297,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function rollback (
-//	 tnx ty$pointer not null 
+//	tnx ty$pointer not null 
 //	) returns ty$pointer
 //	external name 'nano!tnx$rollback'
 //	engine udr; 
@@ -324,7 +324,7 @@ FB_UDR_BEGIN_FUNCTION(tnx$rollback)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->tnxNull = FB_TRUE;
 		nanoudr::transaction* tnx = helper.native_ptr<transaction>(in->tnx.str);
 		if (!in->tnxNull && att_resources->transactions.valid(tnx))

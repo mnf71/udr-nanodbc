@@ -61,10 +61,10 @@ connection::~connection()
 
 //-----------------------------------------------------------------------------
 // create function connection (
-//	 attr varchar(512) character set utf8 default null, 
-//	 user_ varchar(63) character set utf8 default null, 
-//	 pass varchar(63) character set utf8 default null, 
-//	 timeout integer not null default 0 
+//	attr varchar(512) character set none [utf8] default null, 
+//	user_ varchar(128) character set none [utf8] default null, 
+//	pass varchar(128) character set none [utf8] default null, 
+//	timeout integer not null default 0 
 //	) returns ty$pointer
 //	external name 'nano!conn$connection'
 //	engine udr; 
@@ -103,8 +103,8 @@ FB_UDR_BEGIN_FUNCTION(conn$connection)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(FB_VARCHAR(512 * 4), attr)
-		(FB_VARCHAR(63 * 4), user)
-		(FB_VARCHAR(63 * 4), pass)
+		(FB_VARCHAR(128 * 4), user)
+		(FB_VARCHAR(128 * 4), pass)
 		(FB_INTEGER, timeout)
 	);
 
@@ -115,7 +115,7 @@ FB_UDR_BEGIN_FUNCTION(conn$connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->connNull = FB_TRUE;
 		try
 		{
@@ -147,7 +147,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function valid (
-//	 conn ty$pointer not null, 
+//	conn ty$pointer not null, 
 //	) returns boolean
 //	external name 'nano!conn$valid'
 //	engine udr; 
@@ -174,7 +174,7 @@ FB_UDR_BEGIN_FUNCTION(conn$valid)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->valid = helper.fb_bool(
 			in->connNull ? false :
 				att_resources->connections.valid(helper.native_ptr<connection>(in->conn.str))
@@ -186,7 +186,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function release_ (
-//	 conn ty$pointer not null, 
+//	conn ty$pointer not null, 
 //	) returns ty$pointer
 //	external name 'nano!conn$release'
 //	engine udr; 
@@ -213,7 +213,7 @@ FB_UDR_BEGIN_FUNCTION(conn$release)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->connNull = FB_TRUE;
 		if (!in->connNull)
 		{
@@ -237,7 +237,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function expunge (
-//	 conn ty$pointer not null, 
+//	conn ty$pointer not null, 
 //	) returns ty$nano_blank
 //	external name 'nano!conn$expunge'
 //	engine udr; 
@@ -264,7 +264,7 @@ FB_UDR_BEGIN_FUNCTION(conn$expunge)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -288,7 +288,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function allocate (
-//	 conn ty$pointer not null 
+//	conn ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!conn$allocate'
 //	engine udr; 
@@ -315,7 +315,7 @@ FB_UDR_BEGIN_FUNCTION(conn$allocate)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -339,7 +339,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function deallocate (
-//	 conn ty$pointer not null 
+//	conn ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!conn$deallocate'
 //	engine udr; 
@@ -366,7 +366,7 @@ FB_UDR_BEGIN_FUNCTION(conn$deallocate)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -390,8 +390,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function isolation_level (
-//	 tnx ty$pointer not null, 
-// 	 level_ smallint default null 
+//	tnx ty$pointer not null, 
+//	level_ smallint default null 
 //	) returns smallint
 //	external name 'nano!conn$isolation_level'
 //	engine udr; 
@@ -419,7 +419,7 @@ FB_UDR_BEGIN_FUNCTION(conn$isolation_level)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->isolation_levelNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -443,14 +443,14 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function connect_ (
-//	 conn ty$pointer not null, 
-//	 attr varchar(512) character set utf8 not null, 
-//	 user varchar(64) character set utf8 default null, 
-// 	 pass varchar(64) character set utf8 default null, 
-//	 timeout integer not null default = 0
-//	) returns ty$nano_blank
-//	external name 'nano!conn$connect'
-//	engine udr; 
+//	conn ty$pointer not null, 
+//	attr varchar(512) character set none [utf8] not null, 
+//	user varchar(128) character set none [utf8] default null, 
+//	pass varchar(128) character set none [utf8] default null, 
+//	timeout integer not null default = 0
+// 	) returns ty$nano_blank
+// 	external name 'nano!conn$connect'
+// 	engine udr; 
 //
 // connect (?, ?, null, null, ...) returns blank and connect to the given data source by SQLDriverConnect
 // connect (?, ?, ?, ?, ...) returns blank and connect to the given data source by by SQLConnect
@@ -486,8 +486,8 @@ FB_UDR_BEGIN_FUNCTION(conn$connect)
 		InMessage,
 		(NANO_POINTER, conn)
 		(FB_VARCHAR(512 * 4), attr)
-		(FB_VARCHAR(63 * 4), user)
-		(FB_VARCHAR(63 * 4), pass)
+		(FB_VARCHAR(128 * 4), user)
+		(FB_VARCHAR(128 * 4), pass)
 		(FB_INTEGER, timeout)
 	);
 
@@ -498,7 +498,7 @@ FB_UDR_BEGIN_FUNCTION(conn$connect)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -529,7 +529,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function connected (
-//	 conn ty$pointer not null 
+//	conn ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!conn$connected'
 //	engine udr; 
@@ -556,7 +556,7 @@ FB_UDR_BEGIN_FUNCTION(conn$connected)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->connectedNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -579,7 +579,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function disconnect_ (
-//	 conn ty$pointer not null 
+//	conn ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!conn$disconnect'
 //	engine udr; 
@@ -606,7 +606,7 @@ FB_UDR_BEGIN_FUNCTION(conn$disconnect)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -630,7 +630,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function transactions (
-//	 conn ty$pointer not null 
+//	conn ty$pointer not null 
 //	) returns integer
 //	external name 'nano!conn$transactions'
 //	engine udr; 
@@ -657,7 +657,7 @@ FB_UDR_BEGIN_FUNCTION(conn$transactions)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->transactionsNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -680,9 +680,9 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function get_info (
-//	 conn ty$pointer not null, 
-//	 info_type smallint not null
-//	) returns varchar(256) character set utf8
+//	conn ty$pointer not null, 
+//	info_type smallint not null
+//	) returns varchar(256) character set none [utf8]
 //	external name 'nano!conn$get_info'
 //	engine udr; 
 //
@@ -726,7 +726,7 @@ FB_UDR_BEGIN_FUNCTION(conn$get_info)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->infoNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -751,8 +751,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function dbms_name (
-//	 conn ty$pointer not null 
-//	) returns varchar(128) character set utf8
+//	conn ty$pointer not null 
+//	) returns varchar(128) character set none [utf8]
 //	external name 'nano!conn$dbms_name'
 //	engine udr; 
 //
@@ -795,7 +795,7 @@ FB_UDR_BEGIN_FUNCTION(conn$dbms_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->dbms_nameNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -820,8 +820,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function dbms_version (
-//	 conn ty$pointer not null 
-//	) returns varchar(128) character set utf8
+//	conn ty$pointer not null 
+//	) returns varchar(128) character set none [utf8]
 //	external name 'nano!conn$dbms_version'
 //	engine udr; 
 //
@@ -864,7 +864,7 @@ FB_UDR_BEGIN_FUNCTION(conn$dbms_version)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->versionNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -889,8 +889,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function driver_name (
-//	 conn ty$pointer not null 
-//	) returns varchar(128) character set utf8
+//	conn ty$pointer not null 
+//	) returns varchar(128) character set none [utf8]
 //	external name 'nano!conn$driver_name'
 //	engine udr; 
 //
@@ -933,7 +933,7 @@ FB_UDR_BEGIN_FUNCTION(conn$driver_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->drv_nameNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -958,8 +958,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function database_name (
-//	 conn ty$pointer not null 
-//	) returns varchar(128) character set utf8
+//	conn ty$pointer not null 
+//	) returns varchar(128) character set none [utf8]
 //	external name 'nano!conn$database_name'
 //	engine udr; 
 //
@@ -1002,7 +1002,7 @@ FB_UDR_BEGIN_FUNCTION(conn$database_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->db_nameNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))
@@ -1027,8 +1027,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function catalog_name (
-//	 conn ty$pointer not null 
-//	) returns varchar(128) character set utf8
+//	conn ty$pointer not null 
+//	) returns varchar(128) character set none [utf8]
 //	external name 'nano!conn$catalog_name'
 //	engine udr; 
 //
@@ -1071,7 +1071,7 @@ FB_UDR_BEGIN_FUNCTION(conn$catalog_name)
 	
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->ctlg_nameNull = FB_TRUE;
 		nanoudr::connection* conn = helper.native_ptr<connection>(in->conn.str);
 		if (!in->connNull && att_resources->connections.valid(conn))

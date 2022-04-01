@@ -89,12 +89,12 @@ BEGIN
       stmt TY$POINTER NOT NULL,
       /* -- none */ catalog_ VARCHAR(128) CHARACTER SET NONE NOT NULL,
       /* -- none */ schema_ VARCHAR(128) CHARACTER SET NONE NOT NULL,
-      /* -- none */ procedure_ VARCHAR(63) CHARACTER SET NONE NOT NULL,
-      /* -- none */ column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
+      /* -- none */ procedure_ VARCHAR(128) CHARACTER SET NONE NOT NULL,
+      /* -- none */ column_ VARCHAR(128) CHARACTER SET NONE NOT NULL
       -- utf8 catalog_ VARCHAR(128) CHARACTER SET UTF8 NOT NULL,
       -- utf8 schema_ VARCHAR(128) CHARACTER SET UTF8 NOT NULL,
-      -- utf8 procedure_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL,
-      -- utf8 column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+      -- utf8 procedure_ VARCHAR(128) CHARACTER SET UTF8 NOT NULL,
+      -- utf8 column_ VARCHAR(128) CHARACTER SET UTF8 NOT NULL
     ) RETURNS TY$POINTER;
 
   FUNCTION affected_rows(stmt TY$POINTER NOT NULL) RETURNS INTEGER;
@@ -372,12 +372,12 @@ BEGIN
       stmt TY$POINTER NOT NULL,
       /* -- none */ catalog_ VARCHAR(128) CHARACTER SET NONE NOT NULL,
       /* -- none */ schema_ VARCHAR(128) CHARACTER SET NONE NOT NULL,
-      /* -- none */ procedure_ VARCHAR(63) CHARACTER SET NONE NOT NULL,
-      /* -- none */ column_ VARCHAR(63) CHARACTER SET NONE NOT NULL
+      /* -- none */ procedure_ VARCHAR(128) CHARACTER SET NONE NOT NULL,
+      /* -- none */ column_ VARCHAR(128) CHARACTER SET NONE NOT NULL
       -- utf8 catalog_ VARCHAR(128) CHARACTER SET UTF8 NOT NULL,
       -- utf8 schema_ VARCHAR(128) CHARACTER SET UTF8 NOT NULL,
-      -- utf8 procedure_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL,
-      -- utf8 column_ VARCHAR(63) CHARACTER SET UTF8 NOT NULL
+      -- utf8 procedure_ VARCHAR(128) CHARACTER SET UTF8 NOT NULL,
+      -- utf8 column_ VARCHAR(128) CHARACTER SET UTF8 NOT NULL
     ) RETURNS TY$POINTER
     EXTERNAL NAME 'nano!stmt$procedure_columns'
     ENGINE UDR;

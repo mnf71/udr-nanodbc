@@ -8,8 +8,12 @@ BEGIN
   FUNCTION finalize RETURNS TY$NANO_BLANK;
   FUNCTION expunge RETURNS TY$NANO_BLANK;
 
-  FUNCTION locale(set_locale VARCHAR(20) CHARACTER SET NONE DEFAULT NULL /* NULL - get current locale */)
-    RETURNS VARCHAR(20) CHARACTER SET NONE;
+  FUNCTION locale(
+      /* -- none */ set_locale VARCHAR(20) CHARACTER SET NONE DEFAULT NULL /* NULL - get current locale */
+      -- utf8 set_locale VARCHAR(20) CHARACTER SET UTF8 DEFAULT NULL /* NULL - get current locale */
+    )
+    /* -- none */ RETURNS VARCHAR(20) CHARACTER SET NONE;
+    -- utf8 RETURNS VARCHAR(20) CHARACTER SET UTF8;
 
   /* -- none */ FUNCTION error_message RETURNS VARCHAR(512) CHARACTER SET NONE;
   -- utf8 FUNCTION error_message RETURNS VARCHAR(512) CHARACTER SET UTF8;
@@ -32,7 +36,12 @@ BEGIN
     EXTERNAL NAME 'nano!udr$expunge'
     ENGINE UDR;
 
-  FUNCTION locale(set_locale VARCHAR(20) CHARACTER SET NONE) RETURNS VARCHAR(20) CHARACTER SET NONE
+  FUNCTION locale(
+      /* -- none */ set_locale VARCHAR(20) CHARACTER SET NONE
+      -- utf8 set_locale VARCHAR(20) CHARACTER SET UTF8
+    )
+    /* -- none */ RETURNS VARCHAR(20) CHARACTER SET NONE
+    -- utf8 RETURNS VARCHAR(20) CHARACTER SET UTF8
     EXTERNAL NAME 'nano!udr$locale'
     ENGINE UDR;
 

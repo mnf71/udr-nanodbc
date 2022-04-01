@@ -146,7 +146,7 @@ void params_batchs::clear()
 // UDR Statement class implementation
 //
 
-statement::statement(class attachment_resources& att_resources) 
+statement::statement(class attachment_resources& att_resources)
 	: nanodbc::statement()
 	
 {
@@ -170,7 +170,7 @@ statement::statement(class attachment_resources& att_resources, class nanoudr::c
 }
 
 statement::statement(
-	class attachment_resources& att_resources, class nanoudr::connection& conn, const nanodbc::string& query, 
+	class attachment_resources& att_resources, class nanoudr::connection& conn, const nanodbc::string& query,
 	const scroll_state scrollable_usage, long timeout)
 	: nanodbc::statement(conn)
 {
@@ -473,10 +473,10 @@ void statement::describe_parameter(
 
 //-----------------------------------------------------------------------------
 // create function statement_ (
-//	 conn ty$pointer default null, 
-//   query varchar(8191) character set utf8 default null,
-//   scrollable boolean default null,
-// 	 timeout integer not null default 0 
+//	conn ty$pointer default null, 
+//	query varchar(8191) character set none [utf8] default null,
+//	scrollable boolean default null,
+//	timeout integer not null default 0 
 //	) returns ty$pointer
 //	external name 'nano!stmt$statement'
 //	engine udr; 
@@ -527,7 +527,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$statement)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->stmtNull = FB_TRUE;
 		try
 		{
@@ -568,7 +568,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function valid (
-//	 stmt ty$pointer not null, 
+//	stmt ty$pointer not null, 
 //	) returns boolean
 //	external name 'nano!stmt$valid'
 //	engine udr; 
@@ -595,7 +595,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$valid)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->valid = helper.fb_bool(
 			in->stmtNull ? false :
 				att_resources->statements.valid(helper.native_ptr<statement>(in->stmt.str))
@@ -607,10 +607,10 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function release_ (
-//	 stmt ty$pointer not null 
-// ) returns ty$pointer
-// external name 'nano!stmt$release'
-// engine udr; 
+//	stmt ty$pointer not null 
+//	) returns ty$pointer
+//	external name 'nano!stmt$release'
+//	engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(stmt$release)
@@ -634,7 +634,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$release)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->stmtNull = FB_TRUE;
 		if (!in->stmtNull)
 		{
@@ -658,7 +658,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function connected (
-//	 stmt ty$pointer not null 
+//	stmt ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!stmt$connected'
 //	engine udr; 
@@ -685,7 +685,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$connected)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->connectedNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -708,7 +708,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function connection (
-//	 stmt ty$pointer not null 
+//	stmt ty$pointer not null 
 //	) returns ty$pointer
 //	external name 'nano!stmt$connection'
 //	engine udr; 
@@ -735,7 +735,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->connNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -759,11 +759,11 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function open_ (
-//	 stmt ty$pointer not null, 
-//	 conn ty$pointer not null
-// ) returns ty$nano_blank
-// external name 'nano!stmt$open'
-// engine udr; 
+//	stmt ty$pointer not null, 
+//	conn ty$pointer not null
+//	) returns ty$nano_blank
+//	external name 'nano!stmt$open'
+//	engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(stmt$open)
@@ -788,7 +788,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$open)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -819,7 +819,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function close_ (
-//	 stmt ty$pointer not null 
+//	stmt ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$close'
 //	engine udr; 
@@ -846,7 +846,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$close)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -870,7 +870,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function cancel_ (
-//	 stmt ty$pointer not null 
+//	stmt ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$cancel'
 //	engine udr; 
@@ -897,7 +897,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$cancel)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -921,7 +921,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function closed (
-//	 stmt ty$pointer not null 
+//	stmt ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!stmt$closed'
 //	engine udr; 
@@ -948,7 +948,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$closed)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->closedNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -971,11 +971,11 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function prepare_direct (
-//	 stmt ty$pointer not null, 
-//	 conn ty$pointer not null,  
-//   query varchar(8191) character set utf8 not null,
-//   scrollable boolean default null,
-// 	 timeout integer not null default 0 
+//	stmt ty$pointer not null, 
+//	conn ty$pointer not null,  
+//	query varchar(8191) character set none [utf8] not null,
+//	scrollable boolean default null,
+//	timeout integer not null default 0 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$prepare_direct'
 //	engine udr; 
@@ -1023,7 +1023,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare_direct)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1060,10 +1060,10 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function prepare_ (
-//	 stmt ty$pointer not null, 
-//   query varchar(8191) character set utf8 not null,
-//   scrollable boolean default null,
-// 	 timeout integer not null default 0 
+//	stmt ty$pointer not null, 
+//	query varchar(8191) character set none [utf8] not null,
+//	scrollable boolean default null,
+//	timeout integer not null default 0 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$prepare'
 //	engine udr; 
@@ -1110,7 +1110,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$prepare)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1140,8 +1140,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function scrollable (
-//	 stmt ty$pointer not null, 
-// 	 usage_ boolean default null 
+//	stmt ty$pointer not null, 
+//	usage_ boolean default null 
 //	) returns boolean
 //	external name 'nano!stmt$scrollable'
 //	engine udr; 
@@ -1169,7 +1169,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$scrollable)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->scrollableNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1202,8 +1202,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function timeout (
-//	 stmt ty$pointer not null, 
-// 	 timeout integer not null default 0 
+//	stmt ty$pointer not null, 
+//	timeout integer not null default 0 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$timeout'
 //	engine udr; 
@@ -1231,7 +1231,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$timeout)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1256,12 +1256,12 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function execute_direct (
-//	 stmt ty$pointer not null, 
-//	 conn ty$pointer not null, 
-//   query varchar(8191) character set utf8 not null,
-//   scrollable boolean default null,
-// 	 batch_operations integer not null default 1,
-// 	 timeout integer not null default 0 
+//	stmt ty$pointer not null, 
+//	conn ty$pointer not null, 
+//	query varchar(8191) character set none [utf8] not null,
+//	scrollable boolean default null,
+//	batch_operations integer not null default 1,
+//	timeout integer not null default 0 
 //	) returns ty$pointer
 //	external name 'nano!stmt$execute_direct'
 //	engine udr; 
@@ -1310,7 +1310,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$execute_direct)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->rsltNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1348,11 +1348,11 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function just_execute_direct (
-//	 stmt ty$pointer not null, 
-//	 conn ty$pointer not null, 
-//   query varchar(8191) character set utf8 not null,
-// 	 batch_operations integer not null default 1 
-// 	 timeout integer not null default 0 
+//	stmt ty$pointer not null, 
+//	conn ty$pointer not null, 
+//	query varchar(8191) character set none [utf8] not null,
+//	batch_operations integer not null default 1 
+//	timeout integer not null default 0 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$just_execute_direct'
 //	engine udr; 
@@ -1400,7 +1400,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$just_execute_direct)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1432,9 +1432,9 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function execute_ (
-//	 stmt ty$pointer not null, 
-// 	 batch_operations integer not null default 1, 
-// 	 timeout integer not null default 0 
+//	stmt ty$pointer not null, 
+//	batch_operations integer not null default 1, 
+//	timeout integer not null default 0 
 //	) returns ty$pointer
 //	external name 'nano!stmt$execute'
 //	engine udr; 
@@ -1463,7 +1463,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$execute)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->rsltNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1488,9 +1488,9 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function just_execute_ (
-//	 stmt ty$pointer not null, 
-// 	 batch_operations integer not null default 1,
-// 	 timeout integer not null default 0 
+//	stmt ty$pointer not null, 
+//	batch_operations integer not null default 1,
+//	timeout integer not null default 0 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$just_execute'
 //	engine udr; 
@@ -1519,7 +1519,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$just_execute)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1544,11 +1544,11 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function procedure_columns (
-//	 stmt ty$pointer not null, 
-//	 catalog_ varchar(128) character set utf8 not null, 
-//	 schema_ varchar(128) character set utf8 not null, 
-//	 procedure_ varchar(63) character set utf8 not null, 
-//	 column_ varchar(63) character set utf8 not null 
+//	stmt ty$pointer not null, 
+//	catalog_ varchar(128) character set none [utf8] not null, 
+//	schema_ varchar(128) character set none [utf8] not null, 
+//	procedure_ varchar(128) character set none [utf8] not null, 
+//	column_ varchar(128) character set none [utf8] not null 
 //	) returns ty$pointer
 //	external name 'nano!stmt$procedure_columns'
 //	engine udr; 
@@ -1585,8 +1585,8 @@ FB_UDR_BEGIN_FUNCTION(stmt$procedure_columns)
 		(NANO_POINTER, stmt)
 		(FB_VARCHAR(128 * 4), catalog)
 		(FB_VARCHAR(128 * 4), schema)
-		(FB_VARCHAR(63 * 4), procedure)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), procedure)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1596,7 +1596,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$procedure_columns)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->rsltNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1627,7 +1627,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function affected_rows (
-//	 stmt ty$pointer not null 
+//	stmt ty$pointer not null 
 //	) returns integer
 //	external name 'nano!stmt$affected_rows'
 //	engine udr; 
@@ -1654,7 +1654,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$affected_rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->affectedNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1677,7 +1677,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function columns (
-//	 stmt ty$pointer not null 
+//	stmt ty$pointer not null 
 //	) returns smallint
 //	external name 'nano!stmt$columns'
 //	engine udr; 
@@ -1704,7 +1704,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$columns)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->columnsNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1727,7 +1727,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function parameters  ( 
-//	 stmt ty$pointer not null 
+//	stmt ty$pointer not null 
 //	) returns smallint
 //	external name 'nano!stmt$parameters'
 //	engine udr; 
@@ -1754,7 +1754,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$parameters)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->parametersNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1777,8 +1777,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function parameter_size  ( 
-//	 stmt ty$pointer not null, 
-//	 parameter_index smallint not null
+//	stmt ty$pointer not null, 
+//	parameter_index smallint not null
 //	) returns integer
 //	external name 'nano!stmt$parameter_size'
 //	engine udr; 
@@ -1806,7 +1806,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$parameter_size)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->sizeNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -1832,10 +1832,10 @@ FB_UDR_END_FUNCTION
 // template <class T> void bind (...
 //
 // create function bind_[fb_type] (
-//	 stmt ty$pointer not null,
-// 	 parameter_index smallint not null,
-//   value_	native Firebird datatype,
-//   param_size smallint default null
+//	stmt ty$pointer not null,
+//	parameter_index smallint not null,
+//	value_ native Firebird datatype,
+//	param_size smallint default null
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$bind'
 //	engine udr; 
@@ -1889,7 +1889,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = 
 			helper.native_ptr<statement>(reinterpret_cast<const char*>(in + in_offsets[in::stmt]));
@@ -2082,9 +2082,9 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function bind_null (
-//	 stmt ty$pointer not null,
-// 	 parameter_index smallint not null,
-// 	 batch_size integer not null default 1 
+//	stmt ty$pointer not null,
+//	parameter_index smallint not null,
+//	 batch_size integer not null default 1 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$bind_null'
 //	engine udr; 
@@ -2113,7 +2113,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind_null)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -2147,7 +2147,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function clear_bindings (
-//	 stmt ty$pointer not null
+//	stmt ty$pointer not null
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$clear_bindings'
 //	engine udr; 
@@ -2174,7 +2174,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$clear_bindings)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -2199,11 +2199,11 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function describe_parameter (
-//	 stmt ty$pointer not null,
-// 	 idx smallint not null,
-// 	 type_ smallint not null,
-// 	 size_ integer not null,
-// 	 scale_ smallint not null default 0
+//	stmt ty$pointer not null,
+//	idx smallint not null,
+//	type_ smallint not null,
+//	size_ integer not null,
+//	scale_ smallint not null default 0
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$describe_parameter
 //	engine udr; 
@@ -2234,7 +2234,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$describe_parameter)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -2258,7 +2258,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function describe_parameters (
-//	 stmt ty$pointer not null 
+//	stmt ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$describe_parameters'
 //	engine udr; 
@@ -2285,7 +2285,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$describe_parameters)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))
@@ -2311,7 +2311,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function reset_parameters (
-//	 stmt ty$pointer not null 
+//	stmt ty$pointer not null 
 //	) returns ty$nano_blank
 //	external name 'nano!stmt$reset_parameters'
 //	engine udr; 
@@ -2338,7 +2338,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$reset_parameters)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::statement* stmt = helper.native_ptr<statement>(in->stmt.str);
 		if (!in->stmtNull && att_resources->statements.valid(stmt))

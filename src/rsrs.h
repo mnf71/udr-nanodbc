@@ -41,6 +41,7 @@ namespace nanoudr
 #define INVALID_TRANSACTION		INVALID_RESOURCE, "Invalid transaction pointer."
 #define INVALID_STATEMENT		INVALID_RESOURCE, "Invalid statement pointer."
 #define INVALID_RESULT			INVALID_RESOURCE, "Invalid result pointer."
+#define INVALID_CATALOG			INVALID_RESOURCE, "Invalid catalog pointer."
 
 #define	BINDING_ERROR			"NANO$BINDING_ERROR"
 #define	FETCHING_ERROR			"NANO$FETCHING_ERROR"
@@ -76,6 +77,10 @@ struct exception
 	class result;
 #endif
 
+#ifndef CTLG_H
+	class catalog;
+#endif
+
 //-----------------------------------------------------------------------------
 //  Attachment resources
 //
@@ -107,71 +112,88 @@ public:
 
 	void pull_up_resources();
 
-	struct attachment_connections
+	class attachment_connections
 	{
-		attachment_connections(attachment_resources* att_resources) 
-			: outer(att_resources) {};
-		void retain(const nanoudr::connection* conn);
-		void expunge(const nanoudr::connection* conn);
-		void release(const nanoudr::connection* conn);
-		bool valid(const nanoudr::connection* conn);
-		std::vector<nanoudr::connection*>& conn();
-	private:
-		std::vector<nanoudr::connection*> conn_v;
-		std::vector<nanoudr::connection*>::iterator conn_it;
-		attachment_resources* outer;
+		public:
+			attachment_connections(attachment_resources* att_resources)
+				: att_resources_(att_resources) 
+			{
+			};
+			~attachment_connections() noexcept {};
+			void retain(const nanoudr::connection* conn);
+			void expunge(const nanoudr::connection* conn);
+			void release(const nanoudr::connection* conn);
+			bool valid(const nanoudr::connection* conn);
+			std::vector<nanoudr::connection*>& conn();
+		private:
+			std::vector<nanoudr::connection*> conn_v;
+			std::vector<nanoudr::connection*>::iterator conn_it;
+			attachment_resources* att_resources_;
 	};
 
-	struct connection_transactions
+	class connection_transactions
 	{
-		connection_transactions(attachment_resources* att_resources) 
-			: outer(att_resources) {};
-		void retain(const nanoudr::transaction* tnx);
-		void release(const nanoudr::transaction* tnx);
-		bool valid(const nanoudr::transaction* tnx);
-		std::vector<nanoudr::transaction*>& tnx();
-	private:
-		std::vector<nanoudr::transaction*> tnx_v;
-		std::vector<nanoudr::transaction*>::iterator tnx_it;
-		attachment_resources* outer;
+		public:
+			connection_transactions() {};
+			~connection_transactions() noexcept {};
+			void retain(const nanoudr::transaction* tnx);
+			void release(const nanoudr::transaction* tnx);
+			bool valid(const nanoudr::transaction* tnx);
+			std::vector<nanoudr::transaction*>& tnx();
+		private:
+			std::vector<nanoudr::transaction*> tnx_v;
+			std::vector<nanoudr::transaction*>::iterator tnx_it;
 	};
 
-	struct connection_statements
+	class connection_statements
 	{
-		connection_statements(attachment_resources* att_resources) 
-			: outer(att_resources) {};
-		void retain(const nanoudr::statement* stmt);
-		void release(const nanoudr::statement* stmt);
-		bool valid(const nanoudr::statement* stmt);
-		std::vector<nanoudr::statement*>& stmt();
-	private:
-		std::vector<nanoudr::statement*> stmt_v;
-		std::vector<nanoudr::statement*>::iterator stmt_it;
-		attachment_resources* outer;
+		public:
+			connection_statements() {};
+			~connection_statements() noexcept {};
+			void retain(const nanoudr::statement* stmt);
+			void release(const nanoudr::statement* stmt);
+			bool valid(const nanoudr::statement* stmt);
+			std::vector<nanoudr::statement*>& stmt();
+		private:
+			std::vector<nanoudr::statement*> stmt_v;
+			std::vector<nanoudr::statement*>::iterator stmt_it;
 	};
 
-	struct connection_results
+	class connection_results
 	{
-		connection_results(attachment_resources* att_resources) 
-			: outer(att_resources) {};
-		void retain(const nanoudr::result* rslt);
-		void release(const nanoudr::result* rslt);
-		bool valid(const nanoudr::result* rslt);
-		std::vector<nanoudr::result*>& rslt();
-	private:
-		std::vector<nanoudr::result*> rslt_v;
-		std::vector<nanoudr::result*>::iterator rslt_it;
-		attachment_resources* outer;
+		public:
+			connection_results() {};
+			~connection_results() noexcept {};
+			void retain(const nanoudr::result* rslt);
+			void release(const nanoudr::result* rslt);
+			bool valid(const nanoudr::result* rslt);
+			std::vector<nanoudr::result*>& rslt();
+		private:
+			std::vector<nanoudr::result*> rslt_v;
+			std::vector<nanoudr::result*>::iterator rslt_it;
+	};
+
+	class connection_catalogs
+	{
+		public:
+			connection_catalogs() {};
+			~connection_catalogs() noexcept {};
+			void retain(const nanoudr::catalog* ctlg);
+			void release(const nanoudr::catalog* ctlg);
+			bool valid(const nanoudr::catalog* ctlg);
+			std::vector<nanoudr::catalog*>& ctlg();
+		private:
+			std::vector<nanoudr::catalog*> ctlg_v;
+			std::vector<nanoudr::catalog*>::iterator ctlg_it;
 	};
 
 	attachment_connections connections = attachment_connections(this);
-	connection_transactions transactions = connection_transactions(this);
-	connection_statements statements = connection_statements(this);
-	connection_results results = connection_results(this);
+	connection_transactions transactions = connection_transactions();
+	connection_statements statements = connection_statements();
+	connection_results results = connection_results();
+	connection_catalogs catalogs = connection_catalogs();
 
 private:
-	friend class resources_pool;
-
 	ISC_UINT64 attachment_id;
 
 	// if number is zero then sended ANY_THROW 

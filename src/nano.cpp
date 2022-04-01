@@ -41,6 +41,7 @@ template void  nano_helper::fb_ptr(char*, const nanoudr::connection*);
 template void  nano_helper::fb_ptr(char*, const nanoudr::transaction*);
 template void  nano_helper::fb_ptr(char*, const nanoudr::statement*);
 template void nano_helper::fb_ptr(char*, const nanoudr::result*);
+template void nano_helper::fb_ptr(char*, const nanoudr::catalog*);
 
 template <class T> T* nano_helper::native_ptr(const char* fb_pointer) const
 {
@@ -54,6 +55,7 @@ template nanoudr::connection* nano_helper::native_ptr(const char*) const;
 template nanoudr::transaction* nano_helper::native_ptr(const char*) const;
 template nanoudr::statement* nano_helper::native_ptr(const char*) const;
 template nanoudr::result* nano_helper::native_ptr(const char*) const;
+template nanoudr::catalog* nano_helper::native_ptr(const char*) const;
 
 //-----------------------------------------------------------------------------
 //

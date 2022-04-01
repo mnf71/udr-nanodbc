@@ -26,6 +26,16 @@
 #define FB_UDR_STATUS_TYPE ::Firebird::ThrowStatusWrapper
 #define FB_UDR_CONTEXT_TYPE ::Firebird::IExternalContext
 
+#define NANOUDR_FETCH_PROCEDURE	\
+	FB_BOOLEAN fetch(FB_UDR_STATUS_TYPE* status)	\
+	{	\
+		FB_BOOLEAN suspend;	\
+		internalFetch(suspend, status);	\
+		return suspend;	\
+	}	\
+	\
+	void internalFetch(FB_BOOLEAN& suspend, FB_UDR_STATUS_TYPE* status)
+
 #include <ibase.h>
 #include <UdrCppEngine.h>
 
@@ -39,6 +49,8 @@ using namespace Firebird;
 #include "tnx.h"
 #include "stmt.h"
 #include "rslt.h"
+#include "ctlg.h"
+
 #include "rsrs.h"
 
 namespace nanoudr
@@ -59,17 +71,15 @@ namespace nanoudr
 //
 
 #define	DECLARE_RESOURCE	\
-	const ISC_UINT64 att_id = 0;	\
-	attachment_resources* att_resources = nullptr;	\
-/* DECLARE_RESOURCE */ 
+	const ISC_UINT64 current_att_id = 0;	\
+	attachment_resources* current_att_resources = nullptr; 
+/* DECLARE_RESOURCE */
 
 #define	INITIALIZE_RESORCES	\
-{	\
-	if((att_resources = pool.current_resources(status, context)) != nullptr)	\
-		const_cast<ISC_UINT64&>(att_id) = att_resources->current_attachment_id();	\
+	if((current_att_resources =	pool.current_resources(status, context)) != nullptr)	\
+		const_cast<ISC_UINT64&>(current_att_id) = current_att_resources->current_attachment_id();	\
 	else	\
 	{	\
-		/* const_cast<ISC_UINT64&>(att_id) = pool.initialize_attachment(status, context); */	\
 		ISC_LONG exception_number = pool.exceptions.number;	\
 		if (exception_number == 0)	\
 		{	\
@@ -95,11 +105,10 @@ namespace nanoudr
 		}	\
 		return; \
 	}	\
-} /* INITIALIZE_RESORCES */ 
+/* INITIALIZE_RESORCES */ 
 
-#define ATTACHMENT_RESOURCES	\
-{	\
-	if ((att_resources = pool.current_resources(att_id)) == nullptr)	\
+#define FUNCTION_RESOURCES	\
+	if ((current_att_resources = pool.current_resources(current_att_id)) == nullptr)	\
 	{	\
 		ISC_LONG exception_number = pool.exceptions.number;	\
 		if (exception_number == 0)	\
@@ -126,14 +135,52 @@ namespace nanoudr
 		}	\
 		return; \
 	}	\
+	attachment_resources* att_resources = current_att_resources;	\
 	att_resources->current_snapshot(status, context);	\
-	att_resources->current_transaction();	\
-}/* ATTACHMENT_RESOURCES */
+	att_resources->current_transaction();
+/* FUNCTION_RESOURCES */
+
+#define PROCEDURE_RESOURCES	\
+	if ((procedure->current_att_resources = pool.current_resources(procedure->current_att_id)) == nullptr)	\
+	{	\
+		ISC_LONG exception_number = pool.exceptions.number;	\
+		if (exception_number == 0)	\
+		{	\
+			ISC_STATUS_ARRAY vector = { \
+				isc_arg_gds,	\
+				isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.name),	\
+				isc_arg_gds,	\
+				isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.message),	\
+				isc_arg_end };	\
+			status->setErrors(vector);	\
+		}	\
+		else	\
+		{	\
+			ISC_STATUS_ARRAY vector = { \
+				isc_arg_gds,	\
+				isc_except, isc_arg_number, exception_number,	\
+				isc_arg_gds,	\
+				isc_exception_name, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.name),	\
+				isc_arg_gds,	\
+				isc_random, isc_arg_string, reinterpret_cast<ISC_STATUS>(pool.exceptions.message),	\
+				isc_arg_end };	\
+			status->setErrors(vector);	\
+		}	\
+		return; \
+	}	\
+	attachment_resources* att_resources = procedure->current_att_resources;		\
+	att_resources->current_snapshot(status, context);	\
+	att_resources->current_transaction();
+/* PROCEDURE_RESOURCES */
+
+#define FETCH_RESOURCES	\
+	attachment_resources* att_resources = procedure->current_att_resources;	\
+	unsigned* out_char_sets = procedure->fetch_char_sets;
+/* FETCH_RESOURCES */
 
 #define	FINALIZE_RESORCES	\
-{	\
-	pool.finalize_attachment(att_id);	\
-} /* FINALIZE_RESORCES */
+	pool.finalize_attachment(current_att_id);
+/* FINALIZE_RESORCES */
 
 //-----------------------------------------------------------------------------
 //
@@ -274,6 +321,60 @@ namespace nanoudr
 //-----------------------------------------------------------------------------
 //
 
+#define U8_VARIYNG(message, param)	\
+{	\
+	if (message##_char_sets[message::param] == fb_char_set::CS_UTF8)	\
+	{	\
+		try {	\
+			helper.utf8_##message(	\
+				att_resources, message->param.str, static_cast<ISC_USHORT>(sizeof(message->param.str)),	\
+				message->param.str, message->param.length);	\
+		} catch (std::runtime_error const& e) {	\
+			NANOUDR_THROW(e.what())	\
+		}	\
+	}	 \
+	/* trunc to one byte coding for dual purpose parameter */	\
+	else \
+	{	\
+		ISC_USHORT trunc_length = static_cast<ISC_USHORT>(sizeof(message->param.str) / 4);	\
+		if (message->param.length > trunc_length)	\
+		{	\
+			*(message->param.str + trunc_length) = '\0';	\
+			message->param.length = trunc_length;	\
+		}	\
+	}	\
+}
+//	/* U8_VARIYNG */
+
+#define U8_STRING(message, param)	\
+{	\
+	if (message##_char_sets[message::param] == fb_char_set::CS_UTF8)	\
+	{	\
+		ISC_USHORT param##_length = static_cast<ISC_USHORT>(sizeof(message->param.str));	\
+		try {	\
+			helper.utf8_##message(	\
+				att_resources, message->param.str, param##_length, message->param.str, \
+				/* with char spaces */ param##_length);	\
+		} catch (std::runtime_error const& e) {	\
+			NANOUDR_THROW(e.what())	\
+		}	\
+	}	\
+	/* trunc to one byte coding for dual purpose parameter */	\
+	else \
+	{	\
+		ISC_USHORT trunc_length = static_cast<ISC_USHORT>(sizeof(message->param.str) / 4);	\
+		if (message->param.length > trunc_length)	\
+		{	\
+			*(message->param.str + trunc_length) = '\0';	\
+			message->param.length = trunc_length;	\
+		}	\
+	}	\
+}
+/* U8_STRING */
+
+//-----------------------------------------------------------------------------
+//
+
 #define FB_VARIYNG(fb_varchar, string)	\
 {	\
 	(fb_varchar).length = static_cast<ISC_USHORT>(sizeof((fb_varchar).str));	\
@@ -302,98 +403,76 @@ enum fb_char_set
 	CS_ASCII = 2,		// ASCII
 	CS_UNICODE_FSS = 3, // UNICODE in FSS format	- 3b
 	CS_UTF8 = 4,		// UTF-8	- 4b
-	CS_SJIS = 5,		// SJIS		- 2b
-	CS_EUCJ = 6,		// EUC-J	- 2b
+//	CS_SJIS = 5,		// SJIS		- 2b
+//	CS_EUCJ = 6,		// EUC-J	- 2b
 
-	CS_JIS_0208 = 7,		// JIS 0208; 1990
-	CS_UNICODE_UCS2 = 8,	// UNICODE v 1.10
+//	CS_JIS_0208 = 7,		// JIS 0208; 1990
+//	CS_UNICODE_UCS2 = 8,	// UNICODE v 1.10
 
-	CS_DOS_737 = 9,
-	CS_DOS_437 = 10,	// DOS CP 437
-	CS_DOS_850 = 11,	// DOS CP 850
-	CS_DOS_865 = 12,	// DOS CP 865
-	CS_DOS_860 = 13,	// DOS CP 860
-	CS_DOS_863 = 14,	// DOS CP 863
+//	CS_DOS_737 = 9,
+//	CS_DOS_437 = 10,	// DOS CP 437
+//	CS_DOS_850 = 11,	// DOS CP 850
+//	CS_DOS_865 = 12,	// DOS CP 865
+//	CS_DOS_860 = 13,	// DOS CP 860
+//	CS_DOS_863 = 14,	// DOS CP 863
 
-	CS_DOS_775 = 15,
-	CS_DOS_858 = 16,
-	CS_DOS_862 = 17,
-	CS_DOS_864 = 18,
+//	CS_DOS_775 = 15,
+//	CS_DOS_858 = 16,
+//	CS_DOS_862 = 17,
+//	CS_DOS_864 = 18,
 
-	CS_NEXT = 19,		// NeXTSTEP OS native charset
+//	CS_NEXT = 19,		// NeXTSTEP OS native charset
 
-	CS_ISO8859_1 = 21,	// ISO-8859.1
-	CS_ISO8859_2 = 22,	// ISO-8859.2
-	CS_ISO8859_3 = 23,	// ISO-8859.3
-	CS_ISO8859_4 = 34,	// ISO-8859.4
-	CS_ISO8859_5 = 35,	// ISO-8859.5
-	CS_ISO8859_6 = 36,	// ISO-8859.6
-	CS_ISO8859_7 = 37,	// ISO-8859.7
-	CS_ISO8859_8 = 38,	// ISO-8859.8
-	CS_ISO8859_9 = 39,	// ISO-8859.9
-	CS_ISO8859_13 = 40,	// ISO-8859.13
+//	CS_ISO8859_1 = 21,	// ISO-8859.1
+//	CS_ISO8859_2 = 22,	// ISO-8859.2
+//	CS_ISO8859_3 = 23,	// ISO-8859.3
+//	CS_ISO8859_4 = 34,	// ISO-8859.4
+//	CS_ISO8859_5 = 35,	// ISO-8859.5
+//	CS_ISO8859_6 = 36,	// ISO-8859.6
+//	CS_ISO8859_7 = 37,	// ISO-8859.7
+//	CS_ISO8859_8 = 38,	// ISO-8859.8
+//	CS_ISO8859_9 = 39,	// ISO-8859.9
+//	CS_ISO8859_13 = 40,	// ISO-8859.13
 
-	CS_KSC5601 = 44,	// KOREAN STANDARD 5601	- 2b
+//	CS_KSC5601 = 44,	// KOREAN STANDARD 5601	- 2b
 
-	CS_DOS_852 = 45,	// DOS CP 852
-	CS_DOS_857 = 46,	// DOS CP 857
-	CS_DOS_861 = 47,	// DOS CP 861
+//	CS_DOS_852 = 45,	// DOS CP 852
+//	CS_DOS_857 = 46,	// DOS CP 857
+//	CS_DOS_861 = 47,	// DOS CP 861
 
-	CS_DOS_866 = 48,
-	CS_DOS_869 = 49,
+//	CS_DOS_866 = 48,
+//	CS_DOS_869 = 49,
 
-	CS_CYRL = 50,
-	CS_WIN1250 = 51,	// Windows cp 1250
-	CS_WIN1251 = 52,	// Windows cp 1251
-	CS_WIN1252 = 53,	// Windows cp 1252
-	CS_WIN1253 = 54,	// Windows cp 1253
-	CS_WIN1254 = 55,	// Windows cp 1254
+//	CS_CYRL = 50,
+//	CS_WIN1250 = 51,	// Windows cp 1250
+//	CS_WIN1251 = 52,	// Windows cp 1251
+//	CS_WIN1252 = 53,	// Windows cp 1252
+//	CS_WIN1253 = 54,	// Windows cp 1253
+//	CS_WIN1254 = 55,	// Windows cp 1254
 
-	CS_BIG5 = 56,		// Big Five unicode cs
-	CS_GB2312 = 57,		// GB 2312-80 cs	- 2b
+//	CS_BIG5 = 56,		// Big Five unicode cs
+//	CS_GB2312 = 57,		// GB 2312-80 cs	- 2b
 
-	CS_WIN1255 = 58,	// Windows cp 1255
-	CS_WIN1256 = 59,	// Windows cp 1256
-	CS_WIN1257 = 60,	// Windows cp 1257
+//	CS_WIN1255 = 58,	// Windows cp 1255
+//	CS_WIN1256 = 59,	// Windows cp 1256
+//	CS_WIN1257 = 60,	// Windows cp 1257
 
-	CS_UTF16 = 61,		// UTF-16
-	CS_UTF32 = 62,		// UTF-32
+//	CS_UTF16 = 61,		// UTF-16
+//	CS_UTF32 = 62,		// UTF-32
 
-	CS_KOI8R = 63,		// Russian KOI8R
-	CS_KOI8U = 64,		// Ukrainian KOI8U
+//	CS_KOI8R = 63,		// Russian KOI8R
+//	CS_KOI8U = 64,		// Ukrainian KOI8U
 
-	CS_WIN1258 = 65,	// Windows cp 1258
+//	CS_WIN1258 = 65,	// Windows cp 1258
 
-	CS_TIS620 = 66,		// TIS620
-	CS_GBK = 67,		// GBK	- 2b	 
-	CS_CP943C = 68,		// CP943C	- 2b
+//	CS_TIS620 = 66,		// TIS620
+//	CS_GBK = 67,		// GBK	- 2b	 
+//	CS_CP943C = 68,		// CP943C	- 2b
 
-	CS_GB18030 = 69		// GB18030	- 4b
+//	CS_GB18030 = 69,	// GB18030	- 4b
+
+	CS_LOCALE = -1		// UDR local
 };
-
-#define U8_VARIYNG(message, param)	\
-	if (message##_char_sets[message::param] == fb_char_set::CS_UTF8)	\
-	{	\
-		try {	\
-			helper.utf8_##message(	\
-				att_resources, message->param.str, sizeof(message->param.str),	\
-				message->param.str, message->param.length);	\
-		} catch (std::runtime_error const& e) {	\
-			NANOUDR_THROW(e.what())	\
-		}	\
-	}	/* U8_VARIYNG */  
-
-#define U8_STRING(message, param)	\
-	if (message##_char_sets[message::param] == fb_char_set::CS_UTF8)	\
-	{	\
-		size_t param_length = sizeof(message->param.str);	\
-		try {	\
-			helper.utf8_##message(	\
-				att_resources, message->param.str, param_length, message->param.str, param_length);	\
-		} catch (std::runtime_error const& e) {	\
-			NANOUDR_THROW(e.what())	\
-		}	\
-	}	/* U8_STRING */  
 
 //-----------------------------------------------------------------------------
 //
@@ -449,7 +528,7 @@ public:
 	void write_blob(attachment_resources* att_resources, nanodbc::string* in, ISC_QUAD* out);
 
 private:
-	void write_blob(attachment_resources* att_resources, const unsigned char* in, const std::size_t in_length, 
+	void write_blob(attachment_resources* att_resources, const unsigned char* in, const std::size_t in_length,
 		ISC_QUAD* out);
 };
 

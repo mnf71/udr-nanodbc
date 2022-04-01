@@ -230,7 +230,7 @@ void result::get_value
 
 //-----------------------------------------------------------------------------
 // create function valid (
-//	 rslt ty$pointer not null, 
+//	rslt ty$pointer not null, 
 //	) returns boolean
 //	external name 'nano!rslt$valid'
 //	engine udr; 
@@ -257,7 +257,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$valid)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->valid = helper.fb_bool(
 			in->rsltNull ? false :
 				att_resources->results.valid(helper.native_ptr<result>(in->rslt.str))
@@ -269,10 +269,10 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function release_ (
-//	 rslt ty$pointer not null 
-// ) returns ty$pointer
-// external name 'nano!rslt$release'
-// engine udr; 
+//	rslt ty$pointer not null 
+//	) returns ty$pointer
+//	external name 'nano!rslt$release'
+//	engine udr; 
 //
 
 FB_UDR_BEGIN_FUNCTION(rslt$release)
@@ -296,7 +296,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$release)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->rsltNull = FB_TRUE;
 		if (!in->rsltNull)
 		{
@@ -320,7 +320,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function connection (
-//	 rslt ty$pointer not null 
+//	rslt ty$pointer not null 
 //	) returns ty$pointer
 //	external name 'nano!rslt$connection'
 //	engine udr; 
@@ -347,7 +347,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$connection)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->connNull = FB_TRUE;
 		nanoudr::result * rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -371,7 +371,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function rowset_size  ( 
-//	 rslt ty$pointer not null 
+//	rslt ty$pointer not null 
 //	) returns integer
 //	external name 'nano!rslt$rowset_size'
 //	engine udr; 
@@ -398,7 +398,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$rowset_size)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->sizeNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -421,7 +421,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function affected_rows (
-//	 rslt ty$pointer not null 
+//	rslt ty$pointer not null 
 //	) returns integer
 //	external name 'nano!rslt$affected_rows'
 //	engine udr; 
@@ -448,7 +448,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$affected_rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->affectedNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -471,7 +471,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function has_affected_rows (
-//	 rslt ty$pointer not null 
+//	rslt ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!rslt$has_affected_rows'
 //	engine udr; 
@@ -498,7 +498,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$has_affected_rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->has_affectedNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -521,7 +521,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function rows_ (
-//	 rslt ty$pointer not null 
+//	rslt ty$pointer not null 
 //	) returns integer
 //	external name 'nano!rslt$rows'
 //	engine udr; 
@@ -548,7 +548,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$rows)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->rowsNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -571,7 +571,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function columns (
-//	 rslt ty$pointer not null, 
+//	rslt ty$pointer not null, 
 //	) returns smallint
 //	external name 'nano!rslt$columns'
 //	engine udr; 
@@ -598,7 +598,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$columns)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->columnsNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -621,7 +621,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function first_ (
-//	 rslt ty$pointer not null, 
+//	rslt ty$pointer not null, 
 //	) returns boolean
 //	external name 'nano!rslt$first'
 //	engine udr; 
@@ -648,7 +648,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$first)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -671,7 +671,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function last_ (
-//	 rslt ty$pointer not null, 
+//	rslt ty$pointer not null, 
 //	) returns boolean
 //	external name 'nano!rslt$last'
 //	engine udr; 
@@ -698,7 +698,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$last)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -721,7 +721,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function next_ (
-//	 rslt ty$pointer not null, 
+//	rslt ty$pointer not null, 
 //	) returns boolean
 //	external name 'nano!rslt$next'
 //	engine udr; 
@@ -748,7 +748,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$next)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -771,7 +771,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function prior_ (
-//	 rslt ty$pointer not null, 
+//	rslt ty$pointer not null, 
 //	) returns boolean
 //	external name 'nano!rslt$prior'
 //	engine udr; 
@@ -798,7 +798,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$prior)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -821,8 +821,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function move_ (
-//	 rslt ty$pointer not null, 
-//	 row_ integer not null 
+//	rslt ty$pointer not null, 
+//	row_ integer not null 
 //	) returns boolean
 //	external name 'nano!rslt$move'
 //	engine udr; 
@@ -850,7 +850,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$move)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -873,8 +873,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function skip_ (
-//	 rslt ty$pointer not null, 
-//	 row_ integer not null 
+//	rslt ty$pointer not null, 
+//	row_ integer not null 
 //	) returns boolean
 //	external name 'nano!rslt$skip'
 //	engine udr; 
@@ -902,7 +902,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$skip)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -925,7 +925,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function position_ (
-//	 rslt ty$pointer not null 
+//	rslt ty$pointer not null 
 //	) returns integer
 //	external name 'nano!rslt$position'
 //	engine udr; 
@@ -952,7 +952,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$position)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->positionNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -975,7 +975,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function at_end (
-//	 rslt ty$pointer not null, 
+//	rslt ty$pointer not null, 
 //	) returns boolean
 //	external name 'nano!rslt$at_end'
 //	engine udr; 
@@ -1002,7 +1002,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$at_end)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->at_endNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1025,8 +1025,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function unbind (
-//	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 not null 
+//	rslt ty$pointer not null, 
+//	column_ varchar(128) character set none [utf8] not null 
 //	) returns ty$nano_blank
 //	external name 'nano!rslt$unbind'
 //	engine udr; 
@@ -1063,7 +1063,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$unbind)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1073,7 +1073,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$unbind)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1108,8 +1108,8 @@ FB_UDR_END_FUNCTION
 // template <class T> T get (...
 //
 // create function get (
-//	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 not null 
+//	rslt ty$pointer not null, 
+//	column_ varchar(128) character set none [utf8] not null 
 //	) returns native Firebird datatype
 //	external name 'nano!rslt$get'
 //	engine udr; 
@@ -1174,12 +1174,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$get)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		*(reinterpret_cast<ISC_SHORT*>(out + value_null_offset[out::value])) = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1223,9 +1223,9 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function pump (
-//	 rslt ty$pointer not null, 
-//	 query varchar(8191) character set utf8 not null,
-//   transaction_pack integer not null default 0
+//	rslt ty$pointer not null, 
+//	query varchar(8191) character set none [utf8] not null,
+//	transaction_pack integer not null default 0
 //	) returns integer
 //	external name 'nano!rslt$pump'
 //	engine udr; 
@@ -1292,7 +1292,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->pumped_records = 0;
 		out->pumped_recordsNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
@@ -1400,8 +1400,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function is_null (
-//	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 not null 
+//	rslt ty$pointer not null, 
+//	column_ varchar(128) character set none [utf8] not null 
 //	) returns boolean
 //	external name 'nano!rslt$is_null'
 //	engine udr; 
@@ -1438,7 +1438,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_null)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1448,7 +1448,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_null)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->is_nullNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1477,8 +1477,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function is_bound (
-//	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 not null 
+//	rslt ty$pointer not null, 
+//	column_ varchar(128) character set none [utf8] not null 
 //	) returns boolean
 //	external name 'nano!rslt$is_bound'
 //	engine udr; 
@@ -1515,7 +1515,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_bound)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1525,7 +1525,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$is_bound)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->is_boundNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1559,8 +1559,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function column_ (
-//	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 not null 
+//	rslt ty$pointer not null, 
+//	column_ varchar(128) character set none [utf8] not null 
 //	) returns smallint
 //	external name 'nano!rslt$column'
 //	engine udr; 
@@ -1595,7 +1595,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1605,7 +1605,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->indexNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1629,9 +1629,9 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function column_name (
-//	 rslt ty$pointer not null, 
-//	 index smallint not null 
-//	) returns varchar(63) character set utf8
+//	rslt ty$pointer not null, 
+//	index smallint not null 
+//	) returns varchar(128) character set none [utf8]
 //	external name 'nano!rslt$column_name'
 //	engine udr; 
 //
@@ -1670,12 +1670,12 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_name)
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->columnNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1700,8 +1700,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function column_size (
-//	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 not null 
+//	rslt ty$pointer not null, 
+//	column_ varchar(128) character set none [utf8] not null 
 //	) returns integer
 //	external name 'nano!rslt$column_size'
 //	engine udr; 
@@ -1738,7 +1738,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_size)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1748,7 +1748,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_size)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->sizeNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1777,8 +1777,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function column_decimal_digits (
-//	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 not null 
+//	rslt ty$pointer not null, 
+//	column_ varchar(128) character set none [utf8] not null 
 //	) returns integer
 //	external name 'nano!rslt$column_decimal_digits'
 //	engine udr; 
@@ -1815,7 +1815,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_decimal_digits)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1825,7 +1825,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_decimal_digits)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->digitsNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1854,8 +1854,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function column_datatype (
-//	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 not null 
+//	rslt ty$pointer not null, 
+//	column_ varchar(128) character set none [utf8] not null 
 //	) returns integer
 //	external name 'nano!rslt$column_datatype'
 //	engine udr; 
@@ -1892,7 +1892,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1902,7 +1902,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->datatypeNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -1931,9 +1931,9 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function column_datatype_name (
-//	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 not null 
-//	) returns varchar(63) character set utf8
+//	rslt ty$pointer not null, 
+//	column_ varchar(128) character set none [utf8] not null 
+//	) returns varchar(128) character set none [utf8]
 //	external name 'nano!rslt$column_datatype_name'
 //	engine udr; 
 //
@@ -1982,7 +1982,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype_name)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -1992,7 +1992,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_datatype_name)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->datatype_nameNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -2024,8 +2024,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function column_c_datatype (
-//	 rslt ty$pointer not null, 
-//	 column_ varchar(63) character set utf8 not null 
+//	rslt ty$pointer not null, 
+//	column_ varchar(128) character set none [utf8] not null 
 //	) returns integer
 //	external name 'nano!rslt$column_c_datatype'
 //	engine udr; 
@@ -2062,7 +2062,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_c_datatype)
 	FB_UDR_MESSAGE(
 		InMessage,
 		(NANO_POINTER, rslt)
-		(FB_VARCHAR(63 * 4), column)
+		(FB_VARCHAR(128 * 4), column)
 	);
 
 	FB_UDR_MESSAGE(
@@ -2072,7 +2072,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$column_c_datatype)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->c_datatypeNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -2101,7 +2101,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function next_result (
-//	 rslt ty$pointer not null 
+//	rslt ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!rslt$next_result'
 //	engine udr; 
@@ -2128,7 +2128,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$next_result)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->succesNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))
@@ -2151,7 +2151,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function has_data (
-//	 rslt ty$pointer not null 
+//	rslt ty$pointer not null 
 //	) returns boolean
 //	external name 'nano!rslt$has_data'
 //	engine udr; 
@@ -2178,7 +2178,7 @@ FB_UDR_BEGIN_FUNCTION(rslt$has_data)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->has_dataNull = FB_TRUE;
 		nanoudr::result* rslt = helper.native_ptr<result>(in->rslt.str);
 		if (!in->rsltNull && att_resources->results.valid(rslt))

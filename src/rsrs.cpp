@@ -168,9 +168,10 @@ void attachment_resources::attachment_connections::expunge(const nanoudr::connec
 	conn_it = std::find(conn_v.begin(), conn_v.end(), conn);
 	if (conn_it != conn_v.end())
 	{
-		for (auto t : outer->transactions.tnx()) if (t->connection() == conn) delete (nanoudr::transaction*)(t);
-		for (auto s : outer->statements.stmt())	if (s->connection() == conn) delete (nanoudr::statement*)(s);
-		for (auto r : outer->results.rslt()) if (r->connection() == conn) delete (nanoudr::result*)(r);
+		for (auto t : att_resources_->transactions.tnx()) if (t->connection() == conn) delete (nanoudr::transaction*)(t);
+		for (auto s : att_resources_->statements.stmt())	if (s->connection() == conn) delete (nanoudr::statement*)(s);
+		for (auto r : att_resources_->results.rslt()) if (r->connection() == conn) delete (nanoudr::result*)(r);
+		for (auto c : att_resources_->catalogs.ctlg()) if (c->connection() == conn) delete (nanoudr::catalog*)(c);
 	}
 }
 
@@ -179,9 +180,10 @@ void attachment_resources::attachment_connections::release(const nanoudr::connec
 	conn_it = std::find(conn_v.begin(), conn_v.end(), conn);
 	if (conn_it != conn_v.end())
 	{
-		for (auto t : outer->transactions.tnx()) if (t->connection() == conn) delete (nanoudr::transaction*)(t);
-		for (auto s : outer->statements.stmt()) if (s->connection() == conn) delete (nanoudr::statement*)(s);
-		for (auto r : outer->results.rslt()) if (r->connection() == conn) delete (nanoudr::result*)(r);
+		for (auto t : att_resources_->transactions.tnx()) if (t->connection() == conn) delete (nanoudr::transaction*)(t);
+		for (auto s : att_resources_->statements.stmt()) if (s->connection() == conn) delete (nanoudr::statement*)(s);
+		for (auto r : att_resources_->results.rslt()) if (r->connection() == conn) delete (nanoudr::result*)(r);
+		for (auto c : att_resources_->catalogs.ctlg()) if (c->connection() == conn) delete (nanoudr::catalog*)(c);
 		conn_v.erase(conn_it);
 	}
 }
@@ -266,6 +268,29 @@ bool attachment_resources::connection_results::valid(const nanoudr::result* rslt
 std::vector<nanoudr::result*>& attachment_resources::connection_results::rslt()
 {
 	return rslt_v;
+}
+
+//-----------------------------------------------------------------------------
+
+void attachment_resources::connection_catalogs::retain(const nanoudr::catalog* ctlg)
+{
+	ctlg_v.push_back(const_cast<nanoudr::catalog*>(ctlg));
+}
+
+void attachment_resources::connection_catalogs::release(const nanoudr::catalog* ctlg)
+{
+	ctlg_it = std::find(ctlg_v.begin(), ctlg_v.end(), ctlg);
+	if (ctlg_it != ctlg_v.end()) ctlg_v.erase(ctlg_it);
+}
+
+bool attachment_resources::connection_catalogs::valid(const nanoudr::catalog* ctlg)
+{
+	return std::find(ctlg_v.begin(), ctlg_v.end(), ctlg) != ctlg_v.end();
+}
+
+std::vector<nanoudr::catalog*>& attachment_resources::connection_catalogs::ctlg()
+{
+	return ctlg_v;
 }
 
 //-----------------------------------------------------------------------------
@@ -452,7 +477,7 @@ FB_UDR_BEGIN_FUNCTION(udr$expunge)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->blankNull = FB_TRUE;
 		try
 		{
@@ -470,8 +495,8 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function locale (
-//   set_locale varchar(20) character set none default null
-//	) returns varchar(20)
+//	set_locale varchar(20) character set none [utf8] default null
+//	) returns varchar(20) character set none [utf8]
 //	external name 'nano!udr$locale'
 //	engine udr; 
 //
@@ -480,29 +505,59 @@ FB_UDR_BEGIN_FUNCTION(udr$locale)
 
 	DECLARE_RESOURCE
 
+	const unsigned in_count = 1;
+
+	enum in : short {
+		set_locale = 0
+	};
+
+	AutoArrayDelete<unsigned> in_char_sets;
+
+	const unsigned out_count = 1;
+
+	enum out : short {
+		locale = 0
+	};
+
+	AutoArrayDelete<unsigned> out_char_sets;
+
 	FB_UDR_CONSTRUCTOR
 	{
 		INITIALIZE_RESORCES
+
+		AutoRelease<IMessageMetadata> in_metadata(metadata->getInputMetadata(status));
+		AutoRelease<IMessageMetadata> out_metadata(metadata->getOutputMetadata(status));
+
+		in_char_sets.reset(new unsigned[in_count]);
+		in_char_sets[in::set_locale] = in_metadata->getCharSet(status, in::set_locale);
+
+		out_char_sets.reset(new unsigned[out_count]);
+		out_char_sets[out::locale] = out_metadata->getCharSet(status, out::locale);
 	}
 
 	FB_UDR_MESSAGE(
 		InMessage,
-		(FB_VARCHAR(20), set_locale)
+		(FB_VARCHAR(20 * 4), set_locale)
 	);
 
 	FB_UDR_MESSAGE(
 		OutMessage,
-		(FB_VARCHAR(20), locale)
+		(FB_VARCHAR(20 * 4), locale)
 	);
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->localeNull = FB_TRUE;
 		try
 		{
-			if (!in->set_localeNull) att_resources->current_locale(in->set_locale.str);
+			if (!in->set_localeNull) 
+			{
+				U8_VARIYNG(in, set_locale)
+				att_resources->current_locale(in->set_locale.str);
+			}
 			FB_VARIYNG(out->locale, std::string(att_resources->current_locale()))
+			U8_VARIYNG(out, locale)
 			out->localeNull = FB_FALSE;
 		}
 		catch (std::runtime_error const& e)
@@ -515,10 +570,10 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function convert_[var]char (
-//   value_ [var]char() character set none,
-//   from_ varchar(20) character set none not null,
-//   to_ varchar(20) character set none not null,
-//   convert_size smallint not null default 0
+//	value_ [var]char() character set none,
+//	from_ varchar(20) character set none not null,
+//	to_ varchar(20) character set none not null,
+//	convert_size smallint not null default 0
 //  ) returns [var]char() character set none
 //  external name 'nano!udr$convert'
 //  engine udr;
@@ -585,7 +640,7 @@ FB_UDR_BEGIN_FUNCTION(udr$convert)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		*(reinterpret_cast<ISC_SHORT*>(out + out_null_offset[out::result])) = FB_TRUE;
 		if (!*(reinterpret_cast<ISC_SHORT*>(in + in_null_offsets[in::value])) ||
 			!(in_types[in::value] == SQL_TEXT || in_types[in::value] == SQL_VARYING) ||
@@ -636,7 +691,7 @@ FB_UDR_END_FUNCTION
 
 //-----------------------------------------------------------------------------
 // create function error_message
-//	returns varchar(512) character set utf8
+//	returns varchar(512) character set none [utf8]
 //	external name 'nano!udr$error_message'
 //	engine udr; 
 //
@@ -674,7 +729,7 @@ FB_UDR_BEGIN_FUNCTION(udr$error_message)
 
 	FB_UDR_EXECUTE_FUNCTION
 	{
-		ATTACHMENT_RESOURCES
+		FUNCTION_RESOURCES
 		out->e_msgNull = FB_FALSE;
 		std::string e_msg = att_resources->current_error_message();
 		FB_VARIYNG(out->e_msg, e_msg)
