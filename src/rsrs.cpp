@@ -148,6 +148,7 @@ SELECT CAST(TRIM(ex.rdb$exception_name) AS VARCHAR(63)) AS name,\
 			memcpy(&exceptions[i], &e_buffer, sizeof(exception));
 		}
 		curs->close(snapshot.status);
+		curs.release();
 	}
 	catch (...)
 	{

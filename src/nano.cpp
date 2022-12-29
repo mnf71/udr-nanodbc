@@ -211,7 +211,8 @@ void nano_helper::read_blob(attachment_resources* att_resources, ISC_QUAD* in, c
 				}
 			}
 		}
-		blob->close(att_snapshot->status);
+		blob->close(att_snapshot->status); // will close interface
+		blob.release();
 	}
 	catch (...)
 	{
@@ -253,7 +254,8 @@ void nano_helper::write_blob(
 			stream_size = stream_size - write;
 			stream += write;
 		}
-		blob->close(att_snapshot->status);
+		blob->close(att_snapshot->status); // will close interface
+		blob.release();
 	}
 	catch (...)
 	{

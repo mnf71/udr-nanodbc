@@ -1370,12 +1370,13 @@ FB_UDR_BEGIN_FUNCTION(rslt$pump)
 
 							out->pumped_records += 1;
 						}
-						pump_stmt->free(status);
+						pump_stmt->free(status); // will close interface
+						pump_stmt.release();
 						att_resources->current_transaction(nullptr);
 						if (transaction_packed)
 						{
-							tra->commit(status); // commit transaction (will close interface)
-							tra.reset(); // clear closed interface
+							tra->commit(status); // will close interface
+							tra.release();
 						}
 					}
 					catch (const FbException& e)
