@@ -65,8 +65,7 @@ public:
 
 	short count();
 
-	template <class T> long push(const short parameter_index, T const value, const bool null = false);
-	template <class T> long push(const short parameter_index, T && value, const bool * null = false);
+	template <class T> long push(const short parameter_index, const T& value, bool null = false);
 
 	bind_type touch(const short param_index);
 

@@ -51,21 +51,7 @@ short params_batchs::count()
 }
 
 template <class T>
-long params_batchs::push(const short parameter_index, T const value, const bool null)
-{
-	bind_types& values = (&batchs[parameter_index])->values;
-	std::vector<uint8_t>& nulls = (&batchs[parameter_index])->nulls;
-
-	if (!std::holds_alternative<std::vector<T>>(values))
-		values = std::vector<T>{};
-	std::get<std::vector<T>>(values).push_back(value);
-	nulls.push_back(null);
-
-	return static_cast<long>(nulls.size() - 1);
-}
-
-template <class T>
-long params_batchs::push(const short parameter_index, T && value, const bool * null)
+long params_batchs::push(const short parameter_index, const T& value, bool null)
 {
 	bind_types& values = (&batchs[parameter_index])->values;
 	std::vector<uint8_t>& nulls = (&batchs[parameter_index])->nulls;
@@ -73,7 +59,7 @@ long params_batchs::push(const short parameter_index, T && value, const bool * n
 	if (!std::holds_alternative<std::vector<T>>(values))
 		values = std::vector<T>{};
 	std::get<std::vector<T>>(values).push_back(std::move(value));
-	nulls.push_back(*null);
+	nulls.push_back(null);
 
 	return static_cast<long>(nulls.size() - 1);
 }
@@ -1908,7 +1894,7 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 						case SQL_VARYING: // varchar
 						{
 							if (null_flag)
-								batchs->push(parameter_index, std::move(static_cast<nanodbc::string>(NANODBC_TEXT("\0"))), &null_flag);
+								batchs->push(parameter_index, static_cast<nanodbc::string>(NANODBC_TEXT("\0")), null_flag);
 							else
 							{
 								bool u8_string = (in_char_sets[in::value] == fb_char_set::CS_UTF8);
@@ -1929,22 +1915,14 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 								}
 								param_size = 
 									param_size == 0 || param_size > length ? length : param_size;
-								char* param = new char[param_size + 1]; // null-term string
+								char* param_ptr = reinterpret_cast<char*>(in + (in_types[in::value] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]);
 								if (u8_string)
+								{
 									param_size =
-										helper.utf8_in(
-											att_resources, param, param_size,
-											reinterpret_cast<const char*>(in + (in_types[in::value] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
-											length);
-								else
-									memcpy(
-										param,
-										reinterpret_cast<const char*>(in + (in_types[in::value] == SQL_TEXT ? 0 : sizeof(ISC_USHORT)) + in_offsets[in::value]),
-										param_size
-									);
-								param[param_size] = '\0';
-								batchs->push(parameter_index, std::move(static_cast<nanodbc::string>(NANODBC_TEXT(param))), &null_flag);
-								delete[] param;
+										helper.utf8_in(att_resources, param_ptr, param_size, reinterpret_cast<const char*>(param_ptr), length);
+								}
+								nanodbc::string p(NANODBC_TEXT(param_ptr), param_size);
+								batchs->push(parameter_index, p, null_flag);
 							}
 							break;
 						}
@@ -1985,12 +1963,12 @@ FB_UDR_BEGIN_FUNCTION(stmt$bind)
 						case SQL_BLOB: // blob
 						{
 							if (null_flag)
-								batchs->push(parameter_index, std::move(static_cast<nanodbc::string>(NANODBC_TEXT("\0"))), &null_flag);
+								batchs->push(parameter_index, static_cast<nanodbc::string>(NANODBC_TEXT("\0")), null_flag);
 							else
 							{
 								std::vector<std::uint8_t> param;
 								helper.read_blob(att_resources, reinterpret_cast<ISC_QUAD*>(in + in_offsets[in::value]), &param);
-								batchs->push(parameter_index, std::move(param), &null_flag);
+								batchs->push(parameter_index, param, null_flag);
 							}
 							break;
 						}
